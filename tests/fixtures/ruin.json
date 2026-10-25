@@ -1,0 +1,460 @@
+{
+  "schema_version": 1,
+  "grammar": "Combined",
+  "seed": 444,
+  "size": "L",
+  "theme": "tor-barrow",
+  "start": 0,
+  "goal": 1,
+  "solvable": true,
+  "unsolvable_reasons": [],
+  "nodes": [
+    {
+      "id": 0,
+      "type": "st",
+      "name": "START",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 1,
+      "type": "gl",
+      "name": "GOAL",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 2,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 3,
+      "type": "em",
+      "name": "em",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 4,
+      "type": "item",
+      "name": "Get blessed censer 1",
+      "kind": "room",
+      "objects": [
+        "yYHkIsJd"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "lock",
+      "name": "Use blessed censer 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "yYHkIsJd"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 7,
+      "type": "bosskey",
+      "name": "Get rune-inscribed sigil 1",
+      "kind": "room",
+      "objects": [
+        "70XR3XI2"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "eb",
+      "name": "eb",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 9,
+      "type": "lock",
+      "name": "Use rune-inscribed sigil 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "70XR3XI2"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "key",
+      "name": "Get bronze key 1",
+      "kind": "room",
+      "objects": [
+        "ZBkkw9Lf"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "lock",
+      "name": "Use bronze key 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "ZBkkw9Lf"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "switch",
+      "name": "gravestone catch 1",
+      "kind": "room",
+      "objects": [
+        "AlN1Eya3"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "switch",
+      "name": "gravestone catch 2",
+      "kind": "room",
+      "objects": [
+        "IeHDvrUb"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "gate",
+      "name": "Check gravestone catch 1 + gravestone catch 2",
+      "kind": "gate",
+      "gate": "state",
+      "requires": [
+        "AlN1Eya3",
+        "IeHDvrUb"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "gb: treasure points",
+      "name": "gb: treasure points",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 16,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 17,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 18,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 19,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 20,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 21,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 22,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 23,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 24,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 25,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 26,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 27,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 28,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": []
+    },
+    {
+      "id": 29,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": []
+    }
+  ],
+  "edges": [
+    {
+      "source": 0,
+      "target": 20,
+      "oneway": false
+    },
+    {
+      "source": 2,
+      "target": 5,
+      "oneway": false
+    },
+    {
+      "source": 2,
+      "target": 21,
+      "oneway": false
+    },
+    {
+      "source": 3,
+      "target": 4,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 16,
+      "oneway": false
+    },
+    {
+      "source": 6,
+      "target": 9,
+      "oneway": false
+    },
+    {
+      "source": 6,
+      "target": 11,
+      "oneway": false
+    },
+    {
+      "source": 6,
+      "target": 19,
+      "oneway": false
+    },
+    {
+      "source": 8,
+      "target": 1,
+      "oneway": false
+    },
+    {
+      "source": 9,
+      "target": 8,
+      "oneway": false
+    },
+    {
+      "source": 11,
+      "target": 23,
+      "oneway": false
+    },
+    {
+      "source": 14,
+      "target": 17,
+      "oneway": false
+    },
+    {
+      "source": 16,
+      "target": 22,
+      "oneway": false
+    },
+    {
+      "source": 16,
+      "target": 26,
+      "oneway": false
+    },
+    {
+      "source": 17,
+      "target": 18,
+      "oneway": false
+    },
+    {
+      "source": 18,
+      "target": 6,
+      "oneway": false
+    },
+    {
+      "source": 19,
+      "target": 10,
+      "oneway": false
+    },
+    {
+      "source": 20,
+      "target": 2,
+      "oneway": false
+    },
+    {
+      "source": 21,
+      "target": 25,
+      "oneway": false
+    },
+    {
+      "source": 22,
+      "target": 17,
+      "oneway": false
+    },
+    {
+      "source": 23,
+      "target": 29,
+      "oneway": true
+    },
+    {
+      "source": 24,
+      "target": 7,
+      "oneway": false
+    },
+    {
+      "source": 24,
+      "target": 23,
+      "oneway": true
+    },
+    {
+      "source": 25,
+      "target": 3,
+      "oneway": false
+    },
+    {
+      "source": 26,
+      "target": 14,
+      "oneway": false
+    },
+    {
+      "source": 26,
+      "target": 27,
+      "oneway": false
+    },
+    {
+      "source": 26,
+      "target": 28,
+      "oneway": false
+    },
+    {
+      "source": 27,
+      "target": 12,
+      "oneway": false
+    },
+    {
+      "source": 28,
+      "target": 13,
+      "oneway": false
+    },
+    {
+      "source": 29,
+      "target": 15,
+      "oneway": false
+    },
+    {
+      "source": 29,
+      "target": 24,
+      "oneway": true
+    }
+  ],
+  "objects": [
+    {
+      "id": "yYHkIsJd",
+      "type": "item",
+      "name": "blessed censer 1",
+      "found_in": [
+        4
+      ],
+      "opens": [
+        5
+      ]
+    },
+    {
+      "id": "70XR3XI2",
+      "type": "bosskey",
+      "name": "rune-inscribed sigil 1",
+      "found_in": [
+        7
+      ],
+      "opens": [
+        9
+      ]
+    },
+    {
+      "id": "ZBkkw9Lf",
+      "type": "key",
+      "name": "bronze key 1",
+      "found_in": [
+        10
+      ],
+      "opens": [
+        11
+      ]
+    },
+    {
+      "id": "AlN1Eya3",
+      "type": "switch",
+      "name": "gravestone catch 1",
+      "found_in": [
+        12
+      ],
+      "opens": [
+        14
+      ]
+    },
+    {
+      "id": "IeHDvrUb",
+      "type": "switch",
+      "name": "gravestone catch 2",
+      "found_in": [
+        13
+      ],
+      "opens": [
+        14
+      ]
+    }
+  ]
+}
