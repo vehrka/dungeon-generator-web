@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "grammar": "Combined",
   "seed": 444,
   "size": "L",
@@ -14,28 +14,36 @@
       "type": "st",
       "name": "START",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 1,
+      "label": "Grass-grown portal (START)"
     },
     {
       "id": 1,
       "type": "gl",
       "name": "GOAL",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 21,
+      "label": "Burial vault of the prince (GOAL)"
     },
     {
       "id": 2,
       "type": "n",
       "name": "n",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 3,
+      "label": "Silent crypt (Explore, Scan)"
     },
     {
       "id": 3,
       "type": "em",
       "name": "em",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 12,
+      "label": "Tomb sentinel"
     },
     {
       "id": 4,
@@ -43,8 +51,10 @@
       "name": "Get blessed censer 1",
       "kind": "room",
       "objects": [
-        "yYHkIsJd"
-      ]
+        "WrfcZq1z"
+      ],
+      "number": 16,
+      "label": "Pickup: blessed censer 1"
     },
     {
       "id": 5,
@@ -53,7 +63,7 @@
       "kind": "gate",
       "gate": "lock",
       "requires": [
-        "yYHkIsJd"
+        "WrfcZq1z"
       ]
     },
     {
@@ -61,7 +71,9 @@
       "type": "n",
       "name": "n",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 17,
+      "label": "Silent crypt (Explore, Scan)"
     },
     {
       "id": 7,
@@ -69,15 +81,19 @@
       "name": "Get rune-inscribed sigil 1",
       "kind": "room",
       "objects": [
-        "70XR3XI2"
-      ]
+        "F5QElwXC"
+      ],
+      "number": 25,
+      "label": "Pickup: rune-inscribed sigil 1"
     },
     {
       "id": 8,
       "type": "eb",
       "name": "eb",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 18,
+      "label": "Barrow-wight lord"
     },
     {
       "id": 9,
@@ -86,7 +102,7 @@
       "kind": "gate",
       "gate": "lock",
       "requires": [
-        "70XR3XI2"
+        "F5QElwXC"
       ]
     },
     {
@@ -95,8 +111,10 @@
       "name": "Get bronze key 1",
       "kind": "room",
       "objects": [
-        "ZBkkw9Lf"
-      ]
+        "TMtovAPQ"
+      ],
+      "number": 22,
+      "label": "Pickup: bronze key 1"
     },
     {
       "id": 11,
@@ -105,7 +123,7 @@
       "kind": "gate",
       "gate": "lock",
       "requires": [
-        "ZBkkw9Lf"
+        "TMtovAPQ"
       ]
     },
     {
@@ -114,8 +132,10 @@
       "name": "gravestone catch 1",
       "kind": "room",
       "objects": [
-        "AlN1Eya3"
-      ]
+        "A5WE9edp"
+      ],
+      "number": 14,
+      "label": "Switch: gravestone catch 1"
     },
     {
       "id": 13,
@@ -123,8 +143,10 @@
       "name": "gravestone catch 2",
       "kind": "room",
       "objects": [
-        "IeHDvrUb"
-      ]
+        "9mQx6MIR"
+      ],
+      "number": 15,
+      "label": "Switch: gravestone catch 2"
     },
     {
       "id": 14,
@@ -133,8 +155,8 @@
       "kind": "gate",
       "gate": "state",
       "requires": [
-        "AlN1Eya3",
-        "IeHDvrUb"
+        "A5WE9edp",
+        "9mQx6MIR"
       ]
     },
     {
@@ -142,105 +164,135 @@
       "type": "gb: treasure points",
       "name": "gb: treasure points",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 26,
+      "label": "Royal grave-goods (Shadow: Greed): treasure points"
     },
     {
       "id": 16,
       "type": "c",
       "name": "c",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 4,
+      "label": "Oath-rune seal (Lore, Song)"
     },
     {
       "id": 17,
       "type": "n",
       "name": "n",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 9,
+      "label": "Silent crypt (Explore, Scan)"
     },
     {
       "id": 18,
       "type": "p",
       "name": "p",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 13,
+      "label": "Rhyming portal (Riddle, Lore)"
     },
     {
       "id": 19,
       "type": "t",
       "name": "t",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 19,
+      "label": "Sorcerous mist (Endurance loss)"
     },
     {
       "id": 20,
       "type": "p",
       "name": "p",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 2,
+      "label": "Rhyming portal (Riddle, Lore)"
     },
     {
       "id": 21,
       "type": "e",
       "name": "e",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 5,
+      "label": "Restless dead"
     },
     {
       "id": 22,
       "type": "p",
       "name": "p",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 6,
+      "label": "Rhyming portal (Riddle, Lore)"
     },
     {
       "id": 23,
       "type": "t",
       "name": "t",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 20,
+      "label": "Sorcerous mist (Endurance loss)"
     },
     {
       "id": 24,
       "type": "e",
       "name": "e",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 23,
+      "label": "Restless dead"
     },
     {
       "id": 25,
       "type": "t",
       "name": "t",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 8,
+      "label": "Sorcerous mist (Endurance loss)"
     },
     {
       "id": 26,
       "type": "n",
       "name": "n",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 7,
+      "label": "Silent crypt (Explore, Scan)"
     },
     {
       "id": 27,
       "type": "p",
       "name": "p",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 10,
+      "label": "Rhyming portal (Riddle, Lore)"
     },
     {
       "id": 28,
       "type": "p",
       "name": "p",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 11,
+      "label": "Rhyming portal (Riddle, Lore)"
     },
     {
       "id": 29,
       "type": "t",
       "name": "t",
       "kind": "room",
-      "objects": []
+      "objects": [],
+      "number": 24,
+      "label": "Sorcerous mist (Endurance loss)"
     }
   ],
   "edges": [
@@ -402,7 +454,7 @@
   ],
   "objects": [
     {
-      "id": "yYHkIsJd",
+      "id": "WrfcZq1z",
       "type": "item",
       "name": "blessed censer 1",
       "found_in": [
@@ -413,7 +465,7 @@
       ]
     },
     {
-      "id": "70XR3XI2",
+      "id": "F5QElwXC",
       "type": "bosskey",
       "name": "rune-inscribed sigil 1",
       "found_in": [
@@ -424,7 +476,7 @@
       ]
     },
     {
-      "id": "ZBkkw9Lf",
+      "id": "TMtovAPQ",
       "type": "key",
       "name": "bronze key 1",
       "found_in": [
@@ -435,7 +487,7 @@
       ]
     },
     {
-      "id": "AlN1Eya3",
+      "id": "A5WE9edp",
       "type": "switch",
       "name": "gravestone catch 1",
       "found_in": [
@@ -446,7 +498,7 @@
       ]
     },
     {
-      "id": "IeHDvrUb",
+      "id": "9mQx6MIR",
       "type": "switch",
       "name": "gravestone catch 2",
       "found_in": [
