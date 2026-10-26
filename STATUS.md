@@ -2,7 +2,7 @@
 
 **updated:** 2026-10-26
 
-Steps 1–5 (normalize, planarity, chains, geometry, shapes and doors) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–6 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -22,7 +22,7 @@ One feature branch per step, off `dev`, test first.
 - [x] 4. **geometry**: orthogonal polygons and segments, intersection, overlap area.
 - [x] 5. **shapes and doors**: seeded rectangle pool per room type, door lines (`doorLength`,
   `cornerDistance`).
-- [ ] 6. **configuration spaces**: per shape pair, cached; maximum intersection.
+- [x] 6. **configuration spaces**: per shape pair, cached; door at an offset; maximum intersection.
 - [ ] 7. **energy and layout**: greedy placement, simulated annealing for cycles, planner with
   backtracking, iteration cap. No corridors.
 - [ ] 8. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.

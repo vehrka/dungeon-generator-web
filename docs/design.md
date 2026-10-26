@@ -166,8 +166,12 @@ which B does not overlap A and a door line of B faces a door line of A of the sa
 2. Drop the offsets where the polygons overlap.
 3. Merge duplicates and overlaps between segments.
 
-- Stored as orthogonal segments of offsets, not a point grid (thesis 1.1).
-- Precomputed for every pair of shapes and cached, keyed by `(shapeA, shapeB)`.
+- Stored as orthogonal segments of offsets, not a point grid (thesis 1.1). Our door lines are
+  normalized (from ≤ to), so no rotation: the offsets of a pair are `fixed.line − moving.line`.
+- Each space also keeps the door line pair behind each raw segment (Edgar's `ReverseDoors`);
+  `doorAt(space, offset)` gives the door on the fixed shape, the middle one where several fit.
+- Cached lazily per `(moving.id, fixed.id)`. The fixture's full pool (30 shapes, 900 pairs) takes
+  about 125 ms.
 - **Over a corridor** (thesis Algorithm 1): for every offset of the corridor relative to A, add the
   configuration space of B relative to the moved corridor. Repeat per corridor shape and merge.
 - **Maximum intersection** of the configuration spaces of a room relative to several placed
@@ -297,8 +301,8 @@ area. Most of the bugs will be here, so it gets the most tests.
 - Overlap area: both polygons split into rectangles by vertical slabs, then rectangle overlaps
   summed.
 - Segments are sets of grid points: `merge` joins segments on one line that overlap or have no grid
-  point between them. Subtraction and point lookup come with the configuration spaces; rotation
-  with the L/T shapes.
+  point between them. `contains` looks a point up. No subtraction: configuration spaces drop
+  overlapping offsets point by point. Rotation comes with the L/T shapes.
 
 ## Testing
 

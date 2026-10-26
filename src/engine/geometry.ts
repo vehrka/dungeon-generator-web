@@ -146,3 +146,6 @@ export function merge(segments: Segment[]): Segment[] {
   }
   return out.sort((s, t) => s.from.x - t.from.x || s.from.y - t.from.y || s.to.x - t.to.x || s.to.y - t.to.y);
 }
+
+export const contains = (segments: Segment[], q: Point): boolean =>
+  segments.some((s) => s.from.x <= q.x && q.x <= s.to.x && s.from.y <= q.y && q.y <= s.to.y);

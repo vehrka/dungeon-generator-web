@@ -17,3 +17,12 @@ export function rng(seed: number, stream = ""): Rng {
 
 // Integer in [min, max], both included.
 export const randInt = (r: Rng, min: number, max: number): number => min + Math.floor(r() * (max - min + 1));
+
+// Fisher–Yates, in place.
+export function shuffle<T>(items: T[], r: Rng): T[] {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [items[i], items[j]] = [items[j]!, items[i]!];
+  }
+  return items;
+}
