@@ -67,14 +67,16 @@ tests all call the same code.
 Collapse every `room – gate – room` path into one **door edge** between the two rooms:
 
 ```ts
-type Gate = { kind: "lock" | "state" | "on" | "off" | "secret"; requires: string[] };
+type GameObject = { id: string; type: string; name: string };
+type Gate = { kind: "lock" | "state" | "on" | "off" | "secret"; requires: GameObject[] };
 type Door = { a: RoomId; b: RoomId; oneway: boolean; gate?: Gate }; // oneway: a → b
 type RoomGraph = { rooms: Map<RoomId, Room>; doors: Door[]; start: RoomId; goal: RoomId };
 ```
 
 - Gates must have exactly two neighbours, both rooms. Anything else is an error, not a guess.
 - One-way: the direction comes from the edges around the gate. If they disagree, error.
-- Room → objects found there (pickups, switches) are kept for icons.
+- Room → objects found there (pickups, switches) are kept for icons. Object ids in rooms and gates
+  are resolved to `GameObject` (id, type, name), so the renderer can print key names.
 - The layout ignores `oneway` and `gate`: they only matter to the renderer.
 
 Fixture `ruin.json` → 26 rooms, 27 doors (3 lock, 1 state), one 3-room one-way loop.
