@@ -2,7 +2,7 @@
 
 **updated:** 2026-10-26
 
-Steps 1–3 (normalize, planarity, chains) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–4 (normalize, planarity, chains, geometry) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -19,7 +19,7 @@ One feature branch per step, off `dev`, test first.
   27 doors (3 lock, 1 state), one 3-room one-way loop.
 - [x] 2. **planarity**: planarity test, faces, outer (largest) face dropped. Error on non-planar.
 - [x] 3. **chains**: smallest face first, cycles before trees, BFS trees ≤ 8, merge small trees.
-- [ ] 4. **geometry**: orthogonal polygons and segments, intersection, overlap area.
+- [x] 4. **geometry**: orthogonal polygons and segments, intersection, overlap area.
 - [ ] 5. **shapes and doors**: seeded rectangle pool per room type, door lines (`doorLength`,
   `cornerDistance`).
 - [ ] 6. **configuration spaces**: per shape pair, cached; maximum intersection.

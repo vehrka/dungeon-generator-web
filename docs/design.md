@@ -283,6 +283,15 @@ tests/         one test file per engine module, fixture ruin.json
 `geometry.ts`: orthogonal polygons, orthogonal segments, segment intersection, polygon overlap
 area. Most of the bugs will be here, so it gets the most tests.
 
+- Screen coordinates (y down), like the SVG. Polygons are validated (axis-parallel edges, no
+  collinear neighbours, no self-intersection) and stored clockwise from the top-left corner, so a
+  wall's outside is on its left; `walls()` gives each edge with its outward normal.
+- Overlap area: both polygons split into rectangles by vertical slabs, then rectangle overlaps
+  summed.
+- Segments are sets of grid points: `merge` joins segments on one line that overlap or have no grid
+  point between them. Subtraction and point lookup come with the configuration spaces; rotation
+  with the L/T shapes.
+
 ## Testing
 
 Red-green per module, with `ruin.json` plus small hand-made graphs:
