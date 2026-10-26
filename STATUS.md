@@ -2,7 +2,7 @@
 
 **updated:** 2026-10-26
 
-Step 1 (normalize) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–2 (normalize, planarity) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -17,7 +17,7 @@ One feature branch per step, off `dev`, test first.
 
 - [x] 1. **normalize**: JSON → room graph, gates collapsed into door edges. Fixture: 26 rooms,
   27 doors (3 lock, 1 state), one 3-room one-way loop.
-- [ ] 2. **planarity**: planarity test, faces, outer (largest) face dropped. Error on non-planar.
+- [x] 2. **planarity**: planarity test, faces, outer (largest) face dropped. Error on non-planar.
 - [ ] 3. **chains**: smallest face first, cycles before trees, BFS trees ≤ 8, merge small trees.
 - [ ] 4. **geometry**: orthogonal polygons and segments, intersection, overlap area.
 - [ ] 5. **shapes and doors**: seeded rectangle pool per room type, door lines (`doorLength`,
@@ -36,4 +36,3 @@ One feature branch per step, off `dev`, test first.
 - Default `doorLength`, `cornerDistance` and size ranges per room type (step 5).
 - `maxTotalIterations` default, from timings on the fixture (step 7).
 - PNG library (step 8).
-- TypeScript 7.0.2: vitest and `tsc` fine; tsx untested until the CLI step.

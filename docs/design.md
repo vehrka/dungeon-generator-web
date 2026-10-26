@@ -84,11 +84,18 @@ Fixture `ruin.json` → 26 rooms, 27 doors (3 lock, 1 state), one 3-room one-way
 ### 2. Planarity and faces (`engine/planar.ts`)
 
 - Edgar tests planarity with Boyer–Myrvold and takes the faces of the embedding
-  (`GeneralAlgorithms/Algorithms/Graphs/GraphUtils.cs`). Our graphs are small (< 100 rooms), so we
-  pick the simplest correct embedding algorithm (left-right or Boyer–Myrvold) and test it hard.
-- Not planar → error naming the conflicting edges. The user rerolls in the generator.
-- Faces as vertex lists. The **largest face is dropped** as the outer face
-  (`ChainDecompositions/BreadthFirstChainDecomposition.cs:52`).
+  (`GeneralAlgorithms/Algorithms/Graphs/GraphUtils.cs`).
+- We split the graph into biconnected blocks (Tarjan) and embed each block with
+  Demoucron–Malgrange–Pertuiset: simple, O(V·E), fine for < 100 rooms. In a biconnected block every
+  face is a simple cycle.
+- Faces as vertex lists. The **largest face of each block is dropped** as its outer face
+  (Edgar drops the largest face of the whole graph, `ChainDecompositions/BreadthFirstChainDecomposition.cs:52`).
+  Per block gives the same cycles on clean graphs, but never puts tree rooms in a face or merges two
+  cycles into one face, which a whole-graph embedding does when blocks nest.
+- Duplicate doors and self-loops are ignored.
+- Not planar → `NonPlanarError` with a minimal conflicting door set (edges dropped one by one while
+  the rest stays non-planar: a Kuratowski subdivision), named by room number. The user rerolls in
+  the generator.
 
 ### 3. Chain decomposition (`engine/chains.ts`)
 

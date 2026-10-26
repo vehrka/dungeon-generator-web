@@ -9,7 +9,7 @@ laid out with Ondřej Nepožitek's graph-based algorithm (the one behind
 [Edgar](https://github.com/OndrejNepozitek/Edgar-DotNet)): procedural room shapes, doors on every
 edge, optional corridors, locks and one-way paths drawn on the map.
 
-Status: in progress, engine step 1 (normalize) done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
+Status: in progress, engine steps 1–2 (normalize, planarity) done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
 
 ## Install
 
