@@ -3,7 +3,8 @@
 Turns the `--json` export of `101.02_dungeon_generator` (schema 2) into a 2D map, laid out with
 Nepožitek's graph-based algorithm. Outputs an SVG/PNG map (CLI) and an interactive viewer.
 
-Status: design agreed 2026-10-25, checked against the thesis and Edgar source. No code yet.
+Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–7
+(normalize to layout, no corridors) implemented; see `STATUS.md`.
 
 ## References
 
@@ -153,8 +154,9 @@ The grid is internal. The map is **abstract scale**: no feet or squares are prin
 `cornerDistance`. Every wall of length ≥ `2·cornerDistance + doorLength` becomes a **door line**:
 the wall shrunk by `cornerDistance` at both ends, so a door never sits in a corner. As in Edgar, the
 line holds door *start* positions: it is shrunk by `cornerDistance + doorLength` at the far end.
-Defaults `doorLength = 1`, `cornerDistance = 1`; with the smallest side at 3, every wall gets a
-door line.
+Defaults `doorLength = 1`, `cornerDistance = 0`: a door may end flush with a corner. With
+`cornerDistance = 1`, 3–5 wide rooms get 1–3 door positions per wall and a third of the benchmark
+dungeons fail (see door capacity below).
 
 **Configuration space** of a free shape B relative to a fixed shape A: the set of offsets of B at
 which B does not overlap A and a door line of B faces a door line of A of the same length
@@ -202,7 +204,7 @@ to a shallower one; that is the backtracking. Done when a layout covers the last
   after each cycle.
 - **Perturb** one random room of the chain: 40% change shape (random from its pool), 60% move it to
   a random point of the maximum intersection (segments weighted by length + 1). Nothing satisfied →
-  keep the old position.
+  change its shape instead (as Edgar's `PerturbPosition`).
 - **Accept**: always if `ΔE ≤ 0`; else with `p = exp(−|ΔE| / (ΔEavg · t))`. `ΔEavg` starts at
   `15 · |ΔE|` of the first trial and is the running mean of accepted `|ΔE|`.
 - **Valid** layout for the chain (energy 0) → if it is **different enough** from the ones already
@@ -220,8 +222,12 @@ avgSize = mean over all shapes of (bbox width + bbox height) / 2
 ```
 
 - `A`: overlap area with other rooms.
-- `D`: sum of Manhattan distances between bounding-box centres of neighbours that are not at a valid
-  configuration space offset.
+- `D`: sum of Manhattan distances between bounding-box centres of neighbours that do not overlap and
+  are not at a valid configuration space offset. At least 1 per such pair (Edgar can count 0 when
+  two non-overlapping shapes share a centre, which would pass as valid).
+- Each room keeps its `A` and `D` (`engine/energy.ts`, `LayoutState`); placing or moving one room
+  recomputes only its pairs and updates the others by the difference, as Edgar's `UpdateEnergyData`.
+  Bounding boxes and rectangle partitions are cached per outline.
 - With corridors: neighbours joined by a corridor add their distance when they are not at a valid
   over-corridor offset (`Constraints/CorridorConstraints.cs`), and **+1 per pair of non-neighbour
   rooms that touch** (`Constraints/TouchingConstraints.cs`), so corridors have room to go.
@@ -229,6 +235,8 @@ avgSize = mean over all shapes of (bbox width + bbox height) / 2
 **Different enough** (`LayoutOperations/AbstractLayoutOperations.cs:215`):
 `diff = mean over chain rooms of (5 · manhattan(centre₁, centre₂) / avgSize)² × (4 if the shape
 differs, else 1)`, accepted when `0.4 · diff ≥ 1`. That diversity is what makes backtracking useful.
+Edgar divides by the number of rooms in the whole graph, not the chain; we keep the chain mean, so
+the threshold does not tighten as the dungeon grows.
 
 **Corridors**, two stages (thesis 2.2.1):
 
@@ -240,17 +248,21 @@ differs, else 1)`, accepted when `0.4 · diff ≥ 1`. That diversity is what mak
   of its configuration spaces with both rooms, without overlap. If any corridor fails, it counts as
   a stage-two failure and annealing goes on.
 
-**Failure**: Edgar runs until cancelled. We cap the total iterations (`maxTotalIterations`, then a
-retry ×4); if still no layout, fail with an error naming the deepest chain reached and its room
-numbers. No fallback layout.
+**Failure**: Edgar runs until cancelled. We cap the total iterations (`maxTotalIterations =
+100 000`: annealing trials plus greedy candidate evaluations). Out of budget, one retry from scratch
+with 4× the budget on its own PRNG stream (`layout/retry`); if still no layout, `LayoutError` with
+the deepest chain reached and its room numbers. No fallback layout. After the energy caching, 100k
+iterations take about 1–1.5 s on 30–40 rooms.
 
 ```ts
-type Placement = { room: RoomId; shape: ShapeId; at: Point };
-type Layout = { placements: Placement[]; doors: PlacedDoor[]; corridors: Placement[] };
+type Placement = { room: RoomId; shape: Shape; at: Point };
+type PlacedDoor = { door: Door; segment: Segment }; // one per graph door, same order
+type Layout = { placements: Placement[]; doors: PlacedDoor[] }; // corridors: Placement[] at step 10
 ```
 
-`PlacedDoor` holds the grid segment of each door (from the configuration space line that was used),
-so the renderer never re-derives geometry.
+`PlacedDoor` holds the grid segment of each door (`doorAt` on the configuration space of the two
+rooms, in layout coordinates) and the `Door` itself (gate, one-way), so the renderer never
+re-derives geometry.
 
 ### 7. Render (`render/svg.ts`)
 
@@ -333,11 +345,18 @@ One feature branch per step, off `dev`:
 5. shapes (rectangles) and doors
 6. configuration spaces
 7. energy and layout (no corridors)
-8. render + CLI, then viewer
-9. corridors → L/T/plus → caves
+8. shape sizes from door count
+9. render + CLI, then viewer
+10. corridors → L/T/plus → caves
 
 ## Open points
 
-- Default `doorLength`, `cornerDistance` and the size ranges per room type: set at the shapes step.
-- `maxTotalIterations` default: set from timings on the fixture.
+- Door capacity. Benchmark on 16 generator dungeons (sizes M and L, seeds 1–8, 5 layout seeds
+  each; one skipped by `normalize`): the fixture and every dungeon up to ~24 rooms lay out in under
+  2k iterations, but 5 of 15 fail at 50k with the defaults. Causes: few door positions with
+  `cornerDistance = 1` on 3–5 wide rooms (thesis 2.4.1), hubs with up to 7 doors on rooms of 4–7,
+  and short cycle chains (1–2 rooms) that must close a face between already placed rooms.
+  `cornerDistance = 0` fixes 3 of the 5; bigger hub shapes fix one more (M-1); M-3 still fails.
+  Decided 2026-10-26: `cornerDistance = 0` by default (done), and shape sizes from a room's door
+  count as its own step (build order 8). M-3 (short cycle chains) may still need more.
 - PNG library: chosen at the render step.
