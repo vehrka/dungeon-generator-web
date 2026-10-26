@@ -130,8 +130,13 @@ type ShapePool = Map<RoomType, Shape[]>;
 ```
 
 - Seeded from `seed` (see Seeds). Same seed → same pool.
-- Size range per room type (e.g. `eb`, `gl` larger, `item`/`switch` small), as data in
-  `engine/shapeRules.ts`.
+- Size range per room type, as data in `engine/shapeRules.ts`. Side lengths: `item key bosskey
+  switch lever` 3–5; `n e m t p c` and unknown types 4–7; `st exit` 4–6; `em gb` 6–9; `eb gl`
+  7–10. `gb: <reward>` types use the `gb` rule.
+- Each family draws from its own PRNG stream per room type, `rng(seed, "rect/<type>")`, so adding a
+  family or a room type never changes the shapes of another. Shapes with the same outline share an
+  id (`rect-5x3`), so configuration spaces are cached once per outline.
+- Default pool: 4 shapes per type (`shapesPerType`), fewer when the size range has fewer rectangles.
 - Stages: rectangles → L/T/plus polyominoes → cave blobs. Each stage only adds families; it does not
   change the earlier ones for the same seed.
 - Pool size per type is small (around 3–6 shapes): configuration spaces grow with pool size squared.
@@ -146,7 +151,10 @@ The grid is internal. The map is **abstract scale**: no feet or squares are prin
 
 **Doors**, Edgar's simple mode (`Doors/SimpleMode/SimpleModeHandler.cs`): `doorLength` and
 `cornerDistance`. Every wall of length ≥ `2·cornerDistance + doorLength` becomes a **door line**:
-the wall shrunk by `cornerDistance` at both ends, so a door never sits in a corner.
+the wall shrunk by `cornerDistance` at both ends, so a door never sits in a corner. As in Edgar, the
+line holds door *start* positions: it is shrunk by `cornerDistance + doorLength` at the far end.
+Defaults `doorLength = 1`, `cornerDistance = 1`; with the smallest side at 3, every wall gets a
+door line.
 
 **Configuration space** of a free shape B relative to a fixed shape A: the set of offsets of B at
 which B does not overlap A and a door line of B faces a door line of A of the same length

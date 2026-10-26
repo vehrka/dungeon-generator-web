@@ -2,7 +2,7 @@
 
 **updated:** 2026-10-26
 
-Steps 1–4 (normalize, planarity, chains, geometry) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–5 (normalize, planarity, chains, geometry, shapes and doors) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -20,7 +20,7 @@ One feature branch per step, off `dev`, test first.
 - [x] 2. **planarity**: planarity test, faces, outer (largest) face dropped. Error on non-planar.
 - [x] 3. **chains**: smallest face first, cycles before trees, BFS trees ≤ 8, merge small trees.
 - [x] 4. **geometry**: orthogonal polygons and segments, intersection, overlap area.
-- [ ] 5. **shapes and doors**: seeded rectangle pool per room type, door lines (`doorLength`,
+- [x] 5. **shapes and doors**: seeded rectangle pool per room type, door lines (`doorLength`,
   `cornerDistance`).
 - [ ] 6. **configuration spaces**: per shape pair, cached; maximum intersection.
 - [ ] 7. **energy and layout**: greedy placement, simulated annealing for cycles, planner with
@@ -33,6 +33,8 @@ One feature branch per step, off `dev`, test first.
 
 ## Open points
 
-- Default `doorLength`, `cornerDistance` and size ranges per room type (step 5).
+- Generator gate chains: the exporter walks "through any chain of gates", so gate–gate edges may
+  occur; `normalize` rejects them. The fixture has none. Decide: collapse a gate chain into one door
+  with all gates, or fix it in the generator.
 - `maxTotalIterations` default, from timings on the fixture (step 7).
 - PNG library (step 8).
