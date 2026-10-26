@@ -109,12 +109,15 @@ Thesis 2.3.2, Algorithms 2 and 4. A chain is a list of rooms plus `fromFace: boo
 3. **Pick**: any cycle candidate beats any tree. Among cycles, the smallest. Among trees, the one
    whose oldest neighbouring chain has the lowest number, then the largest.
 4. **Tree candidates** grow by BFS from the starting points. A vertex joins only if it neighbours the
-   chain, is in no chain, and is in no remaining face. Stop at `maxTreeSize = 8`.
+   chain, is in no chain, and is in no remaining face (thesis rule; Edgar's code adds such a vertex
+   but does not expand from it). Stop at `maxTreeSize = 8`. With this rule two tree candidates
+   never overlap, since they could only meet on a cycle.
 5. **Merge small trees**: if the picked tree has fewer than 8 rooms, merge other tree candidates
    into it while the total stays ≤ 8.
 
-Output: chains in order, every room exactly once, every chain after the first neighbours an earlier
-one.
+Cycle rooms are ordered as in Edgar's `GetCycleComponent`: next is the room with a covered or
+already ordered neighbour. Output: chains in order, every room exactly once, every room after the
+first has a neighbour earlier in the order (so the greedy placement always has an anchor).
 
 ### 4. Shape pool (`engine/shapes.ts`)
 
