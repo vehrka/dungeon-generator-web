@@ -47,6 +47,14 @@ export const rectangle = (width: number, height: number): Polygon =>
 
 export const translate = (poly: Polygon, by: Point): Polygon => poly.map((q) => ({ x: q.x + by.x, y: q.y + by.y }));
 
+// Quarter turns clockwise on screen ((x, y) → (−y, x)), moved back so the bounding box starts at 0,0.
+export function rotate(poly: Polygon, quarterTurns: number): Polygon {
+  let points = poly.map((q) => ({ ...q }));
+  for (let i = 0; i < (((quarterTurns % 4) + 4) % 4); i++) points = points.map((q) => ({ x: -q.y, y: q.x }));
+  const b = bbox(points);
+  return polygon(points.map((q) => ({ x: q.x - b.x0 + 0, y: q.y - b.y0 + 0 }))); // + 0: no −0
+}
+
 export const area = (poly: Polygon): number => signedArea2(poly) / 2;
 
 export function bbox(poly: Polygon): Rect {
@@ -73,8 +81,11 @@ export function walls(poly: Polygon): Wall[] {
 }
 
 // Vertical slabs between consecutive x coordinates; in each slab the horizontal edges pair up
-// into the top and bottom of rectangles.
-export function partition(poly: Polygon): Rect[] {
+// into the top and bottom of rectangles. "rows": horizontal slabs, through the transposed polygon.
+export function partition(poly: Polygon, slabs: "columns" | "rows" = "columns"): Rect[] {
+  if (slabs === "rows") {
+    return partition(polygon(poly.map((q) => ({ x: q.y, y: q.x })))).map((r) => ({ x0: r.y0, y0: r.x0, x1: r.y1, y1: r.x1 }));
+  }
   const xs = [...new Set(poly.map((q) => q.x))].sort((a, b) => a - b);
   const horizontal = walls(poly).filter((w) => w.from.y === w.to.y);
   const rects: Rect[] = [];

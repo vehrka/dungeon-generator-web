@@ -102,6 +102,15 @@ describe("render", () => {
     expect(render(g, l, meta)).toContain(`<polyline class="oneway" points="161,269 165,265 169,269"/>`); // up, into room 1
   });
 
+  it("puts the number in the middle of the longest arm of a lying L", () => {
+    // bar 10×3 along the top, arm 3×2 down the left: column slabs would cut the bar at x 3
+    const g: RoomGraph = { rooms: new Map([[0, { id: 0, type: "n", number: 1, label: "R0", objects: [] }]]), doors: [], start: 0, goal: 0 };
+    const outline = polygon([{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 3 }, { x: 3, y: 3 }, { x: 3, y: 5 }, { x: 0, y: 5 }]);
+    const l: Layout = { placements: [{ room: 0, shape: { id: "l", outline }, at: { x: 0, y: 0 } }], doors: [] };
+    // bar centre (5, 1.5): x 33 + 5·24, y 33 + 66 + 1.5·24, 1 up for the start and goal glyphs
+    expect(render(g, l, meta)).toContain(`<text class="number" data-room="1" x="153" y="134"`);
+  });
+
   it("tags a corridor's gate and one-way at room a's end, a plain door at room b's", () => {
     const shape = { id: "rect-3x3", outline: rectangle(3, 3) };
     const g: RoomGraph = {

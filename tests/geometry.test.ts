@@ -9,6 +9,7 @@ import {
   partition,
   polygon,
   rectangle,
+  rotate,
   segment,
   translate,
   walls,
@@ -104,9 +105,20 @@ describe("walls", () => {
 });
 
 describe("partition", () => {
-  it("splits shapes into disjoint rectangles covering the area", () => {
+  it("cuts columns or rows", () => {
+    expect(partition(L)).toEqual([
+      { x0: 0, y0: 0, x1: 1, y1: 3 },
+      { x0: 1, y0: 2, x1: 3, y1: 3 },
+    ]);
+    expect(partition(L, "rows")).toEqual([
+      { x0: 0, y0: 0, x1: 1, y1: 2 },
+      { x0: 0, y0: 2, x1: 3, y1: 3 },
+    ]);
+  });
+
+  it.each(["columns", "rows"] as const)("splits shapes into disjoint rectangles covering the area (%s)", (slabs) => {
     for (const shape of [rectangle(3, 5), L, U, T, plus]) {
-      const rs = partition(shape);
+      const rs = partition(shape, slabs);
       expect(rs.reduce((s, r) => s + (r.x1 - r.x0) * (r.y1 - r.y0), 0)).toBe(area(shape));
       rs.forEach((a, i) =>
         rs.slice(i + 1).forEach((b) => {
@@ -116,6 +128,29 @@ describe("partition", () => {
         }),
       );
     }
+  });
+});
+
+describe("rotate", () => {
+  it("turns clockwise on screen and moves the result back to the origin", () => {
+    expect(rotate(rectangle(3, 5), 1)).toEqual(rectangle(5, 3));
+    // L's foot (bottom, 3 wide) turns to the left side, its arm to the top
+    expect(rotate(L, 1)).toEqual(poly(0, 0, 3, 0, 3, 1, 1, 1, 1, 3, 0, 3));
+    expect(rotate(L, -1)).toEqual(rotate(L, 3));
+  });
+
+  it("keeps area and validity, four quarter turns give the shape back", () => {
+    for (const shape of [rectangle(3, 5), L, U, T, plus]) {
+      for (let q = 0; q < 4; q++) {
+        const r = rotate(shape, q);
+        expect(area(r)).toBe(area(shape));
+        expect(polygon([...r])).toEqual(r);
+        expect([bbox(r).x0, bbox(r).y0]).toEqual([0, 0]);
+      }
+      expect(rotate(rotate(shape, 2), 2)).toEqual(shape);
+      expect(rotate(shape, 4)).toEqual(shape);
+    }
+    expect(rotate(plus, 1)).toEqual(plus);
   });
 });
 

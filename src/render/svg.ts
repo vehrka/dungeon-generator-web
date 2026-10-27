@@ -80,8 +80,9 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   for (const [id, outline] of outlines) {
     const room = graph.rooms.get(id)!;
     map.push(`<polygon class="room" points="${points(outline)}"/>`);
-    // Number and glyphs in the middle of the largest rectangle, so later L/T shapes keep them inside.
-    const r = partition(outline).reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
+    // Number and glyphs in the middle of the largest rectangle of both slab cuts, so an L, T or plus
+    // keeps them inside its longest arm.
+    const r = [...partition(outline), ...partition(outline, "rows")].reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
     const c = px({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
     const marks = roomGlyphs(graph, id);
     marks.forEach((m) => usedGlyphs.add(m));
