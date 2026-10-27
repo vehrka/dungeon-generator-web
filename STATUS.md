@@ -64,7 +64,16 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [ ] 14. **generator integration**: CLI and viewer generate a dungeon (size, theme, dungeon seed)
   then lay it out (layout seed); JSON and GM key (Markdown) export; loading a JSON file keeps
   working; bench on generated dungeons; rewrite the generator rules in project `CLAUDE.md` and
-  close the gate-chain and mixed one-way open points. Open questions in `ref/generator-port.md`.
+  close the gate-chain and mixed one-way open points. Split in two branches:
+  - [x] 14a. CLI generate (`--dungeon-seed --size --theme`, `--json`, `--key`), GM key
+    (`render/key.ts`, golden `tests/fixtures/ruin-key.md` = `ref/ruin.md`, byte-equal), bench
+    `--generated`, CLAUDE.md generator rules, gate-chain and mixed one-way points closed. Committed
+    bench unchanged; generated: with corridors 14/16 (gen-l-7, gen-m-3 known), without 13/16
+    (+ gen-m-7). Review: generator failures stay known, to review; size/theme checked in both
+    `parseCli` (output name, error lists options) and `generateDungeon` (other callers). Plan:
+    `docs/plans/14a-generator-cli.md`.
+  - [ ] 14b. Viewer: dungeon row (size, theme, dungeon seed, new dungeon), generation in the
+    worker, JSON and key export. Plan: `docs/plans/14b-generator-viewer.md`.
 
 ## Open points
 
@@ -82,15 +91,19 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   link terms in the energy hot path). Machine noise is ~20%, so not chased.
 - Viewer export name `<name>-map-<seed>.svg` does not say whether corridors were on; two maps of
   one seed can share a name.
+- Generated bench failures (step 14a, `bench -- --generated`), known, to review: gen-l-7 (62
+  rooms, 10 faces; 1/5 with corridors, 0/5 without), gen-m-3 (tree `17-16-22-18-23` hangs off rooms
+  11 and 12 of two faces sharing `8-11-15`; 4/5 with, 0/5 without), gen-m-7 (tree
+  `2-5-4-1-7-10` off room 3; without corridors only, 1/5). Room numbers are GM key numbers. Ask
+  before any engine change.
 - Rooms without a direct door may still touch (`roomsCanTouch` true, Edgar's default). Try false
   for cleaner maps if the bench allows it.
 
 - Generator port, decided 2026-10-27: the TS generator becomes canonical (Python frozen), no seed,
   uid or index parity with Python, the two generator issues below are fixed in the port (steps
   13–14, `ref/generator-port.md`).
-- Generator gate chains: the exporter walks "through any chain of gates", so gate–gate edges may
-  occur; `normalize` rejects them. The fixture has none. 0 of 2000 Python dungeons have one and
-  the grammar cannot make one: the TS generator asserts it (step 13), closes in step 14.
+- ~~Generator gate chains~~: closed step 14a. The TS generator asserts none (step 13) and is what
+  CLI and bench use; `normalize` keeps rejecting gate–gate edges as a guard for hand-edited JSON.
 - Generator: reduce keeps `a→b` and `b→a` and a direct door next to a gated one between the same
   two rooms (parallel doors, L 23/500); layout handles them (spot check S/M/L, 3/3 each). Python
   does the same.
@@ -101,10 +114,9 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - Door capacity: `cornerDistance = 0` now default (fixes 3 of the 5 failing benchmark dungeons);
   hub sizing done in step 8 (M-1 fixed); M-3 known failure until corridors (step 8b). Numbers in
   `docs/design.md`, open points.
-- `normalize` rejects a gate with one one-way leg and one two-way leg ("one-way edges that disagree
-  on direction"; generator `--size L --seed 5`, gate 22). Should probably be a one-way door.
-  Cause: `_add_link` makes only the leg into the gate one-way; M 8/500, L 52/500 dungeons. Fixed in
-  the TS generator (step 13); the point closes in step 14, when CLI and viewer use it.
+- ~~`normalize` rejects a gate with one one-way leg and one two-way leg~~: closed step 14a. Fixed
+  in the TS generator (step 13); the `normalize` error stays as a guard for Python JSON (bench
+  `l-5` is still skipped by it, the committed set is not regenerated).
 - Render: the key column width is estimated from character counts (no font metrics); a wide
   fallback font can overflow it. Gate tags and one-way chevrons can touch on short walls with
   several doors; not seen on the fixture or M-1. The glyph row of a room is not clipped to it: 4+

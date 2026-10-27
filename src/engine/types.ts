@@ -33,6 +33,8 @@ export type DungeonJson = {
   theme?: string;
   start: number;
   goal: number;
+  solvable?: boolean;
+  unsolvable_reasons?: string[];
   nodes: JsonNode[];
   edges: JsonEdge[];
   objects: JsonObject[];
