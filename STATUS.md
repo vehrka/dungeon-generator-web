@@ -1,6 +1,6 @@
 # Status
 
-**updated:** 2026-10-26
+**updated:** 2026-10-27
 
 Steps 1–7 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
 and layout) done. Details of each step in [docs/design.md](docs/design.md).
@@ -11,10 +11,11 @@ and layout) done. Details of each step in [docs/design.md](docs/design.md).
   `main` + `dev`.
 - [x] Generator JSON schema 2: rooms carry `number` and `label` (done in the generator).
 - [x] Design, checked against the thesis and the Edgar-DotNet source (`docs/design.md`).
+- [x] Project `CLAUDE.md` and layout benchmark (`npm run bench`, 16 committed generator dungeons).
 
 ## Next steps
 
-One feature branch per step, off `dev`, test first.
+One feature branch per step, off `dev`, test first, `/code-review` before merging into `dev`.
 
 - [x] 1. **normalize**: JSON → room graph, gates collapsed into door edges. Fixture: 26 rooms,
   27 doors (3 lock, 1 state), one 3-room one-way loop.
@@ -27,8 +28,8 @@ One feature branch per step, off `dev`, test first.
 - [x] 7. **energy and layout**: greedy placement, simulated annealing for cycles, planner with
   backtracking, iteration cap (100k, retry 4×), `LayoutError` naming the stuck chain. No corridors.
 - [ ] 8. **shape sizes from door count**: a room's shapes depend on its door count as well as its
-  type, so hubs (up to 7 doors) get walls long enough for all their neighbours. Rerun the
-  generator benchmark (M/L, seeds 1–8); target: M-1, M-3 and M-5 lay out.
+  type, so hubs (up to 7 doors) get walls long enough for all their neighbours. Done when
+  `npm run bench` passes (now: M-1 fails 2/5 layout seeds, M-3 fails 5/5; M-5 already passes).
 - [ ] 9. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.
 - [ ] 10. **viewer**: load JSON, show map, reroll, export SVG.
 - [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
