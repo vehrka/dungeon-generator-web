@@ -37,6 +37,17 @@ describe("reduce", () => {
     expect(g.vertexCount).toBe(4);
   });
 
+  it("rooms on both sides of one gate do not merge", () => {
+    const c = room("c");
+    const gate = { ...LOCK, type: "gate", gate: "state" as const };
+    // 2 – gate – 3 and 2 – 4 – 5 – 3: merging the whole loop would put the gate inside one room
+    const g = build([START, GOAL, c, c, c, c, gate, PICKUP], [[0, 7], [0, 2], [2, 6], [6, 3], [2, 4], [4, 5], [5, 3], [3, 1]]);
+    reduce(g);
+    const ends = g.incident(6).map((e) => (e.source === 6 ? e.target : e.source));
+    expect(new Set(ends).size).toBe(2);
+    expect(types(g).filter((t) => t === "c")).toHaveLength(2);
+  });
+
   it("asserts no gate chain", () => {
     const g = build([START, GOAL, LOCK, { ...LOCK }], [[0, 2], [2, 3], [3, 1]]);
     expect(() => reduce(g)).toThrow("Gate chain: gates 2 and 3 are joined");

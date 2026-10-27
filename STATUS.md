@@ -2,9 +2,9 @@
 
 **updated:** 2026-10-27
 
-Steps 1–12 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
-and layout, hub shape sizes, render and CLI, viewer, corridors, L/T shapes) done. Details of each step in [docs/design.md](docs/design.md).
-Next: port the generator (steps 13–14). Cave shapes dropped.
+Steps 1–13 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
+and layout, hub shape sizes, render and CLI, viewer, corridors, L/T shapes, generator core) done. Details of each step in [docs/design.md](docs/design.md).
+Next: generator integration (step 14). Cave shapes dropped.
 
 ## Done
 
@@ -52,12 +52,15 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   corridors, 2× time). Render: number in the largest rectangle of column or row slabs. Bench both
   modes healthy. Plan: `docs/plans/12-lt-shapes.md`.
 - ~~**cave shapes**~~: dropped 2026-10-27.
-- [ ] 13. **generator core**: port the Combined grammar of `../101.02_dungeon_generator` (commit
-  `539c76c`) to `src/engine/generator/`, pure TS: graph module, grammar and theme data, expansion
-  with limits and finish mode, pacing, reduce, solvability, schema 2 JSON (numbers, labels).
-  Randomness through `rng(seed, stream)`, object ids from the dungeon. Fixes: both legs of a
-  one-way gate one-way; gate chains asserted impossible. Tests are properties and statistics
-  against the Python baseline, no seed parity. Context: `ref/generator-port.md`.
+- [x] 13. **generator core**: Combined grammar of `../101.02_dungeon_generator` (commit `539c76c`)
+  in `src/engine/generator/`, pure TS: graph module, grammar and theme data (dumped from Python),
+  expansion with limits and finish mode, pacing, reduce, solvability, schema 2 JSON
+  (`generateDungeon`). One d20 stream `generator/d20`, object ids `<type>-<n>`, same options →
+  byte-identical JSON. Fixes: both legs of a gate share `oneway`; gate chains asserted; reduce never
+  merges the two ends of one gate (decided 2026-10-27: a merged loop put a state gate inside one
+  room, L-421, layout failed). Seeds 1–500 per size: 0 unsolvable, all pass `normalize` and
+  planarity, rooms within ±2 of the Python baseline (M p90 31 vs 29, L p10 17 vs 16). Plan:
+  `docs/plans/13-generator-core.md`.
 - [ ] 14. **generator integration**: CLI and viewer generate a dungeon (size, theme, dungeon seed)
   then lay it out (layout seed); JSON and GM key (Markdown) export; loading a JSON file keeps
   working; bench on generated dungeons; rewrite the generator rules in project `CLAUDE.md` and
@@ -87,14 +90,17 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   13–14, `ref/generator-port.md`).
 - Generator gate chains: the exporter walks "through any chain of gates", so gate–gate edges may
   occur; `normalize` rejects them. The fixture has none. 0 of 2000 Python dungeons have one and
-  the grammar cannot make one: step 13 asserts it.
+  the grammar cannot make one: the TS generator asserts it (step 13), closes in step 14.
+- Generator: reduce keeps `a→b` and `b→a` and a direct door next to a gated one between the same
+  two rooms (parallel doors, L 23/500); layout handles them (spot check S/M/L, 3/3 each). Python
+  does the same.
 - Door capacity: `cornerDistance = 0` now default (fixes 3 of the 5 failing benchmark dungeons);
   hub sizing done in step 8 (M-1 fixed); M-3 known failure until corridors (step 8b). Numbers in
   `docs/design.md`, open points.
 - `normalize` rejects a gate with one one-way leg and one two-way leg ("one-way edges that disagree
   on direction"; generator `--size L --seed 5`, gate 22). Should probably be a one-way door.
-  Cause: `_add_link` makes only the leg into the gate one-way; M 8/500, L 52/500 dungeons. Step 13
-  makes both legs one-way.
+  Cause: `_add_link` makes only the leg into the gate one-way; M 8/500, L 52/500 dungeons. Fixed in
+  the TS generator (step 13); the point closes in step 14, when CLI and viewer use it.
 - Render: the key column width is estimated from character counts (no font metrics); a wide
   fallback font can overflow it. Gate tags and one-way chevrons can touch on short walls with
   several doors; not seen on the fixture or M-1. The glyph row of a room is not clipped to it: 4+

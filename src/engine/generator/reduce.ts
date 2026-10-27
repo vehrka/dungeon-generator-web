@@ -5,11 +5,26 @@ import type { DEdge, DGraph } from "./types";
 export const MERGE_TYPES = ["e", "n", "p", "t", "c"];
 
 // First two-way edge between two rooms of the same MERGE_TYPES type, neither holding objects. One-way
-// edges never merge, so a one-way path never turns two-way.
+// edges never merge, so a one-way path never turns two-way; nor do the two ends of one gate, which
+// would put the gate inside a room (a same-type loop around it, step 13).
 function mergeable(g: DGraph): Edge<DEdge> | undefined {
+  const gated = new Set<string>();
+  for (const [id, v] of g.vertices()) {
+    if (!v.gate) continue;
+    const ends = g.incident(id).map((e) => (e.source === id ? e.target : e.source));
+    for (const a of ends) for (const b of ends) gated.add(`${a},${b}`);
+  }
   return g.edges().find((e) => {
     const [s, t] = [g.vertex(e.source), g.vertex(e.target)];
-    return e.source !== e.target && s.type === t.type && MERGE_TYPES.includes(s.type) && !e.attrs.oneway && !s.objects.length && !t.objects.length;
+    return (
+      e.source !== e.target &&
+      s.type === t.type &&
+      MERGE_TYPES.includes(s.type) &&
+      !e.attrs.oneway &&
+      !s.objects.length &&
+      !t.objects.length &&
+      !gated.has(`${e.source},${e.target}`)
+    );
   });
 }
 

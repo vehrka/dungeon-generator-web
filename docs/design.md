@@ -5,7 +5,7 @@ Nepožitek's graph-based algorithm. Outputs an SVG/PNG map (CLI) and an interact
 
 Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–8
 (normalize to layout), render + CLI (step 9), viewer (step 10), corridors (step 11) and L/T
-shapes (step 12) implemented; see `STATUS.md`.
+shapes (step 12) implemented, generator core (step 13) ported; see `STATUS.md`.
 
 ## References
 
@@ -347,6 +347,43 @@ plan `docs/plans/10-viewer.md`.
   `innerHTML`, safe because `render` escapes the JSON's values. No PNG export (resvg is Node-only).
 - Reroll steps the seed in the field (what the user sees), not the last seed drawn.
 
+### 9. Generator (`engine/generator/`)
+
+Port of the Combined grammar of `101.02_dungeon_generator` (commit `539c76c`), canonical here
+since step 13; decisions and Python baseline in `ref/generator-port.md`, plan
+`docs/plans/13-generator-core.md`. `generateDungeon({ seed, size, theme })` gives schema 2 JSON,
+the same that `normalize` reads; CLI and viewer wiring is step 14.
+
+- `graph.ts`: directed multigraph, stable ids in insertion order (replaces igraph; order, not
+  index parity, is what expansion and merging depend on). `simplify`, undirected Dijkstra.
+- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 4 themes, `ROOM_STYLE`; data dumped from
+  Python into typed literals.
+- `expand.ts`: START, GOAL, the `Start` rule, then the first non-terminal in vertex order, R last
+  (pacing by progress START → boss, last tier within `nearBoss` steps of `em`/`eb`). One d20 per
+  expansion from `rng(seed, "generator/d20")`; theme never draws. Past `maxNodes` (300) or
+  `maxIter` (200) recursive rules take their `FINISH` variant. Objects `<type>-<n>`, named
+  `<theme name> <n>`. Gate kind stored on the vertex.
+- `reduce.ts`: merge two-way joined plain rooms of one type (`e n p t c`) without objects, then
+  `simplify`; directed, so `a→b` and `b→a` both stay (parallel doors lay out fine).
+- `solve.ts`: explore from START collecting objects; reasons; steps (gate = 1 step).
+- `json.ts`: dense ids in vertex order, numbers BFS from START over room–room and room–gate–room
+  links (by id), labels from the theme, else `SPECIAL_ROOMS`, `gb:`, pickup, switch, lever,
+  `ROOM_STYLE`, name.
+- `GeneratorConfig` (`generator/config.ts`), not `LayoutConfig`: separate stage and seed.
+
+Changes from Python, all errors explicit:
+
+- Both legs of a gate share `oneway` (Python made the leg out of the gate two-way, which
+  `normalize` rejects: M 8/500, L 52/500).
+- `reduce` asserts no gate–gate edge (the grammar cannot make one).
+- `reduce` never merges the two ends of one gate. A same-type room loop around a gate otherwise
+  collapses into one room holding the gate (L seed 421, 1 of 2000; layout fails on the self-door).
+- Generation throws if the dungeon is unsolvable (by construction it is not).
+
+Seeds 1–500 per size: 0 unsolvable, all accepted by `normalize` and planar, rooms (p10 / median /
+p90) XS 6/6/8, S 10/13/19, M 13/18/31, L 17/26/44 against Python 6/6/8, 10/13/19, 12/18/29,
+16/26/44. ~2 s for all 2000.
+
 ## Seeds
 
 - The layout seed defaults to `json.seed`, so one dungeon gives one map.
@@ -369,10 +406,12 @@ All the constants above live in one `LayoutConfig` object with Edgar's defaults:
 ```
 src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, shapes.ts,
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
+src/engine/generator/   graph.ts, grammar.ts, themes.ts, types.ts, config.ts, expand.ts, reduce.ts,
+               solve.ts, json.ts, index.ts
 src/render/    svg.ts, icons.ts
 src/cli/       main.ts     ruin.json → ruin-map.svg / .png  [-o] [--layout-seed] [--no-corridors]
 src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   load JSON, seed, reroll, corridors, export SVG
-tests/         one test file per engine module, fixture ruin.json
+tests/         one test file per engine module, fixture ruin.json; tests/generator/ likewise
 ```
 
 `geometry.ts`: orthogonal polygons, orthogonal segments, segment intersection, polygon overlap
@@ -405,6 +444,10 @@ Red-green per module, with `ruin.json` plus small hand-made graphs:
   determinism for a fixed seed.
 - render: SVG snapshot for the fixture; rooms, numbers, labels, door marks, gate tags, one-way
   direction, glyphs. CLI: arguments, SVG and PNG output, errors exit 1.
+- generator: grammar ranges cover the d20 per preset, subcritical; solve and reduce as the Python
+  tests; expansion deterministic, finish keeps every key; JSON numbers and labels; properties over
+  seeds 1–500 per size (solvable, `normalize`, planar, no self-door, room percentiles within ±2
+  median / ±4 p10, p90 of the Python baseline).
 
 Run before done: `npm run typecheck`, `npm test`.
 
