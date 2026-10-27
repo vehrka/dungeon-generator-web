@@ -4,8 +4,8 @@ Turns the `--json` export of `101.02_dungeon_generator` (schema 2) into a 2D map
 Nepožitek's graph-based algorithm. Outputs an SVG/PNG map (CLI) and an interactive viewer.
 
 Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–8
-(normalize to layout), render + CLI (step 9), viewer (step 10) and corridors (step 11)
-implemented; see `STATUS.md`.
+(normalize to layout), render + CLI (step 9), viewer (step 10), corridors (step 11) and L/T
+shapes (step 12) implemented; see `STATUS.md`.
 
 ## References
 
@@ -142,14 +142,27 @@ type ShapePool = Map<string, Shape[]>;              // poolId "<extra>/<type>" �
   stream and shapes. Degree only, not neighbour sizes (fine while every bench hub is `n`). Type and
   extra stay separate fields: types are free text (`gb: <reward>`), so a suffix such as `+3` could
   not be parsed back.
-- Each family draws from its own PRNG stream per pool key, `rng(seed, "rect/<type>")`,
-  or `"rect+<extra>/<type>"` for hubs, so adding a
-  family or a room type never changes the shapes of another. Shapes with the same outline share an
-  id (`rect-5x3`), so configuration spaces are cached once per outline.
-- Default pool: 4 shapes per type (`shapesPerType`), fewer when the size range has fewer rectangles.
+- Each family draws from its own PRNG stream per pool key, `rng(seed, "<family>/<type>")`
+  (`rect`, `l`, `t`, `plus`), or `"<family>+<extra>/<type>"` for hubs, so adding a family or a room
+  type never changes the shapes of another. Shapes with the same outline share an id (`rect-5x3`),
+  so configuration spaces are cached once per outline.
+- Default pool: 4 rectangles per type (`shapesPerType`), fewer when the size range has fewer.
+- L/T/plus (step 12): box w×h from the size rule, arms at least `minArm` (2) thick, every cut-out
+  at least `minNotch` (2) deep and wide. L: bar along the top, arm down the left; T: bar along the
+  top, stem centred; plus: both bars centred (an odd margin puts the extra cell right or below:
+  rotations only, no mirror image). `lShapes`, `tShapes`, `plusShapes` bases per pool
+  key (defaults 1, 1, 0), drawn without repeats from every (w, h, arm, arm) the rules allow; a
+  family that cannot fit the size range is skipped. Each base adds its distinct rotations, as
+  Edgar's default transformations (`ConfigurationSpacesGenerator.cs:379`, no mirroring); id
+  `l-6x5-2x3-r1` (box, arms, quarter turns). Equal outlines keep the first id; a plus that is a
+  turned plus of an earlier base is redrawn.
+- Defaults from a spike over the bench (`docs/plans/12-lt-shapes.md`): plus fails M-3 with
+  corridors and doubles the time; 1-deep cut-outs read as dents. With one L and one T base, about
+  ⅔ of the placed rooms are not rectangles: a base brings 4 rotations, perturb picks uniformly.
 - Stages: rectangles → L/T/plus polyominoes → cave blobs. Each stage only adds families; it does not
-  change the earlier ones for the same seed.
-- Pool size per type is small (around 3–6 shapes): configuration spaces grow with pool size squared.
+  change the earlier ones for the same seed (it does change layouts: σ and the pool differ).
+- Pool size per key is small (4 rectangles + up to 8 L/T): configuration spaces grow with pool size
+  squared, cached lazily.
 - Corridors are shapes too (`corridorShapes`): straight, `doorLength` wide, one per length in
   `corridorLengths` and orientation, doors only on the two ends (`Shape.doorLines`, Edgar's
   `SpecificPositionsMode`). Lengths `[1, 3, 5]`: Edgar's examples use 1 and 2, but on M-3 over 20
@@ -347,7 +360,8 @@ All the constants above live in one `LayoutConfig` object with Edgar's defaults:
 `mergeSmallChains`, `maxBranching`, `cycles`, `trialsPerCycle`, `maxIterationsWithoutSuccess`,
 `maxStageTwoFailures`, `shapePerturbChance`, `differenceScale`, `greedyMaxPoints`, `doorLength`,
 `cornerDistance`, `corridorRate`, `roomsCanTouch`, `maxTotalIterations`; plus our own `hubDegree`,
-`hubGrowth`, `corridors`, `corridorLengths`.
+`hubGrowth`, `corridors`, `corridorLengths`, `lShapes`, `tShapes`, `plusShapes`, `minArm`,
+`minNotch`.
 
 ## Modules
 
@@ -367,10 +381,12 @@ area. Most of the bugs will be here, so it gets the most tests.
   collinear neighbours, no self-intersection) and stored clockwise from the top-left corner, so a
   wall's outside is on its left; `walls()` gives each edge with its outward normal.
 - Overlap area: both polygons split into rectangles by vertical slabs, then rectangle overlaps
-  summed.
+  summed. `partition(poly, "rows")` cuts horizontal slabs; the render puts a room's number in the
+  largest rectangle of either cut, the long arm of an L or T.
 - Segments are sets of grid points: `merge` joins segments on one line that overlap or have no grid
   point between them. `contains` looks a point up. No subtraction: configuration spaces drop
-  overlapping offsets point by point. Rotation comes with the L/T shapes.
+  overlapping offsets point by point. `rotate(poly, quarterTurns)`: clockwise on screen, moved back
+  to 0,0.
 
 ## Testing
 
@@ -413,7 +429,7 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
 7. energy and layout (no corridors)
 8. shape sizes from door count, then 8b: M-3 known failure, waits for corridors
 9. render + CLI, then viewer
-10. corridors (done: M-3 5/5 with corridors on, known only without) → L/T/plus → caves
+10. corridors (done: M-3 5/5 with corridors on, known only without) → L/T (done, plus off) → caves
 
 ## Open points
 

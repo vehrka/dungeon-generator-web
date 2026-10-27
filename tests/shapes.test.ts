@@ -3,10 +3,10 @@ import ruin from "./fixtures/ruin.json";
 import { normalize } from "../src/engine/normalize";
 import { rng, randInt } from "../src/engine/rng";
 import { sizeRule } from "../src/engine/shapeRules";
-import { corridorShapes, poolId, poolKey, poolKeys, shapePool, type ShapePool } from "../src/engine/shapes";
+import { corridorShapes, poolId, poolKey, poolKeys, shapePool, type Shape, type ShapePool } from "../src/engine/shapes";
 import { doorLines } from "../src/engine/doors";
 import { defaultConfig } from "../src/engine/config";
-import { bbox, polygon, rectangle, segment, walls, type Point } from "../src/engine/geometry";
+import { area, bbox, partition, polygon, rectangle, rotate, segment, walls, type Point, type Polygon } from "../src/engine/geometry";
 import type { DungeonJson } from "../src/engine/types";
 
 const p = (x: number, y: number): Point => ({ x, y });
@@ -55,6 +55,9 @@ describe("sizeRule", () => {
 });
 
 const key = (type: string, extra = 0) => ({ type, extra });
+const get = (pool: ShapePool, type: string, extra = 0) => pool.get(poolId(key(type, extra)));
+const rects = (shapes: Shape[] | undefined) => shapes!.filter((s) => s.id.startsWith("rect-"));
+const rectsOnly = { ...defaultConfig, lShapes: 0, tShapes: 0, plusShapes: 0 };
 
 describe("poolKey", () => {
   it("counts only neighbours above hubDegree", () => {
@@ -84,13 +87,12 @@ describe("shapePool", () => {
   const graph = normalize(ruin as DungeonJson);
   const types = [...new Set([...graph.rooms.values()].map((r) => r.type))];
   const keys = types.map((t) => key(t));
-  const get = (pool: ShapePool, type: string, extra = 0) => pool.get(poolId(key(type, extra)));
 
   it("has rectangles within the size rule for every room type", () => {
     const pool = shapePool(keys, 444, defaultConfig);
     expect([...pool.keys()].sort()).toEqual(keys.map(poolId).sort());
     for (const type of types) {
-      const shapes = get(pool, type)!;
+      const shapes = rects(get(pool, type));
       const { min, max } = sizeRule(type);
       expect(shapes.length).toBeGreaterThan(0);
       expect(shapes.length).toBeLessThanOrEqual(defaultConfig.shapesPerType);
@@ -117,7 +119,7 @@ describe("shapePool", () => {
   it("keeps a type's shapes when hubs of it come and go, own shapes for hubs", () => {
     const pool = shapePool([key("n"), key("n", 3)], 444, defaultConfig);
     expect(get(pool, "n")).toEqual(get(shapePool([key("n")], 444, defaultConfig), "n"));
-    const hub = get(pool, "n", 3)!;
+    const hub = rects(get(pool, "n", 3));
     expect(hub.length).toBe(defaultConfig.shapesPerType);
     for (const s of hub) {
       const b = bbox(s.outline);
@@ -128,13 +130,146 @@ describe("shapePool", () => {
 
   it("stops when the size range has fewer rectangles than asked", () => {
     const pool = shapePool([key("n")], 1, { ...defaultConfig, shapesPerType: 100 });
-    expect(get(pool, "n")!.length).toBe(16); // 4..7 × 4..7
+    expect(rects(get(pool, "n")).length).toBe(16); // 4..7 × 4..7
   });
 
   it("gives every wall of every shape a door line with the defaults", () => {
     for (const shapes of shapePool(keys, 444, defaultConfig).values()) {
-      for (const s of shapes) expect(doorLines(s.outline, defaultConfig)).toHaveLength(4);
+      for (const s of shapes) expect(doorLines(s.outline, defaultConfig)).toHaveLength(s.outline.length);
     }
+  });
+});
+
+describe("L, T and plus shapes", () => {
+  const families = { l: 6, t: 8, plus: 12 } as const;
+  const family = (s: Shape) => s.id.split("-")[0] as keyof typeof families | "rect";
+  const outlineKey = (o: Polygon) => JSON.stringify(o);
+  const withPlus = { ...defaultConfig, plusShapes: 1 };
+  const all = shapePool([key("n"), key("item"), key("gl"), key("n", 3)], 444, withPlus);
+
+  // id: <family>-<w>x<h>-<a>x<b>-r<quarter turns>
+  const params = (s: Shape) => s.id.match(/^\w+-(\d+)x(\d+)-(\d+)x(\d+)-r(\d)$/)!.slice(1).map(Number);
+
+  it("adds L, T and plus shapes within the size rule's box, arms at least minArm", () => {
+    for (const [id, shapes] of all) {
+      const [extra, type] = [Number(id.split("/")[0]), id.slice(id.indexOf("/") + 1)];
+      const { min, max } = sizeRule(type, extra, defaultConfig.hubGrowth);
+      for (const s of shapes.filter((s) => family(s) !== "rect")) {
+        const b = bbox(s.outline);
+        const [w, h, a, arm, q] = params(s) as [number, number, number, number, number];
+        expect(s.outline).toHaveLength(families[family(s) as keyof typeof families]);
+        expect([b.x0, b.y0]).toEqual([0, 0]);
+        expect([b.x1, b.y1]).toEqual(q % 2 ? [h, w] : [w, h]);
+        expect([w, h].every((d) => d >= min && d <= max)).toBe(true);
+        expect(Math.min(a, arm)).toBeGreaterThanOrEqual(defaultConfig.minArm);
+        expect(area(s.outline)).toBeLessThan(w * h);
+      }
+    }
+    expect([...all.values()].flat().some((s) => family(s) === "l")).toBe(true);
+    expect([...all.values()].flat().some((s) => family(s) === "t")).toBe(true);
+    expect([...all.values()].flat().some((s) => family(s) === "plus")).toBe(true);
+  });
+
+  it("adds every distinct rotation of a base shape, no outline twice", () => {
+    for (const shapes of all.values()) {
+      expect(new Set(shapes.map((s) => s.id)).size).toBe(shapes.length);
+      expect(new Set(shapes.map((s) => outlineKey(s.outline))).size).toBe(shapes.length);
+      const present = new Set(shapes.map((s) => outlineKey(s.outline)));
+      for (const s of shapes.filter((s) => family(s) !== "rect")) {
+        for (let q = 1; q < 4; q++) expect(present.has(outlineKey(rotate(s.outline, q)))).toBe(true);
+      }
+    }
+  });
+
+  it("draws the configured number of base shapes per family", () => {
+    const pool = shapePool([key("gl")], 444, { ...defaultConfig, lShapes: 2, tShapes: 1, plusShapes: 0 });
+    const bases = (f: string) => new Set(get(pool, "gl")!.filter((s) => family(s) === f).map((s) => s.id.replace(/-r\d$/, ""))).size;
+    expect([bases("l"), bases("t"), bases("plus")]).toEqual([2, 1, 0]);
+  });
+
+  // Cut-outs: the cells of the bounding box outside the shape, as 4-connected groups, each with
+  // its cell count and bounding box.
+  const cutOuts = (o: Polygon) => {
+    const b = bbox(o);
+    const rs = partition(o);
+    const free = new Set<string>();
+    for (let x = b.x0; x < b.x1; x++)
+      for (let y = b.y0; y < b.y1; y++) if (!rs.some((r) => r.x0 <= x && x < r.x1 && r.y0 <= y && y < r.y1)) free.add(`${x},${y}`);
+    const groups: { cells: number; w: number; h: number }[] = [];
+    for (const start of free) {
+      const stack = [start];
+      const cells: number[][] = [];
+      free.delete(start);
+      while (stack.length) {
+        const [x, y] = stack.pop()!.split(",").map(Number) as [number, number];
+        cells.push([x, y]);
+        for (const n of [`${x + 1},${y}`, `${x - 1},${y}`, `${x},${y + 1}`, `${x},${y - 1}`]) if (free.delete(n)) stack.push(n);
+      }
+      const xs = cells.map((c) => c[0]!);
+      const ys = cells.map((c) => c[1]!);
+      groups.push({ cells: cells.length, w: Math.max(...xs) - Math.min(...xs) + 1, h: Math.max(...ys) - Math.min(...ys) + 1 });
+    }
+    return groups;
+  };
+
+  it("cuts out rectangles at least minNotch deep and wide", () => {
+    for (const minNotch of [1, 2]) {
+      const pool = shapePool([key("n"), key("gl"), key("n", 3)], 7, { ...defaultConfig, lShapes: 3, tShapes: 3, plusShapes: 3, minNotch });
+      const shapes = [...pool.values()].flat().filter((s) => family(s) !== "rect");
+      expect(shapes.length).toBeGreaterThan(20);
+      for (const s of shapes) {
+        const groups = cutOuts(s.outline);
+        expect(groups).toHaveLength({ l: 1, t: 2, plus: 4 }[family(s) as keyof typeof families]);
+        for (const g of groups) {
+          expect(g.cells).toBe(g.w * g.h);
+          expect(Math.min(g.w, g.h)).toBeGreaterThanOrEqual(minNotch);
+        }
+      }
+    }
+  });
+
+  it("draws a plus base only when no earlier base turns into it", () => {
+    // plus(w, h, a, b) a quarter turn on is plus(h, w, b, a) when h − b is even: asked for as many
+    // bases as there are distinct ones, the pool must hold them all
+    const bases = (plusShapes: number, seed: number) => {
+      const cfg = { ...defaultConfig, lShapes: 0, tShapes: 0, plusShapes, minNotch: 1 };
+      const pool = get(shapePool([key("n")], seed, cfg), "n")!.filter((s) => family(s) === "plus");
+      return new Set(pool.map((s) => s.id.replace(/-r\d$/, ""))).size;
+    };
+    const distinct = bases(1000, 1);
+    for (const seed of [1, 2, 3]) expect(bases(distinct, seed)).toBe(distinct);
+  });
+
+  it("rejects arms or cut-outs under 1", () => {
+    expect(() => shapePool([key("n")], 1, { ...defaultConfig, minArm: 0 })).toThrow(/minArm/);
+    expect(() => shapePool([key("n")], 1, { ...defaultConfig, minNotch: 0 })).toThrow(/minNotch/);
+    expect(() => shapePool([key("n")], 1, rectsOnly)).not.toThrow();
+  });
+
+  it("skips a family whose box cannot fit its arms", () => {
+    // item: 3–5; T and plus need minArm + 2 across the stem, L minArm + 1
+    const pool = get(shapePool([key("item")], 444, { ...withPlus, minNotch: 1, minArm: 4 }), "item")!;
+    expect(pool.filter((s) => family(s) === "t" || family(s) === "plus")).toEqual([]);
+    expect(pool.some((s) => family(s) === "l")).toBe(true);
+    const tiny = get(shapePool([key("item")], 444, { ...withPlus, minNotch: 1, minArm: 5 }), "item")!;
+    expect(tiny.every((s) => family(s) === "rect")).toBe(true);
+  });
+
+  it("keeps the rectangles of a seed, and today's pool with the families off", () => {
+    const keys = [key("n"), key("item"), key("n", 3)];
+    const mixed = shapePool(keys, 444, defaultConfig);
+    const plain = shapePool(keys, 444, rectsOnly);
+    for (const [id, shapes] of plain) {
+      expect(shapes.every((s) => family(s) === "rect")).toBe(true);
+      expect(rects(mixed.get(id))).toEqual(shapes);
+    }
+  });
+
+  it("is deterministic per seed, each family on its own stream", () => {
+    const cfg = { ...defaultConfig, lShapes: 1, tShapes: 1, plusShapes: 1 };
+    expect(shapePool([key("gl")], 9, cfg)).toEqual(shapePool([key("gl")], 9, cfg));
+    const ls = (c: typeof cfg) => get(shapePool([key("gl")], 9, c), "gl")!.filter((s) => family(s) === "l");
+    expect(ls({ ...cfg, tShapes: 0, plusShapes: 0 })).toEqual(ls(cfg));
   });
 });
 

@@ -2,8 +2,8 @@
 
 **updated:** 2026-10-27
 
-Steps 1–11 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
-and layout, hub shape sizes, render and CLI, viewer, corridors) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–12 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
+and layout, hub shape sizes, render and CLI, viewer, corridors, L/T shapes) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -45,11 +45,25 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   lengths `[1, 3, 5]` (measured on M-3); CLI `--no-corridors`, viewer checkbox, bench
   `--no-corridors`. M-3 5/5 with corridors, known failure only without. Plan:
   `docs/plans/11-corridors.md`.
-- [ ] 12. **L/T/plus shapes**.
+- [x] 12. **L/T/plus shapes**: L, T and plus families per pool key, own streams (rectangles of a
+  seed unchanged), all distinct rotations as Edgar, `geometry.rotate`. Arms ≥ `minArm` (2),
+  cut-outs ≥ `minNotch` (2). Defaults one L and one T base per key, plus off (fails M-3 with
+  corridors, 2× time). Render: number in the largest rectangle of column or row slabs. Bench both
+  modes healthy. Plan: `docs/plans/12-lt-shapes.md`.
 - [ ] 13. **cave shapes**.
 
 ## Open points
 
+- Step 12 costs time and some M-3 margin: with corridors ms/seed grows 2–4× (l-1 46 → 153, m-1
+  53 → 294, m-3 1201 → 2462), without about 1.5–2×; M-3 over layout seeds 1–20 drops from 19/20
+  to 15/20 (bench seeds 1–5 still 5/5). Bigger pools: more configuration spaces, more perturb
+  choices. `lShapes`/`tShapes` 0 restores the step-11 pools.
+- Plus (off by default): one outline can get different ids in two pools (`0/n` draws
+  `plus-7x6-…-r1`, the hub pool `plus-6x7-…-r0`), so its configuration spaces are cached twice and
+  a switch between them counts as a shape change. Ids from a canonical outline would fix it; not
+  done while plus is off.
+- About ⅔ of placed rooms are L or T: a base brings 4 rotations against 4 rectangles and perturb
+  picks uniformly. A weight per family would need its own step.
 - Bench without corridors is ~10–25% slower than before step 11 (same layouts; the touching and
   link terms in the energy hot path). Machine noise is ~20%, so not chased.
 - Viewer export name `<name>-map-<seed>.svg` does not say whether corridors were on; two maps of

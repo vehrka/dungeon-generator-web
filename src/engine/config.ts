@@ -1,7 +1,12 @@
 export type LayoutConfig = {
   doorLength: number;
   cornerDistance: number; // a door never starts closer than this to a corner
-  shapesPerType: number; // configuration spaces grow with the pool size squared
+  shapesPerType: number; // rectangles; configuration spaces grow with the pool size squared
+  lShapes: number; // base shapes per pool key, each with its distinct rotations
+  tShapes: number;
+  plusShapes: number;
+  minArm: number; // thinnest arm of an L, T or plus
+  minNotch: number; // shallowest cut-out of an L, T or plus
   hubDegree: number; // rooms with more neighbours get bigger shapes
   hubGrowth: number; // added to both size bounds per neighbour above hubDegree
   maxTreeSize: number;
@@ -24,10 +29,17 @@ export type LayoutConfig = {
 // small rooms need every door position they can get (docs/design.md, door capacity). Hub sizing is
 // ours: Edgar's hand-made templates have no size rule. Edgar puts a corridor on every connection;
 // 0.95 leaves a few rooms touching. Corridor lengths as Edgar's examples (Resources/Rooms/corridors.yml).
+// L/T/plus families are ours (Edgar's are hand-made); plus off: on the bench it fails M-3 with
+// corridors and doubles the time. minNotch 2: 1-deep cut-outs read as dents (docs/plans/12-lt-shapes.md).
 export const defaultConfig: LayoutConfig = {
   doorLength: 1,
   cornerDistance: 0,
   shapesPerType: 4,
+  lShapes: 1,
+  tShapes: 1,
+  plusShapes: 0,
+  minArm: 2,
+  minNotch: 2,
   hubDegree: 4,
   hubGrowth: 1,
   maxTreeSize: 8,

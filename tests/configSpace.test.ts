@@ -15,7 +15,7 @@ import {
   type Segment,
 } from "../src/engine/geometry";
 import { rng, shuffle } from "../src/engine/rng";
-import { corridorShapes, type Shape } from "../src/engine/shapes";
+import { corridorShapes, shapePool, type Shape } from "../src/engine/shapes";
 
 const p = (x: number, y: number): Point => ({ x, y });
 const seg = (x0: number, y0: number, x1: number, y1: number) => segment(p(x0, y0), p(x1, y1));
@@ -91,6 +91,15 @@ describe("configSpace", () => {
       for (const a of shapes) {
         for (const b of shapes) expect(points(configSpace(b, a, c).offsets)).toEqual(bruteForce(b, a, c));
       }
+    }
+  });
+
+  it("matches brute force for the pool's L, T and plus shapes, rotated", () => {
+    const pool = shapePool([{ type: "n", extra: 0 }], 444, defaultConfig).get("0/n")!.filter((s) => !s.id.startsWith("rect-"));
+    const shapes = [rectangle(3, 4), ...pool.filter((s) => s.id.endsWith("-r0") || s.id.endsWith("-r1")).map((s) => s.outline)];
+    expect(shapes.length).toBeGreaterThan(4);
+    for (const a of shapes) {
+      for (const b of shapes) expect(points(configSpace(b, a, defaultConfig).offsets)).toEqual(bruteForce(b, a, defaultConfig));
     }
   });
 
