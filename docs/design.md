@@ -488,7 +488,7 @@ spaces, energy or layout. Not part of `npm test` (about 20 s).
 `-- --generated`: the same sizes and seeds from `generateDungeon` (default theme), named
 `gen-<size>-<seed>`, built on the fly and not committed; the committed set stays the regression
 set. Step 14a: with corridors 14/16 pass, gen-l-7 (1/5, 62 rooms) and gen-m-3 (4/5) known; without
-corridors also gen-m-7 (1/5), and gen-l-7, gen-m-3 0/5. Not diagnosed (open points).
+corridors also gen-m-7 (1/5), and gen-l-7, gen-m-3 0/5. Known failures, to review (open points).
 
 ## Build order
 

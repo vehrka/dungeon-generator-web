@@ -25,14 +25,14 @@ const only = args.filter((a) => !a.startsWith("--"));
 const config = { ...defaultConfig, corridors: !args.includes("--no-corridors") };
 const generated = args.includes("--generated");
 // Dungeon → why it fails and the step that should fix it, per set and corridor mode.
-// Generated failures: STATUS open points, not diagnosed yet.
-const genL7 = "62 rooms, 10 faces, largest in either set; not diagnosed";
-const genM3 = "tree 17-16-22-18-23 hangs off rooms 11 and 12 of two faces sharing 8-11-15; not diagnosed";
+// Generated failures: STATUS open points, to review.
+const genL7 = "62 rooms, 10 faces, largest in either set; to review";
+const genM3 = "tree 17-16-22-18-23 hangs off rooms 11 and 12 of two faces sharing 8-11-15; to review";
 const knownFailures = new Map<string, string>(
   generated
     ? config.corridors
       ? [["gen-l-7", genL7], ["gen-m-3", genM3]]
-      : [["gen-l-7", genL7], ["gen-m-3", genM3], ["gen-m-7", "tree 2-5-4-1-7-10 (START) hangs off room 3; not diagnosed"]]
+      : [["gen-l-7", genL7], ["gen-m-3", genM3], ["gen-m-7", "tree 2-5-4-1-7-10 (START) hangs off room 3; to review"]]
     : config.corridors
       ? []
       : [["m-3", "pendant tree 22-31-34 inside ring 12-7-13-23-29-21, needs corridors"]],

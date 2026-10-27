@@ -89,7 +89,7 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   link terms in the energy hot path). Machine noise is ~20%, so not chased.
 - Viewer export name `<name>-map-<seed>.svg` does not say whether corridors were on; two maps of
   one seed can share a name.
-- Generated bench failures (step 14a, `bench -- --generated`), known, not diagnosed: gen-l-7 (62
+- Generated bench failures (step 14a, `bench -- --generated`), known, to review: gen-l-7 (62
   rooms, 10 faces; 1/5 with corridors, 0/5 without), gen-m-3 (tree `17-16-22-18-23` hangs off rooms
   11 and 12 of two faces sharing `8-11-15`; 4/5 with, 0/5 without), gen-m-7 (tree
   `2-5-4-1-7-10` off room 3; without corridors only, 1/5). Room numbers are GM key numbers. Ask
