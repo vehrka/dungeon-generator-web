@@ -320,6 +320,8 @@ the JSON; the CLI and the viewer both draw through it. Every value taken from th
 (labels, names, room numbers, gate kinds: the JSON is not type-checked at runtime).
 Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 `docs/plans/09-render-cli.md`.
+A second style after Dyson Logos (ink, hatching) is designed in `docs/dyson-style.md`; this section
+describes the catalogue style, the default for the cyber theme (every other theme gets Dyson).
 
 - Map on the left, key column on the right (rooms, gates, legend), title on top: theme, size,
   dungeon seed, layout seed, grammar. Grid unit 24 px.
