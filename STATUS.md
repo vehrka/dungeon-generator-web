@@ -64,7 +64,12 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [ ] 14. **generator integration**: CLI and viewer generate a dungeon (size, theme, dungeon seed)
   then lay it out (layout seed); JSON and GM key (Markdown) export; loading a JSON file keeps
   working; bench on generated dungeons; rewrite the generator rules in project `CLAUDE.md` and
-  close the gate-chain and mixed one-way open points. Open questions in `ref/generator-port.md`.
+  close the gate-chain and mixed one-way open points. Split in two branches:
+  - [ ] 14a. CLI generate (`--dungeon-seed --size --theme`, `--json`, `--key`), GM key
+    (`render/key.ts`, golden `ref/ruin.md`), bench `--generated`, CLAUDE.md generator rules, open
+    points closed. Plan: `docs/plans/14a-generator-cli.md`.
+  - [ ] 14b. Viewer: dungeon row (size, theme, dungeon seed, new dungeon), generation in the
+    worker, JSON and key export. Plan: `docs/plans/14b-generator-viewer.md`.
 
 ## Open points
 
