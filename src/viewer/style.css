@@ -1,0 +1,71 @@
+/* teenage engineering (ref/webdesign/design.md, tokens from ref/webdesign/cssvars) */
+:root {
+  --color-canvas-mist: #f6f8f7;
+  --color-ink-black: #000000;
+  --color-steel-gray: #e5e5e5;
+  --color-graphite: #b2b2b2;
+  --color-amber: #f0a000; /* state only: errors, as the gates in the map */
+  --font: Inter, "Helvetica Neue", Arial, "Noto Sans", "DejaVu Sans", sans-serif;
+  --spacing-15: 15px;
+  --spacing-33: 33px;
+}
+
+* { box-sizing: border-box; border-radius: 0; }
+
+body {
+  margin: 0;
+  background: var(--color-canvas-mist);
+  color: var(--color-ink-black);
+  font: 100 13px/1.5 var(--font);
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-15);
+  padding: var(--spacing-15) var(--spacing-33);
+  border-top: 1px solid var(--color-steel-gray);
+  border-bottom: 1px solid var(--color-steel-gray);
+}
+
+h1 { margin: 0; font-size: 24px; font-weight: 300; line-height: 1.15; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-15); }
+
+label { display: flex; align-items: center; gap: 8px; }
+
+input, button { font: inherit; color: inherit; }
+
+input[type="text"] {
+  width: 12ch;
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid var(--color-ink-black);
+}
+
+.file { cursor: pointer; }
+.file:hover { text-decoration: underline; }
+.file input { display: none; }
+
+button {
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { text-decoration: underline; }
+button.primary { background: var(--color-ink-black); color: var(--color-canvas-mist); }
+button:disabled, input:disabled { color: var(--color-graphite); cursor: default; }
+button.primary:disabled { background: var(--color-steel-gray); }
+
+#status { margin: 0; padding: var(--spacing-15) var(--spacing-33); }
+#status.error { background: var(--color-amber); }
+
+main {
+  min-height: 60vh;
+  padding: 0 var(--spacing-33) var(--spacing-33);
+}
+main.drop { outline: 1px dashed var(--color-ink-black); outline-offset: -8px; }
+main svg { display: block; max-width: 100%; height: auto; background: #fff; }

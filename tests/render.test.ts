@@ -6,7 +6,7 @@ import type { DungeonJson } from "../src/engine/types";
 import { polygon, rectangle } from "../src/engine/geometry";
 import type { Layout } from "../src/engine/layout";
 import type { RoomGraph } from "../src/engine/types";
-import { render } from "../src/render/svg";
+import { draw, render } from "../src/render/svg";
 
 const json = ruin as DungeonJson;
 const meta = { seed: json.seed, layoutSeed: json.seed, theme: json.theme, size: json.size, grammar: json.grammar };
@@ -35,6 +35,15 @@ describe("render", () => {
     const escaped = render({ ...graph, rooms: new Map([...graph.rooms].map(([id, r]) => [id, { ...r, label: "a < b & c" }])) }, layout, meta);
     expect(escaped).toContain("a &lt; b &amp; c");
     expect(escaped).not.toContain("a < b");
+  });
+
+  it("escapes room numbers and gate kinds, which the JSON does not type-check", () => {
+    const hostile = '"><img src=x onerror=alert(1)>';
+    const rooms = new Map([...graph.rooms].map(([id, r]) => [id, { ...r, number: hostile as unknown as number }]));
+    const doors = layout.doors.map((d) => (d.door.gate ? { ...d, door: { ...d.door, gate: { ...d.door.gate, kind: hostile as never } } } : d));
+    const out = render({ ...graph, rooms }, { ...layout, doors }, meta);
+    expect(out).not.toContain("<img");
+    expect(out).toContain("&quot;&gt;&lt;img src=x onerror=alert(1)&gt;");
   });
 
   it("marks every door, tags gates and points one-way doors", () => {
@@ -136,5 +145,20 @@ describe("render", () => {
   it("is deterministic", () => {
     expect(render(graph, layout, meta)).toBe(svg);
     expect(svg).toMatchSnapshot();
+  });
+});
+
+describe("draw", () => {
+  it("equals render over generate, titled from the JSON, with the room count", () => {
+    const { graph, layout } = generate(json, 3, defaultConfig);
+    expect(draw(json, 3, defaultConfig)).toEqual({ svg: render(graph, layout, { ...meta, layoutSeed: 3 }), rooms: graph.rooms.size });
+  });
+
+  it("leaves an unusable dungeon seed out of the title", () => {
+    expect(draw({ ...json, seed: -1 }, 3, defaultConfig).svg).not.toContain("seed -1");
+  });
+
+  it("throws the engine's error", () => {
+    expect(() => draw({ ...json, schema_version: 3 }, 1, defaultConfig)).toThrow("Unsupported schema_version 3, expected 2");
   });
 });

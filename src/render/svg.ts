@@ -1,6 +1,9 @@
+import type { LayoutConfig } from "../engine/config";
 import { bbox, partition, translate, type Point, type Polygon, type Segment } from "../engine/geometry";
+import { generate } from "../engine/index";
 import type { Layout, PlacedDoor } from "../engine/layout";
-import type { Gate, RoomGraph, RoomId } from "../engine/types";
+import { isSeed } from "../engine/rng";
+import type { DungeonJson, Gate, RoomGraph, RoomId } from "../engine/types";
 import { defs, glyphs, glyphSize } from "./icons";
 
 export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string };
@@ -76,7 +79,7 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
     const c = px({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
     const marks = roomGlyphs(graph, id);
     marks.forEach((m) => usedGlyphs.add(m));
-    map.push(`<text class="number" data-room="${room.number}" x="${c.x}" y="${c.y + (marks.length ? -1 : 7)}">${room.number}</text>`);
+    map.push(`<text class="number" data-room="${esc(String(room.number))}" x="${c.x}" y="${c.y + (marks.length ? -1 : 7)}">${esc(String(room.number))}</text>`);
     const width = marks.length * glyphSize + (marks.length - 1) * 3;
     marks.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
   }
@@ -120,7 +123,8 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   };
   heading("rooms");
   for (const r of rooms) {
-    key.push(`<text class="muted" x="${kx}" y="${y}">${r.number}</text>`, `<text data-key="${r.number}" x="${kx + 28}" y="${y}">${esc(r.label)}</text>`);
+    const n = esc(String(r.number)); // number and gate kind are untyped at runtime, like the labels
+    key.push(`<text class="muted" x="${kx}" y="${y}">${n}</text>`, `<text data-key="${n}" x="${kx + 28}" y="${y}">${esc(r.label)}</text>`);
     y += line;
   }
   if (gateLines.length) {
@@ -159,11 +163,18 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   ].join("\n");
 }
 
+// JSON → SVG at a layout seed, titled from the JSON: the CLI and the viewer draw through this.
+export function draw(json: DungeonJson, layoutSeed: number, config: LayoutConfig): { svg: string; rooms: number } {
+  const { graph, layout } = generate(json, layoutSeed, config);
+  const meta = { seed: isSeed(json.seed) ? json.seed : undefined, layoutSeed, theme: json.theme, size: json.size, grammar: json.grammar };
+  return { svg: render(graph, layout, meta), rooms: graph.rooms.size };
+}
+
 const useGlyph = (id: string, x: number, y: number) =>
   `<use href="#glyph-${id}" class="glyph" x="${x}" y="${y}" width="${glyphSize}" height="${glyphSize}"/>`;
 
 const tagMark = (x: number, y: number, tag: string, gate?: string) =>
-  `<rect class="tag"${gate ? ` data-gate="${gate}"` : ""} x="${x - 7}" y="${y - 7}" width="14" height="14"/><text class="tag-letter" x="${x}" y="${y + 4}">${tag}</text>`;
+  `<rect class="tag"${gate ? ` data-gate="${esc(gate)}"` : ""} x="${x - 7}" y="${y - 7}" width="14" height="14"/><text class="tag-letter" x="${x}" y="${y + 4}">${tag}</text>`;
 
 // A gap of the door's length across the wall with a jamb at each end; secret doors dashed; a gate
 // tag on the door; a one-way chevron pointing away from room a (past the tag when there is one).

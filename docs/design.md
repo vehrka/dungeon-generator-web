@@ -4,7 +4,8 @@ Turns the `--json` export of `101.02_dungeon_generator` (schema 2) into a 2D map
 Nepožitek's graph-based algorithm. Outputs an SVG/PNG map (CLI) and an interactive viewer.
 
 Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–8
-(normalize to layout, no corridors) and render + CLI (step 9) implemented; see `STATUS.md`.
+(normalize to layout, no corridors), render + CLI (step 9) and viewer (step 10) implemented; see
+`STATUS.md`.
 
 ## References
 
@@ -275,6 +276,9 @@ re-derives geometry.
 ### 7. Render (`render/svg.ts`)
 
 `render(graph, layout, meta) → string` (SVG). It depends only on the engine types, not on the DOM.
+`draw(json, layoutSeed, config) → { svg, rooms }` runs `generate` and `render` with the title meta from
+the JSON; the CLI and the viewer both draw through it. Every value taken from the JSON is escaped
+(labels, names, room numbers, gate kinds: the JSON is not type-checked at runtime).
 Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 `docs/plans/09-render-cli.md`.
 
@@ -296,10 +300,27 @@ Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 
 PNG: the CLI rasterizes the SVG with `@resvg/resvg-js` 2.6.2 (system fonts).
 
+### 8. Viewer (`src/viewer/`)
+
+Vite page (`vite.config.ts`: root `src/viewer`, build to `dist/`), same style. Decided 2026-10-27,
+plan `docs/plans/10-viewer.md`.
+
+- Controls: load JSON (file input or drop on the map), layout seed field (Enter runs it), reroll,
+  export svg (`<name>-map-<seed>.svg`). Status line: rooms, layout seed, ms; errors in amber,
+  message only.
+- Layout runs in a Web Worker (`worker.ts`): a failing layout takes ~2.7 s per seed (M-3). Each run
+  terminates the previous worker, so a reroll cancels a stuck layout.
+- Reroll = layout seed + 1, wrapping at 2³²−1: deterministic, any earlier seed can be typed back.
+- Logic in `state.ts` (no DOM, tested); `main.ts` only wires the DOM. A file that is not a JSON
+  object is rejected by name; the rest is `normalize`'s schema check. The map goes in with
+  `innerHTML`, safe because `render` escapes the JSON's values. No PNG export (resvg is Node-only).
+- Reroll steps the seed in the field (what the user sees), not the last seed drawn.
+
 ## Seeds
 
 - The layout seed defaults to `json.seed`, so one dungeon gives one map.
-- `--layout-seed N` (CLI) and a reroll button (viewer) override it.
+- `--layout-seed N` (CLI) and the seed field and reroll button (viewer, seed + 1) override it.
+- Seeds are 32-bit unsigned integers (`isSeed`, `engine/rng.ts`), shared by CLI and viewer.
 - One seeded PRNG (e.g. mulberry32) passed explicitly into every stage. No `Math.random`.
 - The same JSON and seed always give the same SVG (tested by snapshot).
 
@@ -317,7 +338,7 @@ src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, 
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/render/    svg.ts, icons.ts
 src/cli/       main.ts     ruin.json → ruin-map.svg / .png  [-o] [--layout-seed]  (--corridors at step 11)
-src/viewer/    index.html, main.ts   file input, seed field, reroll, export SVG
+src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   load JSON, seed, reroll, export SVG
 tests/         one test file per engine module, fixture ruin.json
 ```
 

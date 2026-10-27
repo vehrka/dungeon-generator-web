@@ -11,6 +11,8 @@ npm run typecheck   # tsc --noEmit, must be clean
 npm test            # vitest, must pass
 npm run bench       # layout benchmark, bench/dungeons × layout seeds 1–5; exits 1 if any fails
 npm run bench -- m-1 m-3   # only the named dungeons
+npm run dev         # viewer, vite (root src/viewer)
+npm run build       # typecheck + viewer build to dist/, must succeed
 ```
 
 Healthy bench line: `l-1   pass  5/5  28 rooms      39 ms/seed`. Healthy run: exit 0,
@@ -21,7 +23,8 @@ table.
 ## Layout
 
 - `src/engine/`: pure TS, no DOM, no Node APIs. `src/render/` SVG, `src/cli/` Node CLI,
-  `src/viewer/` Vite viewer (empty until steps 9–10).
+  `src/viewer/` Vite viewer (layout in a Web
+  Worker; logic in `state.ts`, tested; DOM checked by hand).
 - `tests/`: one test file per engine module, fixture `tests/fixtures/ruin.json`.
 - `bench/dungeons/`: generator output, M and L, seeds 1–8 (generator commit 573478c, default
   theme). Regenerate only on purpose; the numbers in `docs/design.md` refer to these files.
