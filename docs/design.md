@@ -352,7 +352,7 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
 5. shapes (rectangles) and doors
 6. configuration spaces
 7. energy and layout (no corridors)
-8. shape sizes from door count
+8. shape sizes from door count, then 8b: M-3 (tree chain boxed in by placed rooms)
 9. render + CLI, then viewer
 10. corridors → L/T/plus → caves
 
@@ -365,7 +365,10 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   and short cycle chains (1–2 rooms) that must close a face between already placed rooms.
   `cornerDistance = 0` fixes 3 of the 5; bigger hub shapes fix one more (M-1); M-3 still fails.
   Decided 2026-10-26: `cornerDistance = 0` by default (done), and shape sizes from a room's door
-  count as its own step (build order 8). M-3 (short cycle chains) may still need more.
+  count as its own step (build order 8).
   `npm run bench` on 2026-10-27, defaults: 13 pass, L-5 skipped, M-1 fails 2 of 5 layout seeds,
-  M-3 fails all 5 (M-5 now passes).
+  M-3 fails all 5 (M-5 now passes). Spike 2026-10-27: hub #3 (7 doors) at 7–10 makes M-1 5/5;
+  M-3 stays 0/5, stuck on tree chain `[26,25,19,17,27,20,31,34]`, which does not hold the hub. So
+  M-3 is not short cycle chains nor hub size; likely the tree is boxed in by placed rooms
+  (build order 8b).
 - PNG library: chosen at the render step.

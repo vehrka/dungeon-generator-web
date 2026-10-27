@@ -28,8 +28,10 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [x] 7. **energy and layout**: greedy placement, simulated annealing for cycles, planner with
   backtracking, iteration cap (100k, retry 4×), `LayoutError` naming the stuck chain. No corridors.
 - [ ] 8. **shape sizes from door count**: a room's shapes depend on its door count as well as its
-  type, so hubs (up to 7 doors) get walls long enough for all their neighbours. Done when
-  `npm run bench` passes (now: M-1 fails 2/5 layout seeds, M-3 fails 5/5; M-5 already passes).
+  type, so hubs (up to 7 doors) get walls long enough for all their neighbours. Done when M-1
+  passes 5/5 (now 3/5) and no bench dungeon gets worse. Plan: `docs/plans/08-hub-shapes.md`.
+- [ ] 8b. **M-3**: fails 5/5 on tree chain `[26,25,19,17,27,20,31,34]`, not the hub's chain; bigger
+  hubs don't help. Likely boxed in by placed rooms. Investigate, then plan.
 - [ ] 9. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.
 - [ ] 10. **viewer**: load JSON, show map, reroll, export SVG.
 - [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
