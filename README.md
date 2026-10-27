@@ -4,12 +4,13 @@
 
 **date:** 2026-10-25
 
-Turns a dungeon graph from [101.02_dungeon_generator](../101.02_dungeon_generator) into a 2D map,
-laid out with Ondřej Nepožitek's graph-based algorithm (the one behind
+Generates a dungeon graph (TypeScript port of the Combined grammar of
+[101.02_dungeon_generator](../101.02_dungeon_generator)) and turns it into a 2D map, laid out with Ondřej Nepožitek's graph-based algorithm (the one behind
 [Edgar](https://github.com/OndrejNepozitek/Edgar-DotNet)): procedural room shapes, doors on every
 edge, optional corridors, locks and one-way paths drawn on the map.
 
-Status: in progress, engine (normalize to layout, with corridors), SVG/PNG render, CLI and viewer done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
+Status: in progress, generator, engine (normalize to layout, with corridors), SVG/PNG render, GM
+key, CLI and viewer done; generating from the viewer next. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
 
 ## Install
 
@@ -21,23 +22,27 @@ $ npm install
 
 ## Usage
 
-1. Generate a dungeon with its JSON export (schema 2) in the generator project
+1. Generate a dungeon, lay it out and save the map, its JSON (schema 2) and GM key
 
    ```bash
-   $ uv run python dungeon_generator_cli.py --size L --seed 444 --theme tor-barrow \
-       --json ruin.json --key ruin.md
+   $ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber|tor-barrow|tor-dwarf] \
+       [--json m-7-zelda.json] [--key m-7-zelda.md] [-o m-7-zelda-map.svg | .png] \
+       [--layout-seed N] [--no-corridors]
    ```
 
-2. Lay it out and save the map
+   Size defaults to M, theme to zelda, output to `<size>-<seed>-<theme>-map.svg`; `.png`
+   rasterizes it. The same dungeon seed, size and theme give the same dungeon. The layout seed
+   defaults to the dungeon seed, so they also give the same map. Room numbers and names match the
+   GM key. No layout found → the error names the stuck rooms; try another `--layout-seed`. Most
+   doors lead through a short corridor; `--no-corridors` puts every door in a shared wall.
+
+2. Or load a schema 2 JSON (saved with `--json`, or exported by the Python generator)
 
    ```bash
-   $ npm run cli -- ruin.json [-o ruin-map.svg | -o ruin-map.png] [--layout-seed N] [--no-corridors]
+   $ npm run cli -- ruin.json [-o ruin-map.svg | -o ruin-map.png] [--key ruin.md] [--layout-seed N] [--no-corridors]
    ```
 
-   Output defaults to `<input>-map.svg`; `.png` rasterizes it. The layout seed defaults to the
-   dungeon seed, so the same JSON gives the same map. Room numbers and names match the GM key
-   (`ruin.md`). No layout found → the error names the stuck rooms; try another `--layout-seed`.
-   Most doors lead through a short corridor; `--no-corridors` puts every door in a shared wall.
+   Output defaults to `<input>-map.svg`; the layout seed to the JSON's seed.
 
 3. Or open the viewer, load the JSON (or drop it on the page), reroll and export SVG
 
@@ -56,6 +61,7 @@ $ npm install
 $ npm run typecheck
 $ npm test
 $ npm run bench   # layout benchmark over bench/dungeons (-- --no-corridors: without corridors)
+$ npm run bench -- --generated   # the same over generated dungeons
 ```
 
 Branches: `main` (prod), `dev` (integration), `feature/<slug>` off `dev`.
@@ -63,8 +69,8 @@ Branches: `main` (prod), `dev` (integration), `feature/<slug>` off `dev`.
 ## Layout
 
 ```
-src/engine/    graph → layout, pure TS (no DOM, no Node APIs)
-src/render/    layout → SVG (teenage engineering style, ref/webdesign/)
+src/engine/    graph → layout, pure TS (no DOM, no Node APIs); generator/ seed → schema 2 JSON
+src/render/    layout → SVG (teenage engineering style, ref/webdesign/), JSON → GM key
 src/cli/       Node CLI
 src/viewer/    Vite web viewer
 tests/         vitest, fixture tests/fixtures/ruin.json
