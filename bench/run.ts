@@ -9,7 +9,7 @@ import { chains } from "../src/engine/chains";
 import { defaultConfig } from "../src/engine/config";
 import { layout, LayoutError } from "../src/engine/layout";
 import { normalize } from "../src/engine/normalize";
-import { faces } from "../src/engine/planar";
+import { faces, NonPlanarError } from "../src/engine/planar";
 import { shapePool } from "../src/engine/shapes";
 import type { DungeonJson } from "../src/engine/types";
 
@@ -26,17 +26,19 @@ const names = readdirSync(dir)
 let failed = 0;
 for (const name of names) {
   const json = JSON.parse(readFileSync(join(dir, `${name}.json`), "utf8")) as DungeonJson;
-  let prepared;
+  let graph, roomFaces;
   try {
-    const graph = normalize(json);
-    const types = [...new Set([...graph.rooms.values()].map((r) => r.type))];
-    prepared = { graph, chains: chains(graph, faces(graph), defaultConfig.maxTreeSize), types };
+    graph = normalize(json);
+    roomFaces = faces(graph);
   } catch (e) {
+    // Only rejections skip: normalize throws plain Errors, planarity NonPlanarError. Bugs rethrow.
+    if (!(e instanceof NonPlanarError) && (e as Error).constructor !== Error) throw e;
     console.log(`${name.padEnd(5)} skipped  ${(e as Error).message}`);
     continue;
   }
+  const types = [...new Set([...graph.rooms.values()].map((r) => r.type))];
+  const prepared = { chains: chains(graph, roomFaces, defaultConfig.maxTreeSize) };
 
-  const { graph, types } = prepared;
   const results = layoutSeeds.map((seed) => {
     const t0 = performance.now();
     try {

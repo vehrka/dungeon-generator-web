@@ -367,5 +367,5 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   Decided 2026-10-26: `cornerDistance = 0` by default (done), and shape sizes from a room's door
   count as its own step (build order 8). M-3 (short cycle chains) may still need more.
   `npm run bench` on 2026-10-27, defaults: 13 pass, L-5 skipped, M-1 fails 2 of 5 layout seeds,
-  M-3 all 5 (M-5 now passes).
+  M-3 fails all 5 (M-5 now passes).
 - PNG library: chosen at the render step.

@@ -29,7 +29,7 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   backtracking, iteration cap (100k, retry 4×), `LayoutError` naming the stuck chain. No corridors.
 - [ ] 8. **shape sizes from door count**: a room's shapes depend on its door count as well as its
   type, so hubs (up to 7 doors) get walls long enough for all their neighbours. Done when
-  `npm run bench` passes (now: M-1 fails 2/5 layout seeds, M-3 5/5; M-5 already passes).
+  `npm run bench` passes (now: M-1 fails 2/5 layout seeds, M-3 fails 5/5; M-5 already passes).
 - [ ] 9. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.
 - [ ] 10. **viewer**: load JSON, show map, reroll, export SVG.
 - [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
