@@ -127,14 +127,18 @@ integer grid:
 
 ```ts
 type Shape = { id: string; outline: Point[] };
-type ShapePool = Map<RoomType, Shape[]>;
+type ShapePool = Map<PoolKey, Shape[]>; // "n", or "n+3" for a hub
 ```
 
 - Seeded from `seed` (see Seeds). Same seed → same pool.
 - Size range per room type, as data in `engine/shapeRules.ts`. Side lengths: `item key bosskey
   switch lever` 3–5; `n e m t p c` and unknown types 4–7; `st exit` 4–6; `em gb` 6–9; `eb gl`
   7–10. `gb: <reward>` types use the `gb` rule.
-- Each family draws from its own PRNG stream per room type, `rng(seed, "rect/<type>")`, so adding a
+- Hubs (step 8): a room with more than `hubDegree` (4) distinct neighbours has pool key
+  `<type>+<extra>` and both size bounds grow by `hubGrowth` (1) per extra neighbour, so its walls
+  fit all of them: `n` with 7 neighbours → 7–10. Rooms up to `hubDegree` keep the type's key,
+  stream and shapes. Degree only, not neighbour sizes (fine while every bench hub is `n`).
+- Each family draws from its own PRNG stream per pool key, `rng(seed, "rect/<key>")`, so adding a
   family or a room type never changes the shapes of another. Shapes with the same outline share an
   id (`rect-5x3`), so configuration spaces are cached once per outline.
 - Default pool: 4 shapes per type (`shapesPerType`), fewer when the size range has fewer rectangles.
@@ -291,7 +295,7 @@ pinned and audited.
 All the constants above live in one `LayoutConfig` object with Edgar's defaults: `maxTreeSize`,
 `mergeSmallChains`, `maxBranching`, `cycles`, `trialsPerCycle`, `maxIterationsWithoutSuccess`,
 `maxStageTwoFailures`, `shapePerturbChance`, `differenceScale`, `greedyMaxPoints`, `doorLength`,
-`cornerDistance`, `corridorRate`, `maxTotalIterations`.
+`cornerDistance`, `corridorRate`, `maxTotalIterations`; plus our own `hubDegree`, `hubGrowth`.
 
 ## Modules
 
@@ -371,4 +375,7 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   M-3 stays 0/5, stuck on tree chain `[26,25,19,17,27,20,31,34]`, which does not hold the hub. So
   M-3 is not short cycle chains nor hub size; likely the tree is boxed in by placed rooms
   (build order 8b).
+  Step 8 done 2026-10-27 (`hubDegree` 4, `hubGrowth` 1): 14 pass, L-5 skipped, M-1 5/5
+  (594 → 40 ms/seed), M-3 still 0/5 (1802 → 2758 ms/seed, the bigger hub shapes cost per
+  iteration).
 - PNG library: chosen at the render step.

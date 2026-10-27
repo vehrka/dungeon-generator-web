@@ -3,7 +3,7 @@ import ruin from "./fixtures/ruin.json";
 import { normalize } from "../src/engine/normalize";
 import { rng, randInt } from "../src/engine/rng";
 import { sizeRule } from "../src/engine/shapeRules";
-import { shapePool } from "../src/engine/shapes";
+import { poolKey, poolKeys, shapePool } from "../src/engine/shapes";
 import { doorLines } from "../src/engine/doors";
 import { defaultConfig } from "../src/engine/config";
 import { bbox, polygon, rectangle, segment, walls, type Point } from "../src/engine/geometry";
@@ -42,6 +42,29 @@ describe("sizeRule", () => {
     expect(sizeRule("gb: treasure points")).toEqual(sizeRule("gb"));
     expect(sizeRule("whatever")).toEqual(sizeRule("n"));
   });
+
+  it("grows both bounds per door above hubDegree", () => {
+    expect(sizeRule("n+3", 1)).toEqual({ min: 7, max: 10 });
+    expect(sizeRule("n+3", 2)).toEqual({ min: 10, max: 13 });
+    expect(sizeRule("gb: treasure points+1", 1)).toEqual({ min: 7, max: 10 });
+  });
+});
+
+describe("poolKey", () => {
+  it("is the type up to hubDegree doors, the type plus extra doors above", () => {
+    expect(poolKey("n", 1, defaultConfig)).toBe("n");
+    expect(poolKey("n", 4, defaultConfig)).toBe("n");
+    expect(poolKey("n", 7, defaultConfig)).toBe("n+3");
+    expect(poolKey("n", 7, { ...defaultConfig, hubDegree: 6 })).toBe("n+1");
+  });
+
+  it("counts distinct neighbours, not doors or self-loops", () => {
+    const g = normalize(ruin as DungeonJson);
+    const keys = poolKeys(g, { ...defaultConfig, hubDegree: 1 });
+    const neighbours = (id: number) =>
+      new Set(g.doors.flatMap(({ a, b }) => (a === b ? [] : a === id ? [b] : b === id ? [a] : []))).size;
+    for (const [id, room] of g.rooms) expect(keys.get(id)).toBe(poolKey(room.type, neighbours(id), { ...defaultConfig, hubDegree: 1 }));
+  });
 });
 
 describe("shapePool", () => {
@@ -73,6 +96,18 @@ describe("shapePool", () => {
   it("does not change a type's shapes when other types come and go", () => {
     const alone = shapePool(["n"], 444, defaultConfig).get("n");
     expect(shapePool(types, 444, defaultConfig).get("n")).toEqual(alone);
+  });
+
+  it("keeps today's shapes for rooms up to hubDegree, own shapes for hubs", () => {
+    const pool = shapePool(["n", "n+3"], 444, defaultConfig);
+    expect(pool.get("n")).toEqual(shapePool(["n"], 444, defaultConfig).get("n"));
+    const hub = pool.get("n+3")!;
+    expect(hub.length).toBe(defaultConfig.shapesPerType);
+    for (const s of hub) {
+      const b = bbox(s.outline);
+      expect([b.x1 - b.x0, b.y1 - b.y0].every((d) => d >= 7 && d <= 10)).toBe(true);
+    }
+    expect(shapePool(["n+3"], 444, defaultConfig)).toEqual(shapePool(["n+3"], 444, defaultConfig));
   });
 
   it("stops when the size range has fewer rectangles than asked", () => {
