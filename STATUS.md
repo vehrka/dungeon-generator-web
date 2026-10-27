@@ -30,13 +30,17 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [x] 8. **shape sizes from door count**: a room's shapes depend on its door count as well as its
   type: above `hubDegree` (4) neighbours both size bounds grow by `hubGrowth` (1) each. M-1 3/5 →
   5/5, no regressions. Plan: `docs/plans/08-hub-shapes.md`.
-- [ ] 8b. **M-3**: fails 5/5 on tree chain `[26,25,19,17,27,20,31,34]`, not the hub's chain; bigger
-  hubs don't help. Likely boxed in by placed rooms. Investigate, then plan.
+- [x] 8b. **M-3**: deferred to step 11. Room 22 and its pendant tree `31-34` must sit inside ring
+  12-7-13-23-29-21, closed tight by cycle chains 3 and 4; touching rooms leave no cavity. No engine change:
+  M-3 is a bench known failure (`knownFailures` in `bench/run.ts`). Plan: `docs/plans/08b-m3.md`.
 - [ ] 9. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.
   Style: teenage engineering, `ref/webdesign/design.md`.
 - [ ] 10. **viewer**: load JSON, show map, reroll, export SVG. Style: teenage engineering,
   `ref/webdesign/design.md` (tokens in `ref/webdesign/cssvars`).
 - [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
+  Acceptance: M-3 5/5 with corridors on, then remove it from `knownFailures`. Corridors are a
+  seeded per-door choice: decide whether to measure M-3 over corridor seeds or prefer corridors on
+  face doors (see `docs/plans/08b-m3.md`).
 - [ ] 12. **L/T/plus shapes**.
 - [ ] 13. **cave shapes**.
 
@@ -46,7 +50,8 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   occur; `normalize` rejects them. The fixture has none. Decide: collapse a gate chain into one door
   with all gates, or fix it in the generator.
 - Door capacity: `cornerDistance = 0` now default (fixes 3 of the 5 failing benchmark dungeons);
-  hub sizing done in step 8 (M-1 fixed); M-3 is step 8b. Numbers in `docs/design.md`, open points.
+  hub sizing done in step 8 (M-1 fixed); M-3 known failure until corridors (step 8b). Numbers in
+  `docs/design.md`, open points.
 - `normalize` rejects a gate with one one-way leg and one two-way leg ("one-way edges that disagree
   on direction"; generator `--size L --seed 5`, gate 22). Should probably be a one-way door.
 - PNG library (step 9).

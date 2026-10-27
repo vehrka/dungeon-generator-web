@@ -1,6 +1,7 @@
 // Layout benchmark over committed generator dungeons (bench/dungeons, sizes M and L, seeds 1–8).
 // Each dungeon is laid out with layout seeds 1–5; it passes when all five lay out. Exits non-zero
-// when any dungeon that normalize and planarity accept fails.
+// when any dungeon that normalize and planarity accept fails, unless it is a known failure; a known
+// failure that passes also exits non-zero, so the list does not go stale.
 //
 //   npm run bench [-- m-1 m-3]   only the named dungeons
 import { readdirSync, readFileSync } from "node:fs";
@@ -16,6 +17,10 @@ import type { DungeonJson } from "../src/engine/types";
 const dir = join(import.meta.dirname, "dungeons");
 const layoutSeeds = [1, 2, 3, 4, 5];
 const only = process.argv.slice(2);
+// Dungeon → why it fails and the step that should fix it.
+const knownFailures = new Map([
+  ["m-3", "pendant tree 22-31-34 inside ring 12-7-13-23-29-21 (step 11, corridors)"],
+]);
 
 const names = readdirSync(dir)
   .filter((f) => f.endsWith(".json"))
@@ -24,6 +29,7 @@ const names = readdirSync(dir)
   .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
 
 let failed = 0;
+let known = 0;
 for (const name of names) {
   const json = JSON.parse(readFileSync(join(dir, `${name}.json`), "utf8")) as DungeonJson;
   let graph, roomFaces;
@@ -34,6 +40,7 @@ for (const name of names) {
     // Only rejections skip: normalize throws plain Errors, planarity NonPlanarError. Bugs rethrow.
     if (!(e instanceof NonPlanarError) && (e as Error).constructor !== Error) throw e;
     console.log(`${name.padEnd(5)} skipped  ${(e as Error).message}`);
+    if (knownFailures.has(name)) failed++; // a skipped known failure loses its acceptance case
     continue;
   }
   const keys = [...poolKeys(graph, defaultConfig).values()];
@@ -50,14 +57,24 @@ for (const name of names) {
     }
   });
   const ok = results.filter((r) => r.ok).length;
-  if (ok < layoutSeeds.length) failed++;
+  const pass = ok === layoutSeeds.length;
+  const reason = knownFailures.get(name);
+  if (reason ? pass : !pass) failed++;
+  else if (reason) known++;
+  const status = reason ? (pass ? "pass (known: remove)" : "known") : pass ? "pass" : "FAIL";
   const ms = Math.round(results.reduce((t, r) => t + r.ms, 0) / results.length);
   const stuck = results.find((r) => !r.ok)?.stuck;
   console.log(
-    `${name.padEnd(5)} ${ok === layoutSeeds.length ? "pass" : "FAIL"}  ${ok}/${layoutSeeds.length}` +
+    `${name.padEnd(5)} ${status}  ${ok}/${layoutSeeds.length}` +
       `  ${String(graph.rooms.size).padStart(2)} rooms  ${String(ms).padStart(6)} ms/seed` +
-      (stuck ? `  stuck on rooms ${stuck.join(", ")}` : ""),
+      (stuck ? `  stuck on rooms ${stuck.join(", ")}` : "") +
+      (reason && !pass ? `  — ${reason}` : ""),
   );
 }
-console.log(`\n${failed} failing`);
+for (const name of knownFailures.keys()) {
+  if (only.length > 0 || names.includes(name)) continue;
+  console.log(`${name.padEnd(5)} missing  in knownFailures but not in bench/dungeons`);
+  failed++;
+}
+console.log(`\n${failed} failing, ${known} known`);
 process.exitCode = failed > 0 ? 1 : 0;

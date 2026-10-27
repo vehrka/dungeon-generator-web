@@ -13,8 +13,10 @@ npm run bench       # layout benchmark, bench/dungeons × layout seeds 1–5; ex
 npm run bench -- m-1 m-3   # only the named dungeons
 ```
 
-Healthy bench line: `l-1   pass  5/5  28 rooms      39 ms/seed`. Run it when touching shapes,
-doors, configuration spaces, energy or layout, and report the before/after table.
+Healthy bench line: `l-1   pass  5/5  28 rooms      39 ms/seed`. Healthy run: exit 0,
+`0 failing, 1 known` (M-3 `known`, waits for corridors; `knownFailures` in `bench/run.ts`). Run it
+when touching shapes, doors, configuration spaces, energy or layout, and report the before/after
+table.
 
 ## Layout
 

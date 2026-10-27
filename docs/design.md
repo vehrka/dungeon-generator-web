@@ -344,10 +344,12 @@ Run before done: `npm run typecheck`, `npm test`.
 
 Benchmark (`npm run bench`, `bench/run.ts`): the 16 generator dungeons in `bench/dungeons/` (sizes
 M and L, seeds 1–8, generator commit 573478c), each laid out with layout seeds 1–5 and
-`defaultConfig`. A dungeon passes when all five lay out; the run exits 1 if any dungeon fails.
-Dungeons that `normalize` or planarity reject are reported as skipped. Run it for any change to
-shapes, doors, configuration spaces, energy or layout. Not part of `npm test` (about 20 s, and it
-fails until step 8 is done).
+`defaultConfig`. A dungeon passes when all five lay out; the run exits 1 if any dungeon outside
+`knownFailures` fails. Dungeons that `normalize` or planarity reject are reported as skipped.
+Known failures (`knownFailures` in `bench/run.ts`, dungeon → reason and the step that should fix
+it) print `known` and do not count; a known failure that passes 5/5 (`pass (known: remove)`), is
+skipped or has no dungeon file counts as failing, so the list does not go stale. Run it for any change to shapes, doors, configuration
+spaces, energy or layout. Not part of `npm test` (about 20 s).
 
 ## Build order
 
@@ -360,9 +362,10 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
 5. shapes (rectangles) and doors
 6. configuration spaces
 7. energy and layout (no corridors)
-8. shape sizes from door count, then 8b: M-3 (tree chain boxed in by placed rooms)
+8. shape sizes from door count, then 8b: M-3 known failure, waits for corridors
 9. render + CLI, then viewer
-10. corridors → L/T/plus → caves
+10. corridors → L/T/plus → caves. Corridors' acceptance: M-3 5/5 with corridors on, then remove
+    it from `knownFailures`
 
 ## Open points
 
@@ -376,11 +379,22 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   count as its own step (build order 8).
   `npm run bench` on 2026-10-27, defaults: 13 pass, L-5 skipped, M-1 fails 2 of 5 layout seeds,
   M-3 fails all 5 (M-5 now passes). Spike 2026-10-27: hub #3 (7 doors) at 7–10 makes M-1 5/5;
-  M-3 stays 0/5, stuck on tree chain `[26,25,19,17,27,20,31,34]`, which does not hold the hub. So
-  M-3 is not short cycle chains nor hub size; likely the tree is boxed in by placed rooms
-  (build order 8b).
+  M-3 stays 0/5, stuck on tree chain `[26,25,19,17,27,20,31,34]`, which does not hold the hub, so
+  not hub size.
   Step 8 done 2026-10-27 (`hubDegree` 4, `hubGrowth` 1): 14 pass, L-5 skipped, M-1 5/5
   (594 → 75 ms/seed), M-3 still 0/5 (1802 → 2579 ms/seed). Not a per-iteration cost: a failing
   run spends the whole budget either way, but with hub shapes more of it goes to annealing trials
   (~200k vs ~130k of 500k, about 11 µs each) and less to greedy evaluations (about 1 µs each).
+  M-3 investigated 2026-10-27 (step 8b, `docs/plans/08b-m3.md`). Main cause: a pendant tree inside
+  a ring. Rooms 12 and 23 are joined by three disjoint paths (`22`, `7-13`, `21-29`); with touching
+  rooms one path lies inside the ring the other two form (Jordan curve), cheapest `22` with its
+  pendant tree `31-34`. Cycle chains 3 and 4 close the ring tight: room 31 has 0 free offsets next
+  to 22 in every state the planner reached chain 5 from (0/144). Second: cycles before trees
+  (Edgar's order too), so the merged tree chain 5 waits for chains 1–4, which crowd its anchors.
+  Third: the ring-closing chain `21,29` is short (~5% of its tries give a layout). Placing tree
+  parts as soon as they touch a placed room ("early") does not fix M-3 (0/5, stuck on `21,29`) and
+  costs M-1 (5/5 → 4/5) and L-7 (18 → 189 ms/seed). Decided 2026-10-27: a corridor-free layout
+  cannot leave a cavity in a ring; corridors (build order 10) give that slack. M-3 is a known
+  bench failure until then; no engine change. If corridors are not enough: "early" trees, or
+  placing an enclosed pendant tree before its ring closes (both ours, not Edgar's).
 - PNG library: chosen at the render step.
