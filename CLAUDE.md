@@ -24,6 +24,8 @@ doors, configuration spaces, energy or layout, and report the before/after table
 - `bench/dungeons/`: generator output, M and L, seeds 1–8 (generator commit 573478c, default
   theme). Regenerate only on purpose; the numbers in `docs/design.md` refer to these files.
 - `ref/120370675/` (git-ignored): thesis and Edgar-DotNet source.
+- `ref/webdesign/`: teenage engineering style reference for the SVG render and viewer (steps 9–10):
+  `design.md` (rules), `cssvars`, `design_tokens`, `tailwind` (tokens). Follow it for UI work.
 
 ## Conventions
 

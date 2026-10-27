@@ -33,7 +33,9 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [ ] 8b. **M-3**: fails 5/5 on tree chain `[26,25,19,17,27,20,31,34]`, not the hub's chain; bigger
   hubs don't help. Likely boxed in by placed rooms. Investigate, then plan.
 - [ ] 9. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.
-- [ ] 10. **viewer**: load JSON, show map, reroll, export SVG.
+  Style: teenage engineering, `ref/webdesign/design.md`.
+- [ ] 10. **viewer**: load JSON, show map, reroll, export SVG. Style: teenage engineering,
+  `ref/webdesign/design.md` (tokens in `ref/webdesign/cssvars`).
 - [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
 - [ ] 12. **L/T/plus shapes**.
 - [ ] 13. **cave shapes**.
