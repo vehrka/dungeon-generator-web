@@ -3,8 +3,8 @@
 Turns the `--json` export of `101.02_dungeon_generator` (schema 2) into a 2D map, laid out with
 Nepožitek's graph-based algorithm. Outputs an SVG/PNG map (CLI) and an interactive viewer.
 
-Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–7
-(normalize to layout, no corridors) implemented; see `STATUS.md`.
+Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–8
+(normalize to layout, no corridors) and render + CLI (step 9) implemented; see `STATUS.md`.
 
 ## References
 
@@ -274,18 +274,27 @@ re-derives geometry.
 
 ### 7. Render (`render/svg.ts`)
 
-`(RoomGraph, Layout) → string` (SVG). It depends only on the engine types, not on the DOM.
+`render(graph, layout, meta) → string` (SVG). It depends only on the engine types, not on the DOM.
+Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
+`docs/plans/09-render-cli.md`.
 
-- Rooms: filled outline, colour by type (same palette idea as the generator PNG), `number` large
-  and `label` small.
-- Doors: gap in the wall. Locks get a lock icon and the object name (`bronze key 1`); state gates
-  get the state style and the switch names. Secret doors are dashed.
-- One-way: arrow across the door or corridor, pointing `a → b`.
-- Icons in rooms: pickups (key, boss key, item), switches, treasure (`gb`).
-- Legend, plus a title with seed, theme and size.
+- Map on the left, key column on the right (rooms, gates, legend), title on top: theme, size,
+  dungeon seed, layout seed, grammar. Grid unit 24 px.
+- Rooms: white with a 1 px black hairline on `#f6f8f7`, no fill by type: type shows through size
+  and glyph. The number sits in the room (weight 300); the `label` goes in the key column, since
+  labels of up to ~50 characters do not fit 3-unit rooms.
+- Doors: a gap of `doorLength` across the wall with a jamb at each end. Secret doors dashed.
+- Gates: an amber tag with a letter on the door (amber is the one colour, kept for state); the key
+  lists each letter with the gate kind and its object names (`A  lock  bronze key 1`). Doors between
+  the same two rooms share a segment: one mark, one tag for all their gates.
+- One-way: chevron across the door pointing `a → b`, moved past the tag on gated doors.
+- Room glyphs (`render/icons.ts`, 1 px line, no fill): start, goal, key, boss key, item, switch,
+  lever, treasure (`gb`). Unknown object types draw as items. The legend shows only what the map
+  uses.
+- Fonts: Inter, then common sans fonts by name (resvg maps `sans-serif` to Arial, not to
+  fontconfig). No embedded font; the key column width is estimated at 7.5 px per character.
 
-PNG: the CLI rasterizes the SVG. Library to pick at the render step (e.g. `@resvg/resvg-js`),
-pinned and audited.
+PNG: the CLI rasterizes the SVG with `@resvg/resvg-js` 2.6.2 (system fonts).
 
 ## Seeds
 
@@ -307,7 +316,7 @@ All the constants above live in one `LayoutConfig` object with Edgar's defaults:
 src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, shapes.ts,
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/render/    svg.ts, icons.ts
-src/cli/       main.ts     ruin.json → ruin-map.svg / .png  [--layout-seed] [--corridors]
+src/cli/       main.ts     ruin.json → ruin-map.svg / .png  [-o] [--layout-seed]  (--corridors at step 11)
 src/viewer/    index.html, main.ts   file input, seed field, reroll, export SVG
 tests/         one test file per engine module, fixture ruin.json
 ```
@@ -338,7 +347,8 @@ Red-green per module, with `ruin.json` plus small hand-made graphs:
 - energy: zero only for a valid layout; overlap and distance raise it.
 - layout: valid layouts (no overlap, every door edge touches) on a path, a cycle, and the fixture;
   determinism for a fixed seed.
-- render: SVG snapshot for the fixture.
+- render: SVG snapshot for the fixture; rooms, numbers, labels, door marks, gate tags, one-way
+  direction, glyphs. CLI: arguments, SVG and PNG output, errors exit 1.
 
 Run before done: `npm run typecheck`, `npm test`.
 
@@ -397,4 +407,3 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   cannot leave a cavity in a ring; corridors (build order 10) give that slack. M-3 is a known
   bench failure until then; no engine change. If corridors are not enough: "early" trees, or
   placing an enclosed pendant tree before its ring closes (both ours, not Edgar's).
-- PNG library: chosen at the render step.

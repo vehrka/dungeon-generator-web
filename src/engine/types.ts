@@ -28,6 +28,9 @@ export type JsonObject = { id: string; type: string; name: string; found_in: num
 export type DungeonJson = {
   schema_version: number;
   seed: number;
+  grammar?: string;
+  size?: string;
+  theme?: string;
   start: number;
   goal: number;
   nodes: JsonNode[];
