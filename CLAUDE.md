@@ -3,7 +3,8 @@
 Generates dungeons (TS port of the Combined grammar of `../101.02_dungeon_generator`,
 `src/engine/generator/`) and lays them out (TS port of Nepožitek's graph-based layout, Edgar).
 Schema 2 JSON is the interchange format: generated, or loaded from a file. Plan and progress:
-`STATUS.md`. Design, the source of truth: `docs/design.md`.
+`STATUS.md`. Design, the source of truth: `docs/design.md`; the Dyson map style:
+`docs/dyson-style.md`.
 
 ## Commands
 
@@ -36,7 +37,7 @@ doors, configuration spaces, energy or layout, and report the before/after table
   these files. `bench --generated` builds the same sizes and seeds from the TS generator on the fly.
 - `ref/120370675/` (git-ignored): thesis and Edgar-DotNet source.
 - `ref/generator-port.md`: decisions, scope, behaviour, fixes and baseline for porting the
-  generator (STATUS steps 13–14).
+  generator (plans 13–14 in `docs/plans/`).
 - `ref/webdesign/`: style reference for the SVG render and viewer (teenage engineering, product
   guide look; steps 9–10, 14b): `design.md` (rules), `cssvars` (tokens). Follow it for UI work.
 

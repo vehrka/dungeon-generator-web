@@ -14,6 +14,8 @@ Two surfaces, two type rules:
 - **Viewer UI** (`src/viewer/`): the guide look. Jura, all capitals, bands.
 - **Map SVG** (`src/render/`): the catalogue look. System sans, weight 100/300, sentence case. An
   exported SVG must render anywhere, so it never depends on a web font.
+- **Dyson map style** (`src/render/dyson.ts`): not this reference; ink on white, see
+  `docs/dyson-style.md`.
 
 ## Colors
 
