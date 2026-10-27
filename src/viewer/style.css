@@ -1,0 +1,157 @@
+/* Style rules and tokens: ref/webdesign/design.md. teenage engineering, as their product guides
+   (teenage.engineering/guides/ep-35): all capitals, sections as dark numbered bands, underlined
+   text actions. TechnoType is TE's own; Jura (OFL, fonts/OFL.txt) stands in, Latin
+   subset, self-hosted so the page works offline. */
+@font-face {
+  font-family: Jura;
+  src: url("./fonts/jura-latin.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+:root {
+  --color-canvas-mist: #f6f8f7;
+  --color-ink-black: #000000;
+  --color-carbon: #231f20; /* the guide's section band */
+  --color-steel-gray: #e5e5e5;
+  --color-band: #d1d3d4; /* the guide's subsection band */
+  --color-graphite: #b2b2b2;
+  --color-muted: #6d6e71; /* helper text: graphite is too faint for Jura 300 at 11px */
+  --color-amber: #f0a000; /* state only: errors, as the gates in the map */
+  --font: Jura, Inter, "Helvetica Neue", Arial, "Noto Sans", "DejaVu Sans", sans-serif;
+  --spacing-15: 15px;
+  --spacing-22: 22px;
+  --spacing-33: 33px;
+  --panel: 300px;
+}
+
+* { box-sizing: border-box; border-radius: 0; }
+
+body {
+  margin: 0;
+  background: var(--color-canvas-mist);
+  color: var(--color-ink-black);
+  font: 300 13px/1.4 var(--font);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-15);
+  padding: var(--spacing-15) var(--spacing-33);
+  border-bottom: 1px solid var(--color-steel-gray);
+}
+
+h1 { margin: 0; font-size: 32px; font-weight: 300; line-height: 1.11; letter-spacing: -0.02em; }
+header p { margin: 0; font-size: 11px; text-align: right; }
+
+/* Map left, settings right, as the dungen result page (docs/plans/14b-generator-viewer.md). */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel);
+  align-items: start;
+}
+
+main {
+  min-height: 60vh;
+  padding: var(--spacing-33);
+}
+main.drop { outline: 1px dashed var(--color-ink-black); outline-offset: -8px; }
+main svg { display: block; max-width: 100%; height: auto; background: #fff; text-transform: none; letter-spacing: normal; }
+
+/* Sticky so the result block, errors included, stays in view while a tall map scrolls. */
+aside {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: var(--spacing-15) 0;
+  border-left: 1px solid var(--color-steel-gray);
+}
+
+section { padding: 0 var(--spacing-15) 4px; }
+
+/* Section header: a dark band with a circled number, as the guide's index. */
+h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 calc(-1 * var(--spacing-15)) 10px;
+  padding: 4px var(--spacing-15);
+  background: var(--color-carbon);
+  color: var(--color-steel-gray);
+  font-size: 19px;
+  font-weight: 300;
+  line-height: 1.15;
+}
+h2 .n {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid currentColor;
+  border-radius: 50%; /* the guide's circled section numbers, the one round shape */
+  font-size: 12px;
+}
+
+label { display: flex; align-items: center; gap: 8px; }
+.field { flex-direction: column; align-items: stretch; gap: 4px; font-size: 11px; }
+.help { margin: 2px 0 10px; color: var(--color-muted); font-size: 11px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-15); }
+
+input, button, select { font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
+
+input[type="text"], select {
+  width: 100%;
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid var(--color-ink-black);
+  font-size: 14px;
+}
+select {
+  appearance: none;
+  padding-right: 24px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 5 5-5' fill='none' stroke='%23000'/%3E%3C/svg%3E") no-repeat right 8px center;
+  cursor: pointer;
+}
+
+input[type="checkbox"] { margin: 0; accent-color: var(--color-ink-black); }
+
+button {
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+/* Text actions read as the guide's links: underlined, the band colour on hover. */
+.file, button:not(.primary) { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.row button:not(.primary) { padding: 4px 0; }
+.file:hover, button:not(.primary):hover:not(:disabled) { background: var(--color-band); }
+.file input { display: none; }
+button.primary { width: 100%; background: var(--color-ink-black); color: var(--color-canvas-mist); font-size: 15px; }
+button.primary:hover { background: var(--color-carbon); }
+button:disabled, input:disabled { color: var(--color-graphite); text-decoration: none; cursor: default; }
+button.primary:disabled { background: var(--color-steel-gray); }
+
+/* Result and exports: a subsection band, the guide's lighter grey; exports with the result, as
+   dungen's download next to its seed, so they stay in view on a short window. */
+.result { margin: 0 0 10px; padding: 8px var(--spacing-15); background: var(--color-band); }
+.result:has(.error) { background: var(--color-amber); }
+#result p { margin: 0; }
+#result p:first-child { font-size: 15px; margin-bottom: 2px; }
+#result .error { font-size: 13px; text-transform: none; }
+.exports { gap: 10px; margin-top: 6px; font-size: 11px; }
+.exports button { font-size: 13px; }
+.exports button:hover:not(:disabled) { background: var(--color-canvas-mist); }
+
+@media (max-width: 800px) {
+  .page { grid-template-columns: minmax(0, 1fr); }
+  header { flex-direction: column; align-items: start; padding: var(--spacing-15); }
+  header p { text-align: left; }
+  h1 { font-size: 26px; }
+  main { min-height: 0; padding: var(--spacing-15); }
+  aside { position: static; max-height: none; border-left: 0; border-top: 1px solid var(--color-steel-gray); }
+}

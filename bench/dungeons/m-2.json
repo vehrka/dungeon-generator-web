@@ -1,0 +1,208 @@
+{
+  "schema_version": 2,
+  "grammar": "Combined",
+  "seed": 2,
+  "size": "M",
+  "theme": "zelda",
+  "start": 0,
+  "goal": 1,
+  "solvable": true,
+  "unsolvable_reasons": [],
+  "nodes": [
+    {
+      "id": 0,
+      "type": "st",
+      "name": "START",
+      "kind": "room",
+      "objects": [],
+      "number": 1,
+      "label": "Entrance (START)"
+    },
+    {
+      "id": 1,
+      "type": "gl",
+      "name": "GOAL",
+      "kind": "room",
+      "objects": [],
+      "number": 9,
+      "label": "Dungeon goal (GOAL)"
+    },
+    {
+      "id": 2,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 2,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 3,
+      "type": "key",
+      "name": "Get small key 1",
+      "kind": "room",
+      "objects": [
+        "lOrBYa0v"
+      ],
+      "number": 6,
+      "label": "Pickup: small key 1"
+    },
+    {
+      "id": 4,
+      "type": "lock",
+      "name": "Use small key 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "lOrBYa0v"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 5,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 6,
+      "type": "bosskey",
+      "name": "Get boss key 1",
+      "kind": "room",
+      "objects": [
+        "knpHzAlI"
+      ],
+      "number": 10,
+      "label": "Pickup: boss key 1"
+    },
+    {
+      "id": 7,
+      "type": "eb",
+      "name": "eb",
+      "kind": "room",
+      "objects": [],
+      "number": 7,
+      "label": "Boss"
+    },
+    {
+      "id": 8,
+      "type": "lock",
+      "name": "Use boss key 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "knpHzAlI"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": [],
+      "number": 3,
+      "label": "Trap"
+    },
+    {
+      "id": 10,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 8,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 11,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 4,
+      "label": "Enemy"
+    }
+  ],
+  "edges": [
+    {
+      "source": 0,
+      "target": 2,
+      "oneway": false
+    },
+    {
+      "source": 2,
+      "target": 4,
+      "oneway": false
+    },
+    {
+      "source": 2,
+      "target": 11,
+      "oneway": false
+    },
+    {
+      "source": 4,
+      "target": 9,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 8,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 10,
+      "oneway": false
+    },
+    {
+      "source": 7,
+      "target": 1,
+      "oneway": false
+    },
+    {
+      "source": 8,
+      "target": 7,
+      "oneway": false
+    },
+    {
+      "source": 9,
+      "target": 5,
+      "oneway": false
+    },
+    {
+      "source": 10,
+      "target": 6,
+      "oneway": false
+    },
+    {
+      "source": 11,
+      "target": 3,
+      "oneway": false
+    }
+  ],
+  "objects": [
+    {
+      "id": "lOrBYa0v",
+      "type": "key",
+      "name": "small key 1",
+      "found_in": [
+        3
+      ],
+      "opens": [
+        4
+      ]
+    },
+    {
+      "id": "knpHzAlI",
+      "type": "bosskey",
+      "name": "boss key 1",
+      "found_in": [
+        6
+      ],
+      "opens": [
+        8
+      ]
+    }
+  ]
+}
