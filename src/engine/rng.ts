@@ -1,5 +1,11 @@
 export type Rng = () => number; // uniform in [0, 1)
 
+// rng hashes seeds as 32-bit unsigned; larger ones would wrap and report a seed it did not use.
+export const maxSeed = 2 ** 32 - 1;
+export const isSeed = (n: unknown): n is number => Number.isInteger(n) && (n as number) >= 0 && (n as number) <= maxSeed;
+// Decimal digits only, so "1e3", "0x10" or "1.0" are not seeds; undefined when out of range.
+export const seedFromText = (s: string): number | undefined => (/^\d+$/.test(s) && isSeed(Number(s)) ? Number(s) : undefined);
+
 // mulberry32, seeded from the seed and an optional stream name, so independent stages (e.g. one
 // shape family per room type) never shift each other's draws.
 export function rng(seed: number, stream = ""): Rng {

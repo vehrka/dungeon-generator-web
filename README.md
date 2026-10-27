@@ -9,7 +9,7 @@ laid out with Ondřej Nepožitek's graph-based algorithm (the one behind
 [Edgar](https://github.com/OndrejNepozitek/Edgar-DotNet)): procedural room shapes, doors on every
 edge, optional corridors, locks and one-way paths drawn on the map.
 
-Status: in progress, engine (normalize to layout, no corridors), SVG/PNG render and CLI done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
+Status: in progress, engine (normalize to layout, no corridors), SVG/PNG render, CLI and viewer done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
 
 ## Install
 
@@ -21,7 +21,7 @@ $ npm install
 
 ## Usage
 
-Steps 1–2 work; the viewer (step 3) and `--corridors` are planned.
+`--corridors` is planned.
 
 1. Generate a dungeon with its JSON export (schema 2) in the generator project
 
@@ -40,11 +40,15 @@ Steps 1–2 work; the viewer (step 3) and `--corridors` are planned.
    dungeon seed, so the same JSON gives the same map. Room numbers and names match the GM key
    (`ruin.md`). No layout found → the error names the stuck rooms; try another `--layout-seed`.
 
-3. Or open the viewer, load the JSON, reroll and export SVG
+3. Or open the viewer, load the JSON (or drop it on the page), reroll and export SVG
 
    ```bash
-   $ npm run dev
+   $ npm run dev     # http://localhost:5173
+   $ npm run build   # static site in dist/
    ```
+
+   The layout seed starts at the dungeon seed; reroll steps it by one, or type any seed and press
+   Enter. Export saves `<name>-map-<seed>.svg`.
 
 ## Development
 
