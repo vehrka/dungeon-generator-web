@@ -27,11 +27,9 @@ const rules: Record<string, SizeRule> = {
   lever: small,
 };
 
-// Pool key "<type>" or "<type>+<extra>" (shapes.ts poolKey). Bonus goals come as "gb: <reward>";
-// unknown types get the normal range. Hubs grow both bounds by growth per extra neighbour.
-export function sizeRule(key: string, growth = 0): SizeRule {
-  const [, type, extra] = key.match(/^(.*?)(?:\+(\d+))?$/)!;
-  const { min, max } = rules[type!.split(":")[0]!] ?? normal;
-  const grow = Number(extra ?? 0) * growth;
-  return { min: min + grow, max: max + grow };
+// Bonus goals come as "gb: <reward>"; unknown types get the normal range. Hubs grow both bounds by
+// growth per neighbour above hubDegree (shapes.ts poolKey).
+export function sizeRule(type: string, extra = 0, growth = 0): SizeRule {
+  const { min, max } = rules[type.split(":")[0]!] ?? normal;
+  return { min: min + extra * growth, max: max + extra * growth };
 }

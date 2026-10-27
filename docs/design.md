@@ -127,7 +127,8 @@ integer grid:
 
 ```ts
 type Shape = { id: string; outline: Point[] };
-type ShapePool = Map<PoolKey, Shape[]>; // "n", or "n+3" for a hub
+type PoolKey = { type: string; extra: number };    // extra: neighbours above hubDegree
+type ShapePool = Map<string, Shape[]>;              // poolId "<extra>/<type>" → shapes
 ```
 
 - Seeded from `seed` (see Seeds). Same seed → same pool.
@@ -135,10 +136,13 @@ type ShapePool = Map<PoolKey, Shape[]>; // "n", or "n+3" for a hub
   switch lever` 3–5; `n e m t p c` and unknown types 4–7; `st exit` 4–6; `em gb` 6–9; `eb gl`
   7–10. `gb: <reward>` types use the `gb` rule.
 - Hubs (step 8): a room with more than `hubDegree` (4) distinct neighbours has pool key
-  `<type>+<extra>` and both size bounds grow by `hubGrowth` (1) per extra neighbour, so its walls
+  `{ type, extra }` and both size bounds grow by `hubGrowth` (1) per extra neighbour, so its walls
   fit all of them: `n` with 7 neighbours → 7–10. Rooms up to `hubDegree` keep the type's key,
-  stream and shapes. Degree only, not neighbour sizes (fine while every bench hub is `n`).
-- Each family draws from its own PRNG stream per pool key, `rng(seed, "rect/<key>")`, so adding a
+  stream and shapes. Degree only, not neighbour sizes (fine while every bench hub is `n`). Type and
+  extra stay separate fields: types are free text (`gb: <reward>`), so a suffix such as `+3` could
+  not be parsed back.
+- Each family draws from its own PRNG stream per pool key, `rng(seed, "rect/<type>")`,
+  or `"rect+<extra>/<type>"` for hubs, so adding a
   family or a room type never changes the shapes of another. Shapes with the same outline share an
   id (`rect-5x3`), so configuration spaces are cached once per outline.
 - Default pool: 4 shapes per type (`shapesPerType`), fewer when the size range has fewer rectangles.
@@ -376,7 +380,7 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   M-3 is not short cycle chains nor hub size; likely the tree is boxed in by placed rooms
   (build order 8b).
   Step 8 done 2026-10-27 (`hubDegree` 4, `hubGrowth` 1): 14 pass, L-5 skipped, M-1 5/5
-  (594 → 40 ms/seed), M-3 still 0/5 (1802 → 2758 ms/seed). Not a per-iteration cost: a failing
+  (594 → 75 ms/seed), M-3 still 0/5 (1802 → 2579 ms/seed). Not a per-iteration cost: a failing
   run spends the whole budget either way, but with hub shapes more of it goes to annealing trials
   (~200k vs ~130k of 500k, about 11 µs each) and less to greedy evaluations (about 1 µs each).
 - PNG library: chosen at the render step.

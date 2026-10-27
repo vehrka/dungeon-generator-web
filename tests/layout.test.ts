@@ -23,7 +23,7 @@ const graph = (edges: Edge[]): RoomGraph => {
 };
 
 const run = (g: RoomGraph, seed: number, config: LayoutConfig = defaultConfig) => {
-  const pool = shapePool([...new Set(poolKeys(g, config).values())], seed, config);
+  const pool = shapePool(poolKeys(g, config).values(), seed, config);
   return layout(g, chains(g, faces(g), config.maxTreeSize), pool, seed, config);
 };
 

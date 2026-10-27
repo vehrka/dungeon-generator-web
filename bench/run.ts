@@ -36,7 +36,7 @@ for (const name of names) {
     console.log(`${name.padEnd(5)} skipped  ${(e as Error).message}`);
     continue;
   }
-  const keys = [...new Set(poolKeys(graph, defaultConfig).values())];
+  const keys = [...poolKeys(graph, defaultConfig).values()];
   const prepared = { chains: chains(graph, roomFaces, defaultConfig.maxTreeSize) };
 
   const results = layoutSeeds.map((seed) => {
