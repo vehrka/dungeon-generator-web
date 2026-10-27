@@ -376,6 +376,7 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   M-3 is not short cycle chains nor hub size; likely the tree is boxed in by placed rooms
   (build order 8b).
   Step 8 done 2026-10-27 (`hubDegree` 4, `hubGrowth` 1): 14 pass, L-5 skipped, M-1 5/5
-  (594 → 40 ms/seed), M-3 still 0/5 (1802 → 2758 ms/seed, the bigger hub shapes cost per
-  iteration).
+  (594 → 40 ms/seed), M-3 still 0/5 (1802 → 2758 ms/seed). Not a per-iteration cost: a failing
+  run spends the whole budget either way, but with hub shapes more of it goes to annealing trials
+  (~200k vs ~130k of 500k, about 11 µs each) and less to greedy evaluations (about 1 µs each).
 - PNG library: chosen at the render step.
