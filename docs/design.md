@@ -365,9 +365,13 @@ plan `docs/plans/10-viewer.md`.
 - Look of TE's product guides: all capitals, dark numbered section bands, underlined text actions.
   Font Jura (OFL, self-hosted Latin subset in `src/viewer/fonts/`) standing in for TE's TechnoType;
   the SVG map keeps its own font stack.
-- Generation runs in the worker with the layout; the reply carries the JSON drawn, so exports match
-  the map shown. A theme change keeps the layout seed (theme is text only), a size change or a new
-  dungeon seed resets it to the dungeon seed. Size and theme select values are validated.
+- Generation runs in the worker with the layout. A generated dungeon comes back as JSON, also when
+  its layout fails, so JSON and key export work for a dungeon that does not lay out (as the CLI
+  writes them before layout); later layouts of it send that JSON and skip generation. A theme change
+  keeps the layout seed only if dungeon seed and size are unchanged (theme is text only); anything
+  else resets it to the dungeon seed. Size and theme select values are validated; on an error the
+  selects go back to the dungeon shown. A failed load keeps the dungeon before it; generate drops a
+  file read still pending.
 - Layout runs in a Web Worker (`worker.ts`): a failing layout takes ~2.7 s per seed (M-3). Each run
   terminates a busy worker, so a reroll or a new dungeon cancels a stuck layout.
 - Generate = a random dungeon seed, reroll = a random layout seed (step 14b; reroll was seed + 1),

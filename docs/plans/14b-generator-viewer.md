@@ -40,11 +40,13 @@ teenage engineering style of steps 9–10, not dungen's.
 - **Theme change keeps the layout seed.** Theme is text only (step 13), so the graph and the
   layout are the same; only labels change.
 - **Load and generate replace each other.** A loaded file shows its name in the result block and
-  disables nothing; the dungeon controls keep their values and generate again on use.
+  disables nothing; the dungeon controls keep their values and generate again on use. A file that
+  fails to load keeps the dungeon before it; generate drops a file read still pending.
 - **Opens with a dungeon**: M, `zelda`, seed 1, layout seed 1. The page is a generator now; an empty
   map on open is a wasted step. (Was: empty until a file is loaded.)
 - **Generation in the worker**, with the layout. One cancel path (a new request terminates a busy
-  worker), and the reply carries the JSON for export. Generation is milliseconds, so no separate
+  worker). A generated dungeon comes back as JSON, also when its layout fails, so it can be
+  exported (as the CLI); later layouts send that JSON instead of generating again. Generation is milliseconds, so no separate
   progress state.
 - **Exports**: svg (as today), json (generated only, disabled for a loaded file: already on
   disk), key `.md` (any dungeon, `dungeonKey` runs in the main thread on the JSON it holds).
@@ -54,8 +56,9 @@ teenage engineering style of steps 9–10, not dungen's.
 ## Change
 
 - `viewer/worker.ts`: `DrawRequest = { source: { json } | { generate: GenerateOptions }, seed,
-  corridors }`; `DrawResult = { json, svg, rooms, ms } | { error }`. A generator error (bad
-  options) comes back as `{ error }` like a layout error.
+  corridors }`; `DrawResult = { json? } & ({ svg, rooms, ms } | { error })`, `json` for a
+  generated dungeon only. A generator error (bad options) comes back as `{ error }` like a layout
+  error.
 - `viewer/state.ts`: `parseSeed(s, what)` (message names the layout or the dungeon seed),
   `randomSeed` (generate and reroll; replaces `reroll`), `dungeonName(options)`,
   `keyName(name)`, `jsonName(name)`, `parseSize`, `parseTheme` (select values validated, not

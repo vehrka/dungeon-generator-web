@@ -19,11 +19,15 @@ const keyButton = $<HTMLButtonElement>("export-key");
 const result = $<HTMLElement>("result");
 const map = $<HTMLElement>("map");
 
-type Source = { json: DungeonJson } | { generate: Required<GenerateOptions> };
-// The dungeon asked for last: reroll and corridors lay it out again, even if it never drew.
-let current: { source: Source; name: string } | undefined;
-// What the map shows, from the worker's reply, so exports always match it.
-let shown: { json: DungeonJson; name: string; generated: boolean; svg: string; seed: number } | undefined;
+type Options = Required<GenerateOptions>;
+// The dungeon asked for last: reroll and corridors lay it out again, even if it never drew. Once the
+// worker sends a generated dungeon back, source holds its JSON, so later layouts skip generation.
+// options: set for a generated dungeon, none for a loaded file.
+let current: { source: DrawRequest["source"]; name: string; options?: Options } | undefined;
+// From the worker's replies, so exports always match what was drawn: the dungeon (JSON and key, also
+// when its layout failed) and the map.
+let dungeon: { json: DungeonJson; name: string; options?: Options } | undefined;
+let drawn: { svg: string; seed: number } | undefined;
 let worker: Worker | undefined;
 let busy = false;
 let opening = 0; // the latest load; an older file read that resolves late is dropped
@@ -41,7 +45,7 @@ function say(lines: string[], error = false) {
 
 function clear() {
   map.replaceChildren();
-  shown = undefined;
+  dungeon = drawn = undefined;
   svgButton.disabled = jsonButton.disabled = keyButton.disabled = true;
 }
 
@@ -61,29 +65,30 @@ function fail(message: string) {
 }
 
 function run(seed: number) {
-  if (!current) return;
-  const { source, name } = current;
-  const generated = "generate" in source;
+  const c = current;
+  if (!c) return; // never after the first generate: a failed load keeps the dungeon before it
   stop();
   const w = (worker ??= new Worker(new URL("./worker.ts", import.meta.url), { type: "module" }));
   busy = true;
   seedField.value = String(seed);
   svgButton.disabled = jsonButton.disabled = keyButton.disabled = true;
-  say([`${generated ? "generating and laying out" : "laying out"} ${name}, layout seed ${seed}…`]);
+  say([`${"generate" in c.source ? "generating and laying out" : "laying out"} ${c.name}, layout seed ${seed}…`]);
   w.onmessage = (e: MessageEvent<DrawResult>) => {
     busy = false;
-    if ("error" in e.data) return fail(e.data.error);
+    if (e.data.json) c.source = { json: e.data.json }; // c is still current: a newer run terminates this worker
+    const json = "json" in c.source ? c.source.json : undefined;
+    dungeon = json && { json, name: c.name, options: c.options };
+    keyButton.disabled = !dungeon;
+    jsonButton.disabled = !dungeon?.options; // a loaded file is already on disk
+    if ("error" in e.data) {
+      map.replaceChildren();
+      drawn = undefined;
+      return say([e.data.error], true);
+    }
     map.innerHTML = e.data.svg; // render() escapes everything taken from the JSON
-    shown = { json: e.data.json, name, generated, svg: e.data.svg, seed };
-    svgButton.disabled = keyButton.disabled = false;
-    jsonButton.disabled = !generated; // a loaded file is already on disk
-    say([
-      name,
-      `${e.data.rooms} rooms`,
-      ...("generate" in source ? [`dungeon seed ${source.generate.seed}`] : []),
-      `layout seed ${seed}`,
-      `${e.data.ms} ms`,
-    ]);
+    drawn = { svg: e.data.svg, seed };
+    svgButton.disabled = false;
+    say([c.name, `${e.data.rooms} rooms`, ...(c.options ? [`dungeon seed ${c.options.seed}`] : []), `layout seed ${seed}`, `${e.data.ms} ms`]);
   };
   w.onerror = (e) => {
     w.terminate();
@@ -91,7 +96,7 @@ function run(seed: number) {
     busy = false;
     fail(e.message || "Layout worker failed");
   };
-  w.postMessage({ source, seed, corridors: corridorsBox.checked } satisfies DrawRequest);
+  w.postMessage({ source: c.source, seed, corridors: corridorsBox.checked } satisfies DrawRequest);
 }
 
 // Errors from the panel's fields go to the result block, the map stays as it is.
@@ -106,12 +111,31 @@ function attempt(f: () => void) {
 // Generate from the panel's values; layoutSeed undefined resets the layout seed to the dungeon seed.
 function generate(layoutSeed?: number) {
   const options = { seed: parseSeed(dungeonSeedField.value, "Dungeon seed"), size: parseSize(sizeSelect.value), theme: parseTheme(themeSelect.value) };
+  opening++; // a file read still pending must not replace this dungeon
   dungeonSeedField.value = String(options.seed);
-  current = { source: { generate: options }, name: dungeonName(options) };
+  current = { source: { generate: options }, name: dungeonName(options), options };
   run(layoutSeed ?? options.seed);
 }
 
 const layoutSeed = () => parseSeed(seedField.value);
+
+// Size or theme changed. Theme is text only (step 13): the same seed and size give the same graph,
+// so the layout seed shown is kept; anything else starts at the dungeon seed. On an error the
+// selects go back to the dungeon shown, so the panel keeps matching the map.
+function reselect(keepLayout: boolean) {
+  try {
+    const o = current?.options;
+    const same = o !== undefined && o.seed === parseSeed(dungeonSeedField.value, "Dungeon seed") && o.size === sizeSelect.value;
+    let seed: number | undefined;
+    try {
+      seed = keepLayout && same ? layoutSeed() : undefined;
+    } catch {} // a bad layout seed field: start at the dungeon seed
+    generate(seed);
+  } catch (e) {
+    if (current?.options) ({ size: sizeSelect.value, theme: themeSelect.value } = current.options);
+    say([(e as Error).message], true);
+  }
+}
 
 async function open(f: File) {
   const n = ++opening;
@@ -119,9 +143,7 @@ async function open(f: File) {
   try {
     loaded = load(await f.text(), f.name);
   } catch (e) {
-    if (n !== opening) return;
-    current = undefined;
-    fail((e as Error).message);
+    if (n === opening) say([(e as Error).message], true); // the dungeon before stays, map included
     return;
   }
   if (n !== opening) return;
@@ -152,9 +174,8 @@ generateButton.addEventListener("click", () =>
 dungeonSeedField.addEventListener("keydown", (e) => {
   if (e.key === "Enter") attempt(() => generate());
 });
-sizeSelect.addEventListener("change", () => attempt(() => generate()));
-// Theme is text only (step 13): same graph, so the layout seed shown is kept.
-themeSelect.addEventListener("change", () => attempt(() => generate(seedField.value.trim() ? layoutSeed() : undefined)));
+sizeSelect.addEventListener("change", () => reselect(false));
+themeSelect.addEventListener("change", () => reselect(true));
 
 seedField.addEventListener("keydown", (e) => {
   if (e.key === "Enter") attempt(() => run(layoutSeed()));
@@ -168,14 +189,14 @@ file.addEventListener("change", () => {
 });
 
 svgButton.addEventListener("click", () => {
-  if (shown) download(shown.svg, "image/svg+xml", exportName(shown.name, shown.seed));
+  if (drawn && dungeon) download(drawn.svg, "image/svg+xml", exportName(dungeon.name, drawn.seed));
 });
 jsonButton.addEventListener("click", () => {
-  if (shown?.generated) download(JSON.stringify(shown.json, null, 2) + "\n", "application/json", jsonName(shown.name));
+  if (dungeon?.options) download(JSON.stringify(dungeon.json, null, 2) + "\n", "application/json", jsonName(dungeon.name));
 });
 keyButton.addEventListener("click", () => {
-  const s = shown;
-  if (s) attempt(() => download(dungeonKey(s.json), "text/markdown", keyName(s.name)));
+  const d = dungeon;
+  if (d) attempt(() => download(dungeonKey(d.json), "text/markdown", keyName(d.name)));
 });
 
 // Drop anywhere on the page: a drop the page does not take makes the browser open the file.
