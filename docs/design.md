@@ -7,7 +7,7 @@ an SVG/PNG map and a Markdown GM key (CLI) and an interactive viewer.
 Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–8
 (normalize to layout), render + CLI (step 9), viewer (step 10), corridors (step 11) and L/T
 shapes (step 12) implemented, generator core (step 13) ported, generator in the CLI, GM key and
-bench (step 14a); see `STATUS.md`.
+bench (step 14a) and in the viewer (step 14b); see `STATUS.md`.
 
 ## References
 
@@ -32,7 +32,7 @@ In v1:
 - Shapes: seeded procedural pool, rectangles first. Then L/T/plus. Caves dropped (2026-10-27).
 - Optional corridors.
 - Output: SVG (browser and Node), PNG (CLI only), GM key in Markdown, the JSON itself.
-- Viewer: load JSON, show map, reroll, export SVG.
+- Viewer: generate or load JSON, show map, reroll, export SVG, JSON and GM key.
 
 Out of v1: shape parameter tweaking in the viewer, FoundryVTT scene export, real-world scale,
 Edgar's room template repeat modes (thesis 2.2.2).
@@ -356,23 +356,34 @@ to `<size>-<seed>-<theme>-map.svg`, size lower case.
 Vite page (`vite.config.ts`: root `src/viewer`, build to `dist/`), same style. Decided 2026-10-27,
 plan `docs/plans/10-viewer.md`.
 
-- Controls: load JSON (file input or drop on the map), layout seed field (Enter runs it), reroll,
-  export svg (`<name>-map-<seed>.svg`). Status line: rooms, layout seed, ms; errors in amber,
-  message only.
+- Step 14b (plan `docs/plans/14b-generator-viewer.md`), after dungen.app's result page: map left,
+  settings panel right (sticky, stacks under the map below 800px), one graphite helper line per
+  control. Panel: result band (name, rooms, seeds, ms; errors in amber, message only; exports svg,
+  json for a generated dungeon, key `.md`; first so errors and exports stay in view), dungeon
+  (seed, size, theme, generate), layout (seed, reroll, corridors), file (load JSON or drop on the
+  map). Opens with M, zelda, seed 1.
+- Look of TE's product guides: all capitals, dark numbered section bands, underlined text actions.
+  Font Jura (OFL, self-hosted Latin subset in `src/viewer/fonts/`) standing in for TE's TechnoType;
+  the SVG map keeps its own font stack.
+- Generation runs in the worker with the layout; the reply carries the JSON drawn, so exports match
+  the map shown. A theme change keeps the layout seed (theme is text only), a size change or a new
+  dungeon seed resets it to the dungeon seed. Size and theme select values are validated.
 - Layout runs in a Web Worker (`worker.ts`): a failing layout takes ~2.7 s per seed (M-3). Each run
-  terminates the previous worker, so a reroll cancels a stuck layout.
-- Reroll = layout seed + 1, wrapping at 2³²−1: deterministic, any earlier seed can be typed back.
+  terminates a busy worker, so a reroll or a new dungeon cancels a stuck layout.
+- Generate = a random dungeon seed, reroll = a random layout seed (step 14b; reroll was seed + 1),
+  each written into its field first, so any map can be typed back; Enter in a field runs the typed
+  seed. `crypto.getRandomValues` in the viewer only; the engine never draws randomness outside
+  `rng(seed, stream)`.
 - Logic in `state.ts` (no DOM, tested); `main.ts` only wires the DOM. A file that is not a JSON
   object is rejected by name; the rest is `normalize`'s schema check. The map goes in with
   `innerHTML`, safe because `render` escapes the JSON's values. No PNG export (resvg is Node-only).
-- Reroll steps the seed in the field (what the user sees), not the last seed drawn.
 
 ### 9. Generator (`engine/generator/`)
 
 Port of the Combined grammar of `101.02_dungeon_generator` (commit `539c76c`), canonical here
 since step 13; decisions and Python baseline in `ref/generator-port.md`, plan
 `docs/plans/13-generator-core.md`. `generateDungeon({ seed, size, theme })` gives schema 2 JSON,
-the same that `normalize` reads; in the CLI since step 14a, the viewer is step 14b.
+the same that `normalize` reads; in the CLI since step 14a, in the viewer since step 14b.
 
 - `graph.ts`: directed multigraph, stable ids in insertion order (replaces igraph; order, not
   index parity, is what expansion and merging depend on). `simplify`, undirected Dijkstra.
@@ -409,7 +420,7 @@ p90) XS 6/6/8, S 10/13/19, M 13/18/31, L 17/26/44 against Python 6/6/8, 10/13/19
 - The dungeon seed (with size and theme) gives one dungeon; required to generate, no random seed.
 - The layout seed defaults to `json.seed` (the dungeon seed when generating), so one dungeon gives
   one map.
-- `--layout-seed N` (CLI) and the seed field and reroll button (viewer, seed + 1) override it.
+- `--layout-seed N` (CLI) and the seed field and reroll button (viewer, random seed) override it.
 - Seeds are 32-bit unsigned integers (`isSeed`, `engine/rng.ts`), shared by CLI and viewer.
 - One seeded PRNG (e.g. mulberry32) passed explicitly into every stage. No `Math.random`.
 - The same JSON and seed always give the same SVG (tested by snapshot).
@@ -433,7 +444,7 @@ src/engine/generator/   graph.ts, grammar.ts, themes.ts, types.ts, config.ts, ex
 src/render/    svg.ts, icons.ts, key.ts
 src/cli/       main.ts     ruin.json | --dungeon-seed [--size] [--theme] → map.svg / .png
                            [-o] [--json] [--key] [--layout-seed] [--no-corridors]
-src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   load JSON, seed, reroll, corridors, export SVG
+src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   generate or load JSON, seeds, reroll, corridors, export
 tests/         one test file per engine module, fixture ruin.json; tests/generator/ likewise
 ```
 

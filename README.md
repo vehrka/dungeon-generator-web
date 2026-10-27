@@ -10,7 +10,7 @@ Generates a dungeon graph (TypeScript port of the Combined grammar of
 edge, optional corridors, locks and one-way paths drawn on the map.
 
 Status: in progress, generator, engine (normalize to layout, with corridors), SVG/PNG render, GM
-key, CLI and viewer done; generating from the viewer next. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
+key, CLI and viewer (generate or load, lay out, export) done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
 
 ## Install
 
@@ -44,16 +44,21 @@ $ npm install
 
    Output defaults to `<input>-map.svg`; the layout seed to the JSON's seed.
 
-3. Or open the viewer, load the JSON (or drop it on the page), reroll and export SVG
+3. Or open the viewer: generate (or load a JSON), lay out, export
 
    ```bash
    $ npm run dev     # http://localhost:5173
    $ npm run build   # static site in dist/
    ```
 
-   The layout seed starts at the dungeon seed; reroll steps it by one, or type any seed and press
-   Enter. The corridors checkbox lays the same seed out again with or without corridors. Export
-   saves `<name>-map-<seed>.svg`.
+   Opens with M, zelda, dungeon seed 1. Settings sit right of the map: dungeon seed, size and
+   theme. Generate picks a random dungeon seed and writes it into the field; type a seed and press
+   Enter to generate that one. The layout seed starts at the dungeon seed; reroll picks a random
+   one and writes it into the field, or type any seed and press Enter. A theme change keeps
+   the layout seed (same graph, other labels); a size change resets it. The corridors checkbox
+   lays the same seed out again with or without corridors. Load json (or drop a file on the map)
+   replaces the generated dungeon. Export saves `<name>-map-<seed>.svg`, `<name>.json` (generated only) and
+   `<name>-key.md`; `<name>` is `m-7-zelda` as in the CLI, or the loaded file's name.
 
 ## Development
 
