@@ -2,6 +2,8 @@ export type LayoutConfig = {
   doorLength: number;
   cornerDistance: number; // a door never starts closer than this to a corner
   shapesPerType: number; // configuration spaces grow with the pool size squared
+  hubDegree: number; // rooms with more neighbours get bigger shapes
+  hubGrowth: number; // added to both size bounds per neighbour above hubDegree
   maxTreeSize: number;
   maxBranching: number; // layouts the planner asks of each chain before backtracking
   cycles: number; // simulated annealing
@@ -14,11 +16,14 @@ export type LayoutConfig = {
 };
 
 // Edgar's defaults, except our own iteration cap and cornerDistance 0 (doors may touch a corner):
-// small rooms need every door position they can get (docs/design.md, door capacity).
+// small rooms need every door position they can get (docs/design.md, door capacity). Hub sizing is
+// ours: Edgar's hand-made templates have no size rule.
 export const defaultConfig: LayoutConfig = {
   doorLength: 1,
   cornerDistance: 0,
   shapesPerType: 4,
+  hubDegree: 4,
+  hubGrowth: 1,
   maxTreeSize: 8,
   maxBranching: 5,
   cycles: 50,

@@ -127,14 +127,22 @@ integer grid:
 
 ```ts
 type Shape = { id: string; outline: Point[] };
-type ShapePool = Map<RoomType, Shape[]>;
+type PoolKey = { type: string; extra: number };    // extra: neighbours above hubDegree
+type ShapePool = Map<string, Shape[]>;              // poolId "<extra>/<type>" → shapes
 ```
 
 - Seeded from `seed` (see Seeds). Same seed → same pool.
 - Size range per room type, as data in `engine/shapeRules.ts`. Side lengths: `item key bosskey
   switch lever` 3–5; `n e m t p c` and unknown types 4–7; `st exit` 4–6; `em gb` 6–9; `eb gl`
   7–10. `gb: <reward>` types use the `gb` rule.
-- Each family draws from its own PRNG stream per room type, `rng(seed, "rect/<type>")`, so adding a
+- Hubs (step 8): a room with more than `hubDegree` (4) distinct neighbours has pool key
+  `{ type, extra }` and both size bounds grow by `hubGrowth` (1) per extra neighbour, so its walls
+  fit all of them: `n` with 7 neighbours → 7–10. Rooms up to `hubDegree` keep the type's key,
+  stream and shapes. Degree only, not neighbour sizes (fine while every bench hub is `n`). Type and
+  extra stay separate fields: types are free text (`gb: <reward>`), so a suffix such as `+3` could
+  not be parsed back.
+- Each family draws from its own PRNG stream per pool key, `rng(seed, "rect/<type>")`,
+  or `"rect+<extra>/<type>"` for hubs, so adding a
   family or a room type never changes the shapes of another. Shapes with the same outline share an
   id (`rect-5x3`), so configuration spaces are cached once per outline.
 - Default pool: 4 shapes per type (`shapesPerType`), fewer when the size range has fewer rectangles.
@@ -291,7 +299,7 @@ pinned and audited.
 All the constants above live in one `LayoutConfig` object with Edgar's defaults: `maxTreeSize`,
 `mergeSmallChains`, `maxBranching`, `cycles`, `trialsPerCycle`, `maxIterationsWithoutSuccess`,
 `maxStageTwoFailures`, `shapePerturbChance`, `differenceScale`, `greedyMaxPoints`, `doorLength`,
-`cornerDistance`, `corridorRate`, `maxTotalIterations`.
+`cornerDistance`, `corridorRate`, `maxTotalIterations`; plus our own `hubDegree`, `hubGrowth`.
 
 ## Modules
 
@@ -352,7 +360,7 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
 5. shapes (rectangles) and doors
 6. configuration spaces
 7. energy and layout (no corridors)
-8. shape sizes from door count
+8. shape sizes from door count, then 8b: M-3 (tree chain boxed in by placed rooms)
 9. render + CLI, then viewer
 10. corridors → L/T/plus → caves
 
@@ -365,7 +373,14 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   and short cycle chains (1–2 rooms) that must close a face between already placed rooms.
   `cornerDistance = 0` fixes 3 of the 5; bigger hub shapes fix one more (M-1); M-3 still fails.
   Decided 2026-10-26: `cornerDistance = 0` by default (done), and shape sizes from a room's door
-  count as its own step (build order 8). M-3 (short cycle chains) may still need more.
+  count as its own step (build order 8).
   `npm run bench` on 2026-10-27, defaults: 13 pass, L-5 skipped, M-1 fails 2 of 5 layout seeds,
-  M-3 fails all 5 (M-5 now passes).
+  M-3 fails all 5 (M-5 now passes). Spike 2026-10-27: hub #3 (7 doors) at 7–10 makes M-1 5/5;
+  M-3 stays 0/5, stuck on tree chain `[26,25,19,17,27,20,31,34]`, which does not hold the hub. So
+  M-3 is not short cycle chains nor hub size; likely the tree is boxed in by placed rooms
+  (build order 8b).
+  Step 8 done 2026-10-27 (`hubDegree` 4, `hubGrowth` 1): 14 pass, L-5 skipped, M-1 5/5
+  (594 → 75 ms/seed), M-3 still 0/5 (1802 → 2579 ms/seed). Not a per-iteration cost: a failing
+  run spends the whole budget either way, but with hub shapes more of it goes to annealing trials
+  (~200k vs ~130k of 500k, about 11 µs each) and less to greedy evaluations (about 1 µs each).
 - PNG library: chosen at the render step.

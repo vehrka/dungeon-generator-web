@@ -10,7 +10,7 @@ import { defaultConfig } from "../src/engine/config";
 import { layout, LayoutError } from "../src/engine/layout";
 import { normalize } from "../src/engine/normalize";
 import { faces, NonPlanarError } from "../src/engine/planar";
-import { shapePool } from "../src/engine/shapes";
+import { poolKeys, shapePool } from "../src/engine/shapes";
 import type { DungeonJson } from "../src/engine/types";
 
 const dir = join(import.meta.dirname, "dungeons");
@@ -36,13 +36,13 @@ for (const name of names) {
     console.log(`${name.padEnd(5)} skipped  ${(e as Error).message}`);
     continue;
   }
-  const types = [...new Set([...graph.rooms.values()].map((r) => r.type))];
+  const keys = [...poolKeys(graph, defaultConfig).values()];
   const prepared = { chains: chains(graph, roomFaces, defaultConfig.maxTreeSize) };
 
   const results = layoutSeeds.map((seed) => {
     const t0 = performance.now();
     try {
-      layout(graph, prepared.chains, shapePool(types, seed, defaultConfig), seed, defaultConfig);
+      layout(graph, prepared.chains, shapePool(keys, seed, defaultConfig), seed, defaultConfig);
       return { ok: true, ms: performance.now() - t0 };
     } catch (e) {
       if (!(e instanceof LayoutError)) throw e;

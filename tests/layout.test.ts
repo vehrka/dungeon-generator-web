@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import ruin from "./fixtures/ruin.json";
+import m1 from "./fixtures/m-1.json";
 import { normalize } from "../src/engine/normalize";
 import { faces } from "../src/engine/planar";
 import { chains } from "../src/engine/chains";
 import { defaultConfig, type LayoutConfig } from "../src/engine/config";
-import { shapePool } from "../src/engine/shapes";
+import { poolKeys, shapePool } from "../src/engine/shapes";
 import { layout, LayoutError, type Layout } from "../src/engine/layout";
 import { overlapArea, translate, walls, type Polygon, type Segment } from "../src/engine/geometry";
 import type { DungeonJson, RoomGraph } from "../src/engine/types";
@@ -22,7 +23,7 @@ const graph = (edges: Edge[]): RoomGraph => {
 };
 
 const run = (g: RoomGraph, seed: number, config: LayoutConfig = defaultConfig) => {
-  const pool = shapePool([...new Set([...g.rooms.values()].map((r) => r.type))], seed, config);
+  const pool = shapePool(poolKeys(g, config).values(), seed, config);
   return layout(g, chains(g, faces(g), config.maxTreeSize), pool, seed, config);
 };
 
@@ -69,6 +70,12 @@ describe("layout", () => {
     const g = normalize(ruin as DungeonJson);
     expectValid(g, run(g, ruin.seed));
   });
+
+  // Bench M-1: hub #3 has 7 doors; on 4–7 rooms layout seeds 2 and 4 ran out of iterations.
+  it.each([2, 4])("lays out a dungeon with a 7-door hub, seed %i", (seed) => {
+    const g = normalize(m1 as DungeonJson);
+    expectValid(g, run(g, seed));
+  }, 20_000);
 
   it("is deterministic for a seed", () => {
     const g = graph([[0, 1], [1, 2], [2, 3], [3, 0], [3, 4]]);

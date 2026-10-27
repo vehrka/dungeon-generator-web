@@ -2,8 +2,8 @@
 
 **updated:** 2026-10-27
 
-Steps 1–7 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
-and layout) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–8 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
+and layout, hub shape sizes) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -27,9 +27,11 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [x] 6. **configuration spaces**: per shape pair, cached; door at an offset; maximum intersection.
 - [x] 7. **energy and layout**: greedy placement, simulated annealing for cycles, planner with
   backtracking, iteration cap (100k, retry 4×), `LayoutError` naming the stuck chain. No corridors.
-- [ ] 8. **shape sizes from door count**: a room's shapes depend on its door count as well as its
-  type, so hubs (up to 7 doors) get walls long enough for all their neighbours. Done when
-  `npm run bench` passes (now: M-1 fails 2/5 layout seeds, M-3 fails 5/5; M-5 already passes).
+- [x] 8. **shape sizes from door count**: a room's shapes depend on its door count as well as its
+  type: above `hubDegree` (4) neighbours both size bounds grow by `hubGrowth` (1) each. M-1 3/5 →
+  5/5, no regressions. Plan: `docs/plans/08-hub-shapes.md`.
+- [ ] 8b. **M-3**: fails 5/5 on tree chain `[26,25,19,17,27,20,31,34]`, not the hub's chain; bigger
+  hubs don't help. Likely boxed in by placed rooms. Investigate, then plan.
 - [ ] 9. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.
 - [ ] 10. **viewer**: load JSON, show map, reroll, export SVG.
 - [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
@@ -42,7 +44,7 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   occur; `normalize` rejects them. The fixture has none. Decide: collapse a gate chain into one door
   with all gates, or fix it in the generator.
 - Door capacity: `cornerDistance = 0` now default (fixes 3 of the 5 failing benchmark dungeons);
-  hub sizing is step 8. Numbers in `docs/design.md`, open points.
+  hub sizing done in step 8 (M-1 fixed); M-3 is step 8b. Numbers in `docs/design.md`, open points.
 - `normalize` rejects a gate with one one-way leg and one two-way leg ("one-way edges that disagree
   on direction"; generator `--size L --seed 5`, gate 22). Should probably be a one-way door.
 - PNG library (step 9).

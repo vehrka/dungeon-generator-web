@@ -4,7 +4,7 @@ import { configSpaces, doorAt, maximumIntersection } from "./configSpace";
 import { centre, energy, isValid, place, roomEnergy, terms, type EnergyContext, type LayoutState } from "./energy";
 import { bbox, type Point, type Segment } from "./geometry";
 import { rng, shuffle, type Rng } from "./rng";
-import type { Shape, ShapePool } from "./shapes";
+import { poolId, poolKeys, type Shape, type ShapePool } from "./shapes";
 import type { Door, RoomGraph, RoomId } from "./types";
 
 export type Placement = { room: RoomId; shape: Shape; at: Point };
@@ -39,7 +39,8 @@ export function layout(graph: RoomGraph, chains: Chain[], pool: ShapePool, seed:
     neighbours.get(a)!.push(b);
     neighbours.get(b)!.push(a);
   }
-  const shapes = new Map([...graph.rooms.values()].map((room) => [room.id, pool.get(room.type)!]));
+  const keys = poolKeys(graph, config);
+  const shapes = new Map([...graph.rooms.keys()].map((id) => [id, pool.get(poolId(keys.get(id)!))!]));
   const distinct = new Map([...shapes.values()].flat().map((s) => [s.id, s]));
   const avgSize =
     [...distinct.values()].reduce((t, s) => {
