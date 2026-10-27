@@ -11,14 +11,15 @@ npm run typecheck   # tsc --noEmit, must be clean
 npm test            # vitest, must pass
 npm run bench       # layout benchmark, bench/dungeons × layout seeds 1–5; exits 1 if any fails
 npm run bench -- m-1 m-3   # only the named dungeons
+npm run bench -- --no-corridors   # rooms touch at every door
 npm run dev         # viewer, vite (root src/viewer)
 npm run build       # typecheck + viewer build to dist/, must succeed
 ```
 
-Healthy bench line: `l-1   pass  5/5  28 rooms      39 ms/seed`. Healthy run: exit 0,
-`0 failing, 1 known` (M-3 `known`, waits for corridors; `knownFailures` in `bench/run.ts`). Run it
-when touching shapes, doors, configuration spaces, energy or layout, and report the before/after
-table.
+Healthy bench line: `l-1   pass  5/5  28 rooms      45 ms/seed`. Healthy run: exit 0,
+`0 failing, 0 known`; with `--no-corridors`, `0 failing, 1 known` (M-3 needs corridors;
+`knownFailures` in `bench/run.ts`). Run both modes when touching shapes, doors, configuration
+spaces, energy or layout, and report the before/after table.
 
 ## Layout
 

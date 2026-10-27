@@ -2,8 +2,8 @@
 
 **updated:** 2026-10-27
 
-Steps 1–10 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
-and layout, hub shape sizes, render and CLI, viewer) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–11 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
+and layout, hub shape sizes, render and CLI, viewer, corridors) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -40,14 +40,22 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [x] 10. **viewer**: load JSON (file or drop), seed field, reroll (seed + 1), export SVG; layout in
   a Web Worker so a failing layout (~2.7 s/seed) neither freezes the page nor blocks a reroll.
   `isSeed` shared in `engine/rng.ts`. Plan: `docs/plans/10-viewer.md`.
-- [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
-  Acceptance: M-3 5/5 with corridors on, then remove it from `knownFailures`. Corridors are a
-  seeded per-door choice: decide whether to measure M-3 over corridor seeds or prefer corridors on
-  face doors (see `docs/plans/08b-m3.md`).
+- [x] 11. **corridors**: over-corridor configuration spaces, touching constraint (`roomsCanTouch`,
+  off by default as in Edgar), stage two. On by default, `corridorRate` 0.95 per room pair,
+  lengths `[1, 3, 5]` (measured on M-3); CLI `--no-corridors`, viewer checkbox, bench
+  `--no-corridors`. M-3 5/5 with corridors, known failure only without. Plan:
+  `docs/plans/11-corridors.md`.
 - [ ] 12. **L/T/plus shapes**.
 - [ ] 13. **cave shapes**.
 
 ## Open points
+
+- Bench without corridors is ~10–25% slower than before step 11 (same layouts; the touching and
+  link terms in the energy hot path). Machine noise is ~20%, so not chased.
+- Viewer export name `<name>-map-<seed>.svg` does not say whether corridors were on; two maps of
+  one seed can share a name.
+- Rooms without a direct door may still touch (`roomsCanTouch` true, Edgar's default). Try false
+  for cleaner maps if the bench allows it.
 
 - Generator gate chains: the exporter walks "through any chain of gates", so gate–gate edges may
   occur; `normalize` rejects them. The fixture has none. Decide: collapse a gate chain into one door

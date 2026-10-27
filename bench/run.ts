@@ -3,7 +3,8 @@
 // when any dungeon that normalize and planarity accept fails, unless it is a known failure; a known
 // failure that passes also exits non-zero, so the list does not go stale.
 //
-//   npm run bench [-- m-1 m-3]   only the named dungeons
+//   npm run bench [-- m-1 m-3]        only the named dungeons
+//   npm run bench -- --no-corridors   rooms touch at every door
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { chains } from "../src/engine/chains";
@@ -16,11 +17,13 @@ import type { DungeonJson } from "../src/engine/types";
 
 const dir = join(import.meta.dirname, "dungeons");
 const layoutSeeds = [1, 2, 3, 4, 5];
-const only = process.argv.slice(2);
-// Dungeon → why it fails and the step that should fix it.
-const knownFailures = new Map([
-  ["m-3", "pendant tree 22-31-34 inside ring 12-7-13-23-29-21 (step 11, corridors)"],
-]);
+const args = process.argv.slice(2);
+const only = args.filter((a) => !a.startsWith("--"));
+const config = { ...defaultConfig, corridors: !args.includes("--no-corridors") };
+// Dungeon → why it fails and the step that should fix it, per corridor mode.
+const knownFailures = new Map<string, string>(
+  config.corridors ? [] : [["m-3", "pendant tree 22-31-34 inside ring 12-7-13-23-29-21, needs corridors"]],
+);
 
 const names = readdirSync(dir)
   .filter((f) => f.endsWith(".json"))
@@ -43,13 +46,13 @@ for (const name of names) {
     if (knownFailures.has(name)) failed++; // a skipped known failure loses its acceptance case
     continue;
   }
-  const keys = [...poolKeys(graph, defaultConfig).values()];
-  const prepared = { chains: chains(graph, roomFaces, defaultConfig.maxTreeSize) };
+  const keys = [...poolKeys(graph, config).values()];
+  const prepared = { chains: chains(graph, roomFaces, config.maxTreeSize) };
 
   const results = layoutSeeds.map((seed) => {
     const t0 = performance.now();
     try {
-      layout(graph, prepared.chains, shapePool(keys, seed, defaultConfig), seed, defaultConfig);
+      layout(graph, prepared.chains, shapePool(keys, seed, config), seed, config);
       return { ok: true, ms: performance.now() - t0 };
     } catch (e) {
       if (!(e instanceof LayoutError)) throw e;

@@ -1,3 +1,4 @@
+import { defaultConfig, type LayoutConfig } from "../engine/config";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
 
@@ -27,3 +28,5 @@ export function parseSeed(s: string): number {
 }
 
 export const exportName = (name: string, seed: number): string => `${name.replace(/\.json$/i, "")}-map-${seed}.svg`;
+
+export const layoutConfig = (corridors: boolean): LayoutConfig => ({ ...defaultConfig, corridors });

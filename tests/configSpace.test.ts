@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { configSpace, configSpaces, doorAt, maximumIntersection } from "../src/engine/configSpace";
+import { configSpace, configSpaces, doorAt, maximumIntersection, overCorridor } from "../src/engine/configSpace";
 import { defaultConfig } from "../src/engine/config";
 import { doorLines } from "../src/engine/doors";
 import {
@@ -15,6 +15,7 @@ import {
   type Segment,
 } from "../src/engine/geometry";
 import { rng, shuffle } from "../src/engine/rng";
+import { corridorShapes, type Shape } from "../src/engine/shapes";
 
 const p = (x: number, y: number): Point => ({ x, y });
 const seg = (x0: number, y0: number, x1: number, y1: number) => segment(p(x0, y0), p(x1, y1));
@@ -119,6 +120,88 @@ describe("configSpaces", () => {
     expect(spaces(a, b)).toBe(spaces({ ...a }, { ...b }));
     expect(spaces(a, b)).not.toBe(spaces(b, a));
     expect(spaces(a, b)).toEqual(configSpace(a.outline, b.outline, defaultConfig));
+  });
+});
+
+describe("over a corridor", () => {
+  const c0 = { doorLength: 1, cornerDistance: 0 };
+  const room = (w: number, h: number): Shape => ({ id: `rect-${w}x${h}`, outline: rectangle(w, h) });
+  const corridors = (lengths: number[]) => corridorShapes({ ...defaultConfig, corridorLengths: lengths });
+
+  it("uses a shape's own door lines: a corridor connects only at its ends", () => {
+    const [v2] = corridors([2]);
+    // 3×3 above or below a 1×2 vertical corridor, its door over the corridor's
+    expect(configSpaces(c0)(room(3, 3), v2!).offsets).toEqual([seg(-2, -3, 0, -3), seg(-2, 2, 0, 2)]);
+  });
+
+  it("puts two 3×3 squares a corridor length apart, doors lined up through it", () => {
+    expect(overCorridor(room(3, 3), room(3, 3), corridors([1]), c0).offsets).toEqual([
+      seg(-4, -2, -4, 2),
+      seg(-2, -4, 2, -4),
+      seg(-2, 4, 2, 4),
+      seg(4, -2, 4, 2),
+    ]);
+    expect(points(overCorridor(room(3, 3), room(3, 3), corridors([1, 2]), c0).offsets)).toEqual(
+      points([...overCorridor(room(3, 3), room(3, 3), corridors([1]), c0).offsets, seg(-5, -2, -5, 2), seg(-2, -5, 2, -5), seg(-2, 5, 2, 5), seg(5, -2, 5, 2)]),
+    );
+  });
+
+  // Brute force: every offset of moving that does not overlap fixed, with a corridor shape and
+  // position that overlaps neither and shares a door with both.
+  const ends = (s: Shape, at: Point) =>
+    s.doorLines!.map((d) => {
+      const from = p(d.line.from.x + at.x, d.line.from.y + at.y);
+      const axis = d.normal.x === 0 ? "x" : "y"; // along the wall
+      return { door: segment(from, { ...from, [axis]: from[axis] + d.length }), normal: d.normal };
+    });
+  const same = (a: { door: Segment; normal: Point }, b: { door: Segment; normal: Point }) =>
+    a.normal.x === -b.normal.x && a.normal.y === -b.normal.y && JSON.stringify(a.door) === JSON.stringify(b.door);
+  const bruteForceOver = (moving: Polygon, fixed: Polygon, cs: Shape[]) => {
+    const [bm, bf] = [bbox(moving), bbox(fixed)];
+    const fixedDoors = doors(fixed, c0);
+    // corridor placements that share a door with fixed and do not overlap it
+    const placements = cs.flatMap((c) => {
+      const out = [];
+      for (let cx = bf.x0 - 4; cx <= bf.x1 + 4; cx++) {
+        for (let cy = bf.y0 - 4; cy <= bf.y1 + 4; cy++) {
+          const at = p(cx, cy);
+          const outline = translate(c.outline, at);
+          const e = ends(c, at);
+          if (overlapArea(outline, fixed) === 0 && e.some((d) => fixedDoors.some((f) => same(d, f)))) out.push({ outline, ends: e });
+        }
+      }
+      return out;
+    });
+    const out: string[] = [];
+    for (let x = bf.x0 - bm.x1 - 4; x <= bf.x1 - bm.x0 + 4; x++) {
+      for (let y = bf.y0 - bm.y1 - 4; y <= bf.y1 - bm.y0 + 4; y++) {
+        const moved = translate(moving, p(x, y));
+        if (overlapArea(moved, fixed) > 0) continue;
+        const movedDoors = doors(moved, c0);
+        if (placements.some((c) => overlapArea(c.outline, moved) === 0 && c.ends.some((d) => movedDoors.some((m) => same(d, m))))) out.push(`${x},${y}`);
+      }
+    }
+    return out.sort();
+  };
+
+  it("matches brute force for rectangles and an L", () => {
+    const shapes = [rectangle(3, 3), rectangle(4, 2), L];
+    const cs = corridors([1, 2]);
+    for (const a of shapes) {
+      for (const b of shapes) {
+        const [ma, mb] = [{ id: "a", outline: a }, { id: "b", outline: b }];
+        expect(points(overCorridor(mb, ma, cs, c0).offsets)).toEqual(bruteForceOver(b, a, cs));
+      }
+    }
+  });
+
+  it("is cached per ordered pair and link, apart from the direct space", () => {
+    const spaces = configSpaces(c0, corridors([1]));
+    const [a, b] = [room(3, 3), room(5, 3)];
+    expect(spaces(a, b, "corridor")).toBe(spaces(a, b, "corridor"));
+    expect(spaces(a, b, "corridor")).toEqual(overCorridor(a, b, corridors([1]), c0));
+    expect(spaces(a, b, "corridor")).not.toEqual(spaces(a, b, "door"));
+    expect(spaces(a, b)).toBe(spaces(a, b, "door"));
   });
 });
 

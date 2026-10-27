@@ -4,8 +4,8 @@ Turns the `--json` export of `101.02_dungeon_generator` (schema 2) into a 2D map
 Nepožitek's graph-based algorithm. Outputs an SVG/PNG map (CLI) and an interactive viewer.
 
 Status: design agreed 2026-10-25, checked against the thesis and Edgar source. Engine steps 1–8
-(normalize to layout, no corridors), render + CLI (step 9) and viewer (step 10) implemented; see
-`STATUS.md`.
+(normalize to layout), render + CLI (step 9), viewer (step 10) and corridors (step 11)
+implemented; see `STATUS.md`.
 
 ## References
 
@@ -150,8 +150,11 @@ type ShapePool = Map<string, Shape[]>;              // poolId "<extra>/<type>" �
 - Stages: rectangles → L/T/plus polyominoes → cave blobs. Each stage only adds families; it does not
   change the earlier ones for the same seed.
 - Pool size per type is small (around 3–6 shapes): configuration spaces grow with pool size squared.
-- Corridors are shapes too: straight, 1 wide, a few lengths, doors only on the short ends. Short
-  corridors on purpose, so stage two rarely fails (thesis 2.2.1).
+- Corridors are shapes too (`corridorShapes`): straight, `doorLength` wide, one per length in
+  `corridorLengths` and orientation, doors only on the two ends (`Shape.doorLines`, Edgar's
+  `SpecificPositionsMode`). Lengths `[1, 3, 5]`: Edgar's examples use 1 and 2, but on M-3 over 20
+  layout seeds `[1, 2]` passes 5/20, `[1, 2, 3]` 14/20, `[1, 3, 5]` 19/20 (`[1, 2, 4, 6]` 19/20,
+  `[1, 4]` 18/20, `[1, 3]` 13/20); the gap a corridor leaves is what holds an enclosed pendant tree.
 - Edgar's thesis assumes many door positions per room; few door positions make cycles hard
   (thesis 2.4.1). So rooms get doors along whole walls, not fixed points.
 
@@ -183,8 +186,10 @@ which B does not overlap A and a door line of B faces a door line of A of the sa
   `doorAt(space, offset)` gives the door on the fixed shape, the middle one where several fit.
 - Cached lazily per `(moving.id, fixed.id)`. The fixture's full pool (30 shapes, 900 pairs) takes
   about 125 ms.
-- **Over a corridor** (thesis Algorithm 1): for every offset of the corridor relative to A, add the
-  configuration space of B relative to the moved corridor. Repeat per corridor shape and merge.
+- **Over a corridor** (thesis Algorithm 1, `overCorridor`): for every offset of the corridor
+  relative to A, add the configuration space of B relative to the moved corridor. Repeat per
+  corridor shape, merge, drop the offsets where B overlaps A. No door pairs: stage two places the
+  corridor and its doors. Cached per `(moving.id, fixed.id, link)`.
 - **Maximum intersection** of the configuration spaces of a room relative to several placed
   neighbours (`ConfigurationSpaces/AbstractConfigurationSpaces.cs:65`): try all neighbours, then
   every subset one smaller, and so on, until an intersection is non-empty. Returns the segments and
@@ -238,8 +243,12 @@ avgSize = mean over all shapes of (bbox width + bbox height) / 2
   recomputes only its pairs and updates the others by the difference, as Edgar's `UpdateEnergyData`.
   Bounding boxes and rectangle partitions are cached per outline.
 - With corridors: neighbours joined by a corridor add their distance when they are not at a valid
-  over-corridor offset (`Constraints/CorridorConstraints.cs`), and **+1 per pair of non-neighbour
-  rooms that touch** (`Constraints/TouchingConstraints.cs`), so corridors have room to go.
+  over-corridor offset (`Constraints/CorridorConstraints.cs`). Edgar adds that as a second exp
+  term; we share one distance term, zero on the same layouts. With `roomsCanTouch = false` (Edgar's
+  default is true, so is ours), **+1 per pair of rooms without a direct door that touch**, corners
+  included (`Constraints/TouchingConstraints.cs`); corridors are exempt.
+- Placed corridors sit in the state under ids above every room id: later rooms count overlap with
+  them; they have no distance and no touching term.
 
 **Different enough** (`LayoutOperations/AbstractLayoutOperations.cs:215`):
 `diff = mean over chain rooms of (5 · manhattan(centre₁, centre₂) / avgSize)² × (4 if the shape
@@ -249,13 +258,19 @@ the threshold does not tighten as the dungeon grows.
 
 **Corridors**, two stages (thesis 2.2.1):
 
-- Per door edge, a corridor or not (seeded choice, rate configurable). A corridor has exactly two
-  neighbours, neither a corridor.
-- Stage one: corridor rooms are removed from the graph; their two rooms use the over-corridor
-  configuration space.
-- Stage two, after each valid chain: place each corridor of the chain greedily in the intersection
-  of its configuration spaces with both rooms, without overlap. If any corridor fails, it counts as
-  a stage-two failure and annealing goes on.
+- Per room pair (not per door: parallel doors share a corridor), a corridor with chance
+  `corridorRate = 0.95` on its own stream `rng(seed, "corridors")`, or a direct door. Edgar puts a
+  corridor on every connection; 0.95 keeps a few rooms touching. `corridors: false` gives the
+  touching layout of steps 1–10, identical for a seed. A corridor has exactly two neighbours,
+  neither a corridor.
+- Stage one: corridor rooms are not in the graph; their two rooms use the over-corridor
+  configuration space. Chains are unchanged; a corridor goes with the first chain that has placed
+  both its rooms (`TwoStageChainDecomposition.cs`).
+- Stage two, after each valid layout of a chain, trees included (`AddCorridorGreedily`): each
+  corridor of the chain, shapes shuffled, in the maximum intersection of its spaces with both rooms
+  (must satisfy 2), first sampled point without overlap. If any corridor fails, the layout is
+  dropped, a stage-two failure counts, and annealing goes on; past `maxStageTwoFailures` (10 000)
+  without a layout the chain stops.
 
 **Failure**: Edgar runs until cancelled. We cap the total iterations (`maxTotalIterations =
 100 000`: annealing trials plus greedy candidate evaluations). Out of budget, one retry from scratch
@@ -265,13 +280,15 @@ iterations take about 1–1.5 s on 30–40 rooms.
 
 ```ts
 type Placement = { room: RoomId; shape: Shape; at: Point };
-type PlacedDoor = { door: Door; segment: Segment }; // one per graph door, same order
-type Layout = { placements: Placement[]; doors: PlacedDoor[] }; // corridors: Placement[] at step 10
+// one per graph door, same order; through a corridor, segment is on room a, corridor.segment on b
+type PlacedDoor = { door: Door; segment: Segment; corridor?: { shape: Shape; at: Point; segment: Segment } };
+type Layout = { placements: Placement[]; doors: PlacedDoor[] };
 ```
 
 `PlacedDoor` holds the grid segment of each door (`doorAt` on the configuration space of the two
-rooms, in layout coordinates) and the `Door` itself (gate, one-way), so the renderer never
-re-derives geometry.
+rooms, or of each room and its corridor, in layout coordinates) and the `Door` itself (gate,
+one-way), so the renderer never re-derives geometry. The renderer draws corridors steel gray
+(`#e5e5e5`), gate tag and one-way chevron at room a's end, a plain door at room b's.
 
 ### 7. Render (`render/svg.ts`)
 
@@ -329,7 +346,8 @@ plan `docs/plans/10-viewer.md`.
 All the constants above live in one `LayoutConfig` object with Edgar's defaults: `maxTreeSize`,
 `mergeSmallChains`, `maxBranching`, `cycles`, `trialsPerCycle`, `maxIterationsWithoutSuccess`,
 `maxStageTwoFailures`, `shapePerturbChance`, `differenceScale`, `greedyMaxPoints`, `doorLength`,
-`cornerDistance`, `corridorRate`, `maxTotalIterations`; plus our own `hubDegree`, `hubGrowth`.
+`cornerDistance`, `corridorRate`, `roomsCanTouch`, `maxTotalIterations`; plus our own `hubDegree`,
+`hubGrowth`, `corridors`, `corridorLengths`.
 
 ## Modules
 
@@ -337,8 +355,8 @@ All the constants above live in one `LayoutConfig` object with Edgar's defaults:
 src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, shapes.ts,
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/render/    svg.ts, icons.ts
-src/cli/       main.ts     ruin.json → ruin-map.svg / .png  [-o] [--layout-seed]  (--corridors at step 11)
-src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   load JSON, seed, reroll, export SVG
+src/cli/       main.ts     ruin.json → ruin-map.svg / .png  [-o] [--layout-seed] [--no-corridors]
+src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   load JSON, seed, reroll, corridors, export SVG
 tests/         one test file per engine module, fixture ruin.json
 ```
 
@@ -375,10 +393,10 @@ Run before done: `npm run typecheck`, `npm test`.
 
 Benchmark (`npm run bench`, `bench/run.ts`): the 16 generator dungeons in `bench/dungeons/` (sizes
 M and L, seeds 1–8, generator commit 573478c), each laid out with layout seeds 1–5 and
-`defaultConfig`. A dungeon passes when all five lay out; the run exits 1 if any dungeon outside
+`defaultConfig` (`-- --no-corridors`: without corridors). A dungeon passes when all five lay out; the run exits 1 if any dungeon outside
 `knownFailures` fails. Dungeons that `normalize` or planarity reject are reported as skipped.
-Known failures (`knownFailures` in `bench/run.ts`, dungeon → reason and the step that should fix
-it) print `known` and do not count; a known failure that passes 5/5 (`pass (known: remove)`), is
+Known failures (`knownFailures` in `bench/run.ts`, per corridor mode, dungeon → reason and the
+step that should fix it; today only M-3 without corridors) print `known` and do not count; a known failure that passes 5/5 (`pass (known: remove)`), is
 skipped or has no dungeon file counts as failing, so the list does not go stale. Run it for any change to shapes, doors, configuration
 spaces, energy or layout. Not part of `npm test` (about 20 s).
 
@@ -395,8 +413,7 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
 7. energy and layout (no corridors)
 8. shape sizes from door count, then 8b: M-3 known failure, waits for corridors
 9. render + CLI, then viewer
-10. corridors → L/T/plus → caves. Corridors' acceptance: M-3 5/5 with corridors on, then remove
-    it from `knownFailures`
+10. corridors (done: M-3 5/5 with corridors on, known only without) → L/T/plus → caves
 
 ## Open points
 
@@ -428,3 +445,5 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
   cannot leave a cavity in a ring; corridors (build order 10) give that slack. M-3 is a known
   bench failure until then; no engine change. If corridors are not enough: "early" trees, or
   placing an enclosed pendant tree before its ring closes (both ours, not Edgar's).
+  Step 11 done 2026-10-27: with corridors (lengths `[1, 3, 5]`) M-3 passes 5/5 (19/20 over seeds
+  1–20); still 0/5 without, so it stays a known failure in that mode only.

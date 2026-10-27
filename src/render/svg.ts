@@ -22,8 +22,10 @@ const amber = "#f0a000";
 const style = `<style>
 text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-serif;font-size:13px;font-weight:100;fill:#000}
 .room{fill:#fff;stroke:#000;stroke-width:1}
+.corridor{fill:#e5e5e5;stroke:#000;stroke-width:1}
 .number{font-size:19px;font-weight:300;text-anchor:middle}
 .gap{fill:#fff}
+.gap-corridor{fill:#e5e5e5}
 .jamb,.dash{stroke:#000;stroke-width:1}
 .dash{stroke-dasharray:2 2}
 .oneway{fill:none;stroke:#000;stroke-width:1.5}
@@ -57,7 +59,10 @@ function roomGlyphs(graph: RoomGraph, id: RoomId): string[] {
 // Graph + layout → standalone SVG: map on the left, key column (rooms, gates, legend) on the right.
 export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): string {
   const outlines = new Map<RoomId, Polygon>(layout.placements.map((pl) => [pl.room, translate(pl.shape.outline, pl.at)]));
-  const all = bbox([...outlines.values()].flat());
+  // Doors between the same two rooms share a corridor; one polygon each.
+  const corridorKey = (c: NonNullable<PlacedDoor["corridor"]>) => `${c.shape.id}@${c.at.x},${c.at.y}`;
+  const corridors = new Map(layout.doors.flatMap(({ corridor: c }) => (c ? [[corridorKey(c), translate(c.shape.outline, c.at)] as const] : [])));
+  const all = bbox([...outlines.values(), ...corridors.values()].flat());
   const mapWidth = (all.x1 - all.x0) * unit;
   const mapHeight = (all.y1 - all.y0) * unit;
   const top = margin + titleHeight;
@@ -69,11 +74,12 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
     return partition(outlines.get(a)!).some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1) ? -1 : 1;
   };
 
-  const map: string[] = [];
+  const points = (outline: Polygon) => outline.map((q) => `${px(q).x},${px(q).y}`).join(" ");
+  const map: string[] = [...corridors.values()].map((c) => `<polygon class="corridor" points="${points(c)}"/>`);
   const usedGlyphs = new Set<string>();
   for (const [id, outline] of outlines) {
     const room = graph.rooms.get(id)!;
-    map.push(`<polygon class="room" points="${outline.map((q) => `${px(q).x},${px(q).y}`).join(" ")}"/>`);
+    map.push(`<polygon class="room" points="${points(outline)}"/>`);
     // Number and glyphs in the middle of the largest rectangle, so later L/T shapes keep them inside.
     const r = partition(outline).reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
     const c = px({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
@@ -84,11 +90,12 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
     marks.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
   }
 
-  // Doors between the same two rooms share a segment: one mark, one tag for all their gates; dashed
-  // and one-way only when every door of the segment is (opposite one-ways cross both ways).
+  // Doors between the same two rooms share a segment or a corridor: one mark, one tag for all their
+  // gates; dashed and one-way only when every door of the group is (opposite one-ways cross both
+  // ways). A corridor's tag and chevron sit at room a's end, a plain door at room b's.
   const groups = new Map<string, PlacedDoor[]>();
   for (const d of layout.doors) {
-    const k = `${d.segment.from.x},${d.segment.from.y},${d.segment.to.x},${d.segment.to.y}`;
+    const k = d.corridor ? corridorKey(d.corridor) : `${d.segment.from.x},${d.segment.from.y},${d.segment.to.x},${d.segment.to.y}`;
     if (groups.has(k)) groups.get(k)!.push(d);
     else groups.set(k, [d]);
   }
@@ -100,7 +107,9 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
     if (tag) gates.push({ tag, gates: tagged });
     const [first] = doors as [PlacedDoor];
     const oneway = doors.every((d) => d.door.oneway && d.door.a === first.door.a);
-    map.push(doorMark(first.segment, px, tag && tagged.map((g) => g.kind).join(" "), tag, secret, oneway ? side(first.door.a, first.segment) : undefined));
+    const corridorSide = (room: RoomId, s: Segment) => (first.corridor ? side(room, s) : undefined); // the corridor is past the room
+    map.push(doorMark(first.segment, px, tag && tagged.map((g) => g.kind).join(" "), tag, secret, oneway ? side(first.door.a, first.segment) : undefined, corridorSide(first.door.a, first.segment)));
+    if (first.corridor) map.push(doorMark(first.corridor.segment, px, undefined, undefined, secret, undefined, side(first.door.b, first.corridor.segment)));
   }
 
   // Key column: rooms by number, gates by tag, legend of what the map uses.
@@ -108,6 +117,7 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   const gateLines = gates.map((g) => ({ tag: g.tag, text: g.gates.map(gateText).join("; ") }));
   const legend = [
     ...Object.keys(glyphs).filter((g) => usedGlyphs.has(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name })),
+    ...(corridors.size ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
     ...(gates.length ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
     ...(layout.doors.some((d) => d.door.gate?.kind === "secret") ? [{ mark: `<line class="dash" x1="0" y1="-4" x2="14" y2="-4"/>`, text: "secret door" }] : []),
     ...(layout.doors.some((d) => d.door.oneway) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
@@ -178,6 +188,7 @@ const tagMark = (x: number, y: number, tag: string, gate?: string) =>
 
 // A gap of the door's length across the wall with a jamb at each end; secret doors dashed; a gate
 // tag on the door; a one-way chevron pointing away from room a (past the tag when there is one).
+// Into a corridor, the gap's corridor half is the corridor's grey.
 function doorMark(
   s: Segment,
   px: (p: Point) => Point,
@@ -185,6 +196,7 @@ function doorMark(
   tag: string | undefined,
   secret: boolean,
   d: 1 | -1 | undefined, // one-way: +1 points down or right
+  c?: 1 | -1, // corridor: +1 below or right of the door
 ): string {
   const a = px(s.from);
   const b = px(s.to);
@@ -201,6 +213,14 @@ function doorMark(
         `<line class="jamb" x1="${a.x - 3}" y1="${a.y}" x2="${a.x + 3}" y2="${a.y}"/>`,
         `<line class="jamb" x1="${b.x - 3}" y1="${b.y}" x2="${b.x + 3}" y2="${b.y}"/>`,
       ];
+  if (c) {
+    const o = c > 0 ? 0.5 : -2; // past the wall's half-pixel stroke
+    parts.push(
+      horizontal
+        ? `<rect class="gap-corridor" x="${a.x + 1}" y="${a.y + o}" width="${b.x - a.x - 2}" height="1.5"/>`
+        : `<rect class="gap-corridor" x="${a.x + o}" y="${a.y + 1}" width="1.5" height="${b.y - a.y - 2}"/>`,
+    );
+  }
   if (secret) parts.push(`<line class="dash" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`);
   if (tag) parts.push(tagMark(mid.x, mid.y, tag, gate));
   if (d) {

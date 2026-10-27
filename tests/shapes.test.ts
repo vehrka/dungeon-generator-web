@@ -3,7 +3,7 @@ import ruin from "./fixtures/ruin.json";
 import { normalize } from "../src/engine/normalize";
 import { rng, randInt } from "../src/engine/rng";
 import { sizeRule } from "../src/engine/shapeRules";
-import { poolId, poolKey, poolKeys, shapePool, type ShapePool } from "../src/engine/shapes";
+import { corridorShapes, poolId, poolKey, poolKeys, shapePool, type ShapePool } from "../src/engine/shapes";
 import { doorLines } from "../src/engine/doors";
 import { defaultConfig } from "../src/engine/config";
 import { bbox, polygon, rectangle, segment, walls, type Point } from "../src/engine/geometry";
@@ -172,5 +172,27 @@ describe("doorLines", () => {
       expect(d.line.to[axis] + d.length).toBe(w.to[axis] - 1);
       expect(d.normal).toEqual(w.normal);
     });
+  });
+});
+
+describe("corridorShapes", () => {
+  it("has a vertical and a horizontal corridor per length, doorLength wide", () => {
+    const shapes = corridorShapes({ ...defaultConfig, corridorLengths: [1, 3] });
+    expect(shapes.map((s) => s.id)).toEqual(["corridor-v1", "corridor-h1", "corridor-v3", "corridor-h3"]);
+    expect(shapes.map((s) => bbox(s.outline))).toEqual([
+      { x0: 0, y0: 0, x1: 1, y1: 1 },
+      { x0: 0, y0: 0, x1: 1, y1: 1 },
+      { x0: 0, y0: 0, x1: 1, y1: 3 },
+      { x0: 0, y0: 0, x1: 3, y1: 1 },
+    ]);
+  });
+
+  it("has doors only on the two ends, even where cornerDistance would leave none", () => {
+    const [v, h] = corridorShapes({ ...defaultConfig, cornerDistance: 1, corridorLengths: [3] });
+    expect(v!.doorLines).toEqual([
+      { line: segment(p(0, 0), p(0, 0)), length: 1, normal: p(0, -1) },
+      { line: segment(p(0, 3), p(0, 3)), length: 1, normal: p(0, 1) },
+    ]);
+    expect(h!.doorLines!.map((d) => d.normal)).toEqual([p(1, 0), p(-1, 0)]);
   });
 });
