@@ -25,8 +25,9 @@ We port from the thesis and use the source for constants and details. We do not 
 
 In v1:
 
-- Input: generator JSON, schema 2.
-- Shapes: seeded procedural pool, rectangles first. Then L/T/plus, then irregular caves.
+- Input: generator JSON, schema 2. From step 13 the generator itself is ported here and becomes
+  canonical (`ref/generator-port.md`); schema 2 stays the interchange format.
+- Shapes: seeded procedural pool, rectangles first. Then L/T/plus. Caves dropped (2026-10-27).
 - Optional corridors.
 - Output: SVG (browser and Node), PNG (CLI only).
 - Viewer: load JSON, show map, reroll, export SVG.
@@ -159,7 +160,7 @@ type ShapePool = Map<string, Shape[]>;              // poolId "<extra>/<type>" �
 - Defaults from a spike over the bench (`docs/plans/12-lt-shapes.md`): plus fails M-3 with
   corridors and doubles the time; 1-deep cut-outs read as dents. With one L and one T base, about
   ⅔ of the placed rooms are not rectangles: a base brings 4 rotations, perturb picks uniformly.
-- Stages: rectangles → L/T/plus polyominoes → cave blobs. Each stage only adds families; it does not
+- Stages: rectangles → L/T/plus polyominoes (cave blobs dropped). Each stage only adds families; it does not
   change the earlier ones for the same seed (it does change layouts: σ and the pool differ).
 - Pool size per key is small (4 rectangles + up to 8 L/T): configuration spaces grow with pool size
   squared, cached lazily.
@@ -429,7 +430,10 @@ One feature branch per step, off `dev`, reviewed with `/code-review` before the 
 7. energy and layout (no corridors)
 8. shape sizes from door count, then 8b: M-3 known failure, waits for corridors
 9. render + CLI, then viewer
-10. corridors (done: M-3 5/5 with corridors on, known only without) → L/T (done, plus off) → caves
+10. corridors (done: M-3 5/5 with corridors on, known only without) → L/T (done, plus off); caves
+    dropped
+11. generator port: core (STATUS 13), then CLI, viewer and bench integration (STATUS 14).
+    Context and decisions: `ref/generator-port.md`
 
 ## Open points
 
