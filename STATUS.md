@@ -94,6 +94,10 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - Generator: reduce keeps `a→b` and `b→a` and a direct door next to a gated one between the same
   two rooms (parallel doors, L 23/500); layout handles them (spot check S/M/L, 3/3 each). Python
   does the same.
+- Generator solvability (`solve.ts`, as Python): objects collected anywhere count at every gate,
+  assuming the player can walk back. A key behind a one-way edge with no return would pass. The
+  grammar's one-way loops always return and reduce no longer drops a two-way copy of a one-way
+  edge (step 13 review), so not seen; a state search (position + objects) would close it.
 - Door capacity: `cornerDistance = 0` now default (fixes 3 of the 5 failing benchmark dungeons);
   hub sizing done in step 8 (M-1 fixed); M-3 known failure until corridors (step 8b). Numbers in
   `docs/design.md`, open points.

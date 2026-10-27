@@ -3,7 +3,7 @@ import type { GateKind } from "../types";
 import type { GeneratorConfig } from "./config";
 import { BOSS_ROOMS, chooseVariant, finishVariant, GATE_KINDS, pacedRoomVariant, type EdgeKind, type NodeKind, type Preset, type Variant } from "./grammar";
 import { Graph } from "./graph";
-import { progress, steps } from "./solve";
+import { find, steps } from "./solve";
 import { rewardVariant, type Theme } from "./themes";
 import type { DGraph, DVertex, GObject } from "./types";
 
@@ -65,10 +65,11 @@ export function expand(seed: number, preset: Preset, theme: Theme, config: Gener
     }
   };
 
-  // Rooms near a mini-boss or the boss count as the end.
+  // Progress as solve.progress; rooms near a mini-boss or the boss count as the end. One Dijkstra.
   const pace = (v: number): number => {
     const bosses = g.vertices().flatMap(([id, x]) => (BOSS_ROOMS.includes(x.type) ? [id] : []));
-    return Math.min(...steps(g, v, bosses)) <= config.nearBoss ? 1 : progress(g, v);
+    const [fromStart, toBoss, ...near] = steps(g, v, [find(g, "st"), find(g, "eb"), ...bosses]) as number[];
+    return Math.min(...near) <= config.nearBoss ? 1 : fromStart! / (fromStart! + toBoss!);
   };
 
   const next = (): number | undefined => {

@@ -58,23 +58,26 @@ export class Graph<V, E> {
     return [...this.es.values()];
   }
 
-  // Edges at the vertex in edge order; "in" ends at it, "out" starts at it.
+  // Edges at the vertex in edge order (ids only grow, so the set is in order); "in" ends at it,
+  // "out" starts at it.
   incident(id: number, mode: "in" | "out" | "all" = "all"): Edge<E>[] {
     const set = this.inc.get(id);
     if (!set) throw new Error(`No vertex ${id}`);
-    return [...set]
-      .sort((a, b) => a - b)
-      .map((e) => this.es.get(e)!)
-      .filter((e) => mode === "all" || (mode === "in" ? e.target === id : e.source === id));
+    return [...set].map((e) => this.es.get(e)!).filter((e) => mode === "all" || (mode === "in" ? e.target === id : e.source === id));
   }
 
-  // Drops self-loops and repeated source → target edges, keeping the first; a → b and b → a both stay.
-  simplify(): void {
-    const seen = new Set<string>();
+  // Drops self-loops and repeated source → target edges into the first, whose attributes combine
+  // takes (default: the first's); a → b and b → a both stay.
+  simplify(combine: (kept: E, dropped: E) => E = (kept) => kept): void {
+    const first = new Map<string, Edge<E>>();
     for (const e of this.edges()) {
       const key = `${e.source}>${e.target}`;
-      if (e.source === e.target || seen.has(key)) this.deleteEdge(e.id);
-      else seen.add(key);
+      const kept = first.get(key);
+      if (e.source !== e.target && !kept) first.set(key, e);
+      else {
+        if (kept) kept.attrs = combine(kept.attrs, e.attrs);
+        this.deleteEdge(e.id);
+      }
     }
   }
 

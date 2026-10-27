@@ -29,7 +29,8 @@ function mergeable(g: DGraph): Edge<DEdge> | undefined {
 }
 
 // Python Dungeon._reduce_graph: the kept room takes the edges of the dropped one, then duplicates
-// and self-loops go. Gate–gate edges cannot come out of the grammar: assert it.
+// and self-loops go; a duplicate is one-way only if all its copies were (Python kept the first,
+// losing a two-way way back). Gate–gate edges cannot come out of the grammar: assert it.
 export function reduce(g: DGraph): void {
   for (let e = mergeable(g); e; e = mergeable(g)) {
     const [keep, drop] = [e.source, e.target];
@@ -39,7 +40,7 @@ export function reduce(g: DGraph): void {
     }
     g.deleteVertex(drop);
   }
-  g.simplify();
+  g.simplify((kept, dropped) => ({ oneway: kept.oneway && dropped.oneway }));
   for (const e of g.edges()) {
     if (g.vertex(e.source).gate && g.vertex(e.target).gate) throw new Error(`Gate chain: gates ${e.source} and ${e.target} are joined`);
   }

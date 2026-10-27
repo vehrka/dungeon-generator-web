@@ -48,6 +48,14 @@ describe("reduce", () => {
     expect(types(g).filter((t) => t === "c")).toHaveLength(2);
   });
 
+  it("a two-way edge moved onto a one-way pair keeps the way back", () => {
+    const e = room("e");
+    // 2 → 4 one-way, 3 – 4 two-way: merging 3 into 2 gives 2 → 4 twice, the second two-way
+    const g = build([START, GOAL, e, e, PICKUP, LOCK], [[0, 2], [2, 4, true], [2, 3], [3, 4], [2, 5], [5, 1]]);
+    reduce(g);
+    expect(edges(g).filter(([s, d]) => s === 2 && d === 4)).toEqual([[2, 4, false]]);
+  });
+
   it("asserts no gate chain", () => {
     const g = build([START, GOAL, LOCK, { ...LOCK }], [[0, 2], [2, 3], [3, 1]]);
     expect(() => reduce(g)).toThrow("Gate chain: gates 2 and 3 are joined");

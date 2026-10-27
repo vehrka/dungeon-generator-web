@@ -1,6 +1,6 @@
 import type { DungeonJson, JsonGateNode, JsonObject, JsonRoomNode } from "../types";
 import type { Preset } from "./grammar";
-import { unsolvableReasons } from "./solve";
+import { find, unsolvableReasons } from "./solve";
 import { ROOM_STYLE, SPECIAL_ROOMS, type Theme, type ThemeName } from "./themes";
 import type { DGraph } from "./types";
 
@@ -63,8 +63,8 @@ function numbers(g: DGraph, start: number): Map<number, number> {
 export function dungeonJson(g: DGraph, meta: Meta, theme: Theme): GeneratedDungeon {
   const vertices = g.vertices();
   const dense = new Map(vertices.map(([id], i) => [id, i]));
-  const at = (type: string) => dense.get(vertices.find(([, v]) => v.type === type)![0])!;
-  const num = numbers(g, vertices.find(([, v]) => v.type === "st")![0]);
+  const [start, goal] = [find(g, "st"), find(g, "gl")];
+  const num = numbers(g, start);
   const nodes = vertices.map(([id, v]): GeneratedNode => {
     const base = { id: dense.get(id)!, type: v.type, name: v.name };
     const ids = v.objects.map((o) => o.id);
@@ -83,8 +83,8 @@ export function dungeonJson(g: DGraph, meta: Meta, theme: Theme): GeneratedDunge
     schema_version: 2,
     grammar: "Combined",
     ...meta,
-    start: at("st"),
-    goal: at("gl"),
+    start: dense.get(start)!,
+    goal: dense.get(goal)!,
     solvable: !reasons.length,
     unsolvable_reasons: reasons,
     nodes,

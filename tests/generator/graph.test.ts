@@ -37,6 +37,10 @@ describe("graph", () => {
       [0, 1, 1],
       [1, 0, 3],
     ]);
+    const h = path(2, 1);
+    h.addEdge(0, 1, 2);
+    h.simplify((kept, dropped) => kept + dropped);
+    expect(h.edges().map((e) => e.attrs)).toEqual([3]);
   });
 
   it("distances are weighted and undirected", () => {

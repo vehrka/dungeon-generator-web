@@ -75,6 +75,8 @@ describe("json", () => {
   it("rejects bad options", () => {
     expect(() => generateDungeon({ seed: -1 })).toThrow("Invalid dungeon seed -1");
     expect(() => generateDungeon({ seed: 1, theme: "spam" as never })).toThrow("Unknown theme spam");
+    expect(() => generateDungeon({ seed: 1, theme: "toString" as never })).toThrow("Unknown theme toString");
+    expect(() => generateDungeon({ seed: 1, size: "XL" as never })).toThrow("Unknown size XL");
   });
 });
 
