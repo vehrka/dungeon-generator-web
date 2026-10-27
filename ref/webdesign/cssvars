@@ -1,52 +1,44 @@
+/* Design tokens (ref/webdesign/design.md). Same values as the :root of src/viewer/style.css; the
+   map (src/render/svg.ts) uses the colours and the system stack with literal values. */
 :root {
   /* Colors */
   --color-canvas-mist: #f6f8f7;
   --color-ink-black: #000000;
-  --color-carbon: #0f0e12;
+  --color-carbon: #231f20;
   --color-steel-gray: #e5e5e5;
+  --color-band: #d1d3d4;
   --color-graphite: #b2b2b2;
+  --color-muted: #6d6e71;
+  --color-amber: #f0a000;
 
-  /* Typography — Font Families */
-  --font-te-20: 'te-20', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-te-40: 'te-40', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Typography — families */
+  --font: Jura, Inter, "Helvetica Neue", Arial, "Noto Sans", "DejaVu Sans", sans-serif; /* viewer */
+  --font-map: Inter, "Helvetica Neue", Arial, "Noto Sans", "DejaVu Sans", sans-serif;   /* SVG */
 
-  /* Typography — Scale */
-  --text-caption: 13px;
-  --leading-caption: 1.5;
-  --text-subheading: 19px;
-  --leading-subheading: 1.15;
-  --text-heading-sm: 24px;
-  --leading-heading-sm: 1.15;
-  --text-heading: 26px;
-  --leading-heading: 1.15;
-  --text-heading-lg: 40px;
-  --leading-heading-lg: 1.11;
+  /* Typography — viewer scale, weight 300, uppercase, letter-spacing 0.02em */
+  --text-title: 32px;
+  --leading-title: 1.11;
+  --text-band: 19px;
+  --leading-band: 1.15;
+  --text-emphasis: 15px;
+  --text-input: 14px;
+  --text-body: 13px;
+  --leading-body: 1.4;
+  --text-small: 11px;
 
-  /* Typography — Weights */
-  --font-weight-thin: 100;
-  --font-weight-light: 300;
+  /* Typography — map scale, weight 100 text, 300 numbers and headings */
+  --text-map: 13px;
+  --text-map-number: 19px;
+  --text-map-tag: 10px;
 
   /* Spacing */
   --spacing-15: 15px;
   --spacing-22: 22px;
   --spacing-33: 33px;
-  --spacing-66: 66px;
 
   /* Layout */
-  --page-max-width: 1200px;
-  --section-gap: 66px;
-  --card-padding: 0px;
-  --element-gap: 15px;
+  --panel: 300px;
+  --breakpoint: 800px; /* not usable in @media; written literally there */
 
-  /* Named Radii */
-  --radius-tags: 0px;
-  --radius-cards: 0px;
-  --radius-global: 0px;
-  --radius-inputs: 0px;
-  --radius-buttons: 0px;
-
-  /* Surfaces */
-  --surface-canvas-mist: #f6f8f7;
-  --surface-pure-white-implicit: #ffffff;
-  --surface-carbon: #0f0e12;
+  /* Radius: 0 everywhere, 50% only for the circled section number */
 }
