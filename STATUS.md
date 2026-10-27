@@ -2,9 +2,10 @@
 
 **updated:** 2026-10-27
 
-Steps 1–13 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
-and layout, hub shape sizes, render and CLI, viewer, corridors, L/T shapes, generator core) done. Details of each step in [docs/design.md](docs/design.md).
-Next: generator integration (step 14). Cave shapes dropped.
+Steps 1–14 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
+and layout, hub shape sizes, render and CLI, viewer, corridors, L/T shapes, generator core,
+generator integration) done. Details of each step in [docs/design.md](docs/design.md).
+Cave shapes dropped.
 
 ## Done
 
@@ -61,7 +62,7 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   room, L-421, layout failed). Seeds 1–500 per size: 0 unsolvable, all pass `normalize` and
   planarity, rooms within ±2 of the Python baseline (M p90 31 vs 29, L p10 17 vs 16). Plan:
   `docs/plans/13-generator-core.md`.
-- [ ] 14. **generator integration**: CLI and viewer generate a dungeon (size, theme, dungeon seed)
+- [x] 14. **generator integration**: CLI and viewer generate a dungeon (size, theme, dungeon seed)
   then lay it out (layout seed); JSON and GM key (Markdown) export; loading a JSON file keeps
   working; bench on generated dungeons; rewrite the generator rules in project `CLAUDE.md` and
   close the gate-chain and mixed one-way open points. Split in two branches:
@@ -72,8 +73,13 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
     (+ gen-m-7). Review: generator failures stay known, to review; size/theme checked in both
     `parseCli` (output name, error lists options) and `generateDungeon` (other callers). Plan:
     `docs/plans/14a-generator-cli.md`.
-  - [ ] 14b. Viewer: dungeon row (size, theme, dungeon seed, new dungeon), generation in the
-    worker, JSON and key export. Plan: `docs/plans/14b-generator-viewer.md`.
+  - [x] 14b. Viewer, after dungen.app's result page in the teenage engineering style: map left,
+    settings panel right (result and exports, dungeon, layout, file), the look of TE's product
+    guides (all capitals, dark numbered bands, Jura font self-hosted, OFL), generate and reroll
+    draw a random seed into their field (Enter runs a typed one), generation in the worker, JSON
+    and key export. Changed after trying it: reroll + 1 felt like a counter, next dropped. Result
+    block moved to the top of the panel: at the bottom it fell below the fold and hid errors. Plan:
+    `docs/plans/14b-generator-viewer.md`.
 
 ## Open points
 

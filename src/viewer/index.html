@@ -9,16 +9,62 @@
   <body>
     <header>
       <h1>dungeon layout helper</h1>
-      <div class="controls">
-        <label class="file">load json<input id="file" type="file" accept=".json,application/json" /></label>
-        <label>layout seed<input id="seed" type="text" inputmode="numeric" autocomplete="off" disabled /></label>
-        <button id="reroll" disabled>reroll</button>
-        <label><input id="corridors" type="checkbox" checked disabled />corridors</label>
-        <button id="export" class="primary" disabled>export svg</button>
-      </div>
+      <p>dungeon generator<br />and map layout</p>
     </header>
-    <p id="status">load a generator json (schema 2), or drop it on the page</p>
-    <main id="map"></main>
+    <div class="page">
+      <main id="map"></main>
+      <aside>
+        <div class="result">
+          <div id="result" aria-live="polite"></div>
+          <div class="row exports">
+            export
+            <button id="export-svg" disabled>svg</button>
+            <button id="export-json" disabled>json</button>
+            <button id="export-key" disabled>key</button>
+          </div>
+        </div>
+        <section>
+          <h2><span class="n">1</span>dungeon</h2>
+          <label class="field">dungeon seed<input id="dungeon-seed" type="text" inputmode="numeric" autocomplete="off" value="1" /></label>
+          <p class="help">integer from 0 to 4294967295, enter generates it</p>
+          <label class="field">size
+            <select id="size">
+              <option value="XS">xs</option>
+              <option value="S">s</option>
+              <option value="M" selected>m</option>
+              <option value="L">l</option>
+            </select>
+          </label>
+          <p class="help">number of rooms, xs fewest</p>
+          <label class="field">theme
+            <select id="theme">
+              <option value="zelda" selected>zelda</option>
+              <option value="cyber">cyber</option>
+              <option value="tor-barrow">tor-barrow</option>
+              <option value="tor-dwarf">tor-dwarf</option>
+            </select>
+          </label>
+          <p class="help">names and labels only, same map</p>
+          <button id="generate" class="primary">generate</button>
+          <p class="help">random dungeon seed</p>
+        </section>
+        <section>
+          <h2><span class="n">2</span>layout</h2>
+          <label class="field">layout seed<input id="seed" type="text" inputmode="numeric" autocomplete="off" /></label>
+          <p class="help">starts at the dungeon seed, enter lays out</p>
+          <div class="row">
+            <button id="reroll">reroll</button>
+            <label><input id="corridors" type="checkbox" checked />corridors</label>
+          </div>
+          <p class="help">reroll: random layout seed</p>
+        </section>
+        <section>
+          <h2><span class="n">3</span>file</h2>
+          <label class="file">load json<input id="file" type="file" accept=".json,application/json" /></label>
+          <p class="help">a json saved with export, or drop it on the map</p>
+        </section>
+      </aside>
+    </div>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

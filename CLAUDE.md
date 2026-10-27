@@ -37,15 +37,16 @@ doors, configuration spaces, energy or layout, and report the before/after table
 - `ref/120370675/` (git-ignored): thesis and Edgar-DotNet source.
 - `ref/generator-port.md`: decisions, scope, behaviour, fixes and baseline for porting the
   generator (STATUS steps 13–14).
-- `ref/webdesign/`: teenage engineering style reference for the SVG render and viewer (steps 9–10):
-  `design.md` (rules), `cssvars`, `design_tokens`, `tailwind` (tokens). Follow it for UI work.
+- `ref/webdesign/`: style reference for the SVG render and viewer (teenage engineering, product
+  guide look; steps 9–10, 14b): `design.md` (rules), `cssvars` (tokens). Follow it for UI work.
 
 ## Conventions
 
 - Port from the thesis; Edgar source only for constants and details. Comments name the Edgar file
   or thesis section a function follows.
 - All randomness through `rng(seed, stream)` from `engine/rng.ts`; never `Math.random`. Same
-  JSON + seed gives the same layout.
+  JSON + seed gives the same layout. One exception, viewer only: generate and reroll pick a seed
+  with `crypto.getRandomValues` and write it into the field first, so every map stays reproducible.
 - Every tunable layout constant lives in `LayoutConfig` (`engine/config.ts`), with Edgar's default
   unless a comment says why not. Generator constants live in `GeneratorConfig`
   (`generator/config.ts`), with Python's default unless a comment says why not.
