@@ -50,6 +50,7 @@ Planned, not implemented yet.
 ```bash
 $ npm run typecheck
 $ npm test
+$ npm run bench   # layout benchmark over bench/dungeons
 ```
 
 Branches: `main` (prod), `dev` (integration), `feature/<slug>` off `dev`.
@@ -62,6 +63,7 @@ src/render/    layout → SVG
 src/cli/       Node CLI
 src/viewer/    Vite web viewer
 tests/         vitest, fixture tests/fixtures/ruin.json
+bench/         layout benchmark, generator dungeons M/L seeds 1–8
 docs/          design
 ref/           sample generator output; ref/120370675/ (thesis + Edgar source) is git-ignored
 ```

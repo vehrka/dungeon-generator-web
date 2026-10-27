@@ -334,9 +334,16 @@ Red-green per module, with `ruin.json` plus small hand-made graphs:
 
 Run before done: `npm run typecheck`, `npm test`.
 
+Benchmark (`npm run bench`, `bench/run.ts`): the 16 generator dungeons in `bench/dungeons/` (sizes
+M and L, seeds 1–8, generator commit 573478c), each laid out with layout seeds 1–5 and
+`defaultConfig`. A dungeon passes when all five lay out; the run exits 1 if any dungeon fails.
+Dungeons that `normalize` or planarity reject are reported as skipped. Run it for any change to
+shapes, doors, configuration spaces, energy or layout. Not part of `npm test` (about 20 s, and it
+fails until step 8 is done).
+
 ## Build order
 
-One feature branch per step, off `dev`:
+One feature branch per step, off `dev`, reviewed with `/code-review` before the merge:
 
 1. normalize
 2. planarity
@@ -359,4 +366,6 @@ One feature branch per step, off `dev`:
   `cornerDistance = 0` fixes 3 of the 5; bigger hub shapes fix one more (M-1); M-3 still fails.
   Decided 2026-10-26: `cornerDistance = 0` by default (done), and shape sizes from a room's door
   count as its own step (build order 8). M-3 (short cycle chains) may still need more.
+  `npm run bench` on 2026-10-27, defaults: 13 pass, L-5 skipped, M-1 fails 2 of 5 layout seeds,
+  M-3 all 5 (M-5 now passes).
 - PNG library: chosen at the render step.

@@ -1,0 +1,829 @@
+{
+  "schema_version": 2,
+  "grammar": "Combined",
+  "seed": 3,
+  "size": "M",
+  "theme": "zelda",
+  "start": 0,
+  "goal": 1,
+  "solvable": true,
+  "unsolvable_reasons": [],
+  "nodes": [
+    {
+      "id": 0,
+      "type": "st",
+      "name": "START",
+      "kind": "room",
+      "objects": [],
+      "number": 1,
+      "label": "Entrance (START)"
+    },
+    {
+      "id": 1,
+      "type": "gl",
+      "name": "GOAL",
+      "kind": "room",
+      "objects": [],
+      "number": 37,
+      "label": "Dungeon goal (GOAL)"
+    },
+    {
+      "id": 2,
+      "type": "exit",
+      "name": "EXIT",
+      "kind": "room",
+      "objects": [],
+      "number": 20,
+      "label": "Extra entrance (EXIT)"
+    },
+    {
+      "id": 3,
+      "type": "em",
+      "name": "em",
+      "kind": "room",
+      "objects": [],
+      "number": 14,
+      "label": "Mini-boss"
+    },
+    {
+      "id": 4,
+      "type": "item",
+      "name": "Get dungeon item 1",
+      "kind": "room",
+      "objects": [
+        "C3vhzrsc"
+      ],
+      "number": 24,
+      "label": "Pickup: dungeon item 1"
+    },
+    {
+      "id": 5,
+      "type": "lock",
+      "name": "Use dungeon item 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "C3vhzrsc"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "lock",
+      "name": "Use dungeon item 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "C3vhzrsc"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 32,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 8,
+      "type": "bosskey",
+      "name": "Get boss key 1",
+      "kind": "room",
+      "objects": [
+        "7HYFBNx4"
+      ],
+      "number": 40,
+      "label": "Pickup: boss key 1"
+    },
+    {
+      "id": 9,
+      "type": "eb",
+      "name": "eb",
+      "kind": "room",
+      "objects": [],
+      "number": 35,
+      "label": "Boss"
+    },
+    {
+      "id": 10,
+      "type": "lock",
+      "name": "Use boss key 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "7HYFBNx4"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "gb: heart piece",
+      "name": "gb: heart piece",
+      "kind": "room",
+      "objects": [],
+      "number": 4,
+      "label": "Bonus goal: heart piece"
+    },
+    {
+      "id": 12,
+      "type": "lever",
+      "name": "lever 1",
+      "kind": "room",
+      "objects": [
+        "t1NeM2kz"
+      ],
+      "number": 25,
+      "label": "Lever: lever 1 (starts OFF)"
+    },
+    {
+      "id": 13,
+      "type": "gate",
+      "name": "Check lever 1 ON",
+      "kind": "gate",
+      "gate": "on",
+      "requires": [
+        "t1NeM2kz"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "gate",
+      "name": "Check lever 1 OFF",
+      "kind": "gate",
+      "gate": "off",
+      "requires": [
+        "t1NeM2kz"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 10,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 16,
+      "type": "lever",
+      "name": "lever 2",
+      "kind": "room",
+      "objects": [
+        "9d5o4pmG"
+      ],
+      "number": 27,
+      "label": "Lever: lever 2 (starts OFF)"
+    },
+    {
+      "id": 17,
+      "type": "gate",
+      "name": "Check lever 2 ON",
+      "kind": "gate",
+      "gate": "on",
+      "requires": [
+        "9d5o4pmG"
+      ]
+    },
+    {
+      "id": 18,
+      "type": "gate",
+      "name": "Check lever 2 OFF",
+      "kind": "gate",
+      "gate": "off",
+      "requires": [
+        "9d5o4pmG"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "gb: arrows",
+      "name": "gb: arrows",
+      "kind": "room",
+      "objects": [],
+      "number": 5,
+      "label": "Bonus goal: arrows"
+    },
+    {
+      "id": 20,
+      "type": "gb: rupees",
+      "name": "gb: rupees",
+      "kind": "room",
+      "objects": [],
+      "number": 17,
+      "label": "Bonus goal: rupees"
+    },
+    {
+      "id": 21,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 21,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 22,
+      "type": "lever",
+      "name": "lever 3",
+      "kind": "room",
+      "objects": [
+        "atVdIzCD"
+      ],
+      "number": 33,
+      "label": "Lever: lever 3 (starts OFF)"
+    },
+    {
+      "id": 23,
+      "type": "gate",
+      "name": "Check lever 3 ON",
+      "kind": "gate",
+      "gate": "on",
+      "requires": [
+        "atVdIzCD"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "gate",
+      "name": "Check lever 3 OFF",
+      "kind": "gate",
+      "gate": "off",
+      "requires": [
+        "atVdIzCD"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 22,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 26,
+      "type": "key",
+      "name": "Get small key 1",
+      "kind": "room",
+      "objects": [
+        "0h2BoGcT"
+      ],
+      "number": 34,
+      "label": "Pickup: small key 1"
+    },
+    {
+      "id": 27,
+      "type": "lock",
+      "name": "Use small key 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "0h2BoGcT"
+      ]
+    },
+    {
+      "id": 28,
+      "type": "gb: arrows",
+      "name": "gb: arrows",
+      "kind": "room",
+      "objects": [],
+      "number": 28,
+      "label": "Bonus goal: arrows"
+    },
+    {
+      "id": 29,
+      "type": "gb: rupees",
+      "name": "gb: rupees",
+      "kind": "room",
+      "objects": [],
+      "number": 26,
+      "label": "Bonus goal: rupees"
+    },
+    {
+      "id": 30,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 3,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 31,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 6,
+      "label": "Enemy"
+    },
+    {
+      "id": 32,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 11,
+      "label": "Puzzle"
+    },
+    {
+      "id": 33,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 7,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 34,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 36,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 35,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 38,
+      "label": "Puzzle"
+    },
+    {
+      "id": 36,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 2,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 37,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 8,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 38,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 12,
+      "label": "Enemy"
+    },
+    {
+      "id": 39,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 13,
+      "label": "Enemy"
+    },
+    {
+      "id": 40,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 39,
+      "label": "Enemy"
+    },
+    {
+      "id": 41,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 18,
+      "label": "Enemy"
+    },
+    {
+      "id": 42,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 9,
+      "label": "Puzzle"
+    },
+    {
+      "id": 43,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 15,
+      "label": "Enemy"
+    },
+    {
+      "id": 44,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": [],
+      "number": 19,
+      "label": "Trap"
+    },
+    {
+      "id": 45,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": [],
+      "number": 29,
+      "label": "Trap"
+    },
+    {
+      "id": 46,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 23,
+      "label": "Puzzle"
+    },
+    {
+      "id": 47,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 16,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 48,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 30,
+      "label": "Puzzle"
+    },
+    {
+      "id": 49,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 31,
+      "label": "Challenge (skill check)"
+    }
+  ],
+  "edges": [
+    {
+      "source": 0,
+      "target": 36,
+      "oneway": false
+    },
+    {
+      "source": 3,
+      "target": 4,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 33,
+      "oneway": false
+    },
+    {
+      "source": 6,
+      "target": 11,
+      "oneway": false
+    },
+    {
+      "source": 7,
+      "target": 10,
+      "oneway": false
+    },
+    {
+      "source": 7,
+      "target": 34,
+      "oneway": false
+    },
+    {
+      "source": 9,
+      "target": 1,
+      "oneway": false
+    },
+    {
+      "source": 10,
+      "target": 9,
+      "oneway": false
+    },
+    {
+      "source": 13,
+      "target": 37,
+      "oneway": false
+    },
+    {
+      "source": 14,
+      "target": 19,
+      "oneway": false
+    },
+    {
+      "source": 15,
+      "target": 17,
+      "oneway": false
+    },
+    {
+      "source": 15,
+      "target": 18,
+      "oneway": false
+    },
+    {
+      "source": 15,
+      "target": 44,
+      "oneway": false
+    },
+    {
+      "source": 17,
+      "target": 41,
+      "oneway": false
+    },
+    {
+      "source": 18,
+      "target": 20,
+      "oneway": false
+    },
+    {
+      "source": 21,
+      "target": 23,
+      "oneway": false
+    },
+    {
+      "source": 21,
+      "target": 24,
+      "oneway": false
+    },
+    {
+      "source": 21,
+      "target": 48,
+      "oneway": false
+    },
+    {
+      "source": 23,
+      "target": 45,
+      "oneway": false
+    },
+    {
+      "source": 24,
+      "target": 28,
+      "oneway": false
+    },
+    {
+      "source": 25,
+      "target": 27,
+      "oneway": false
+    },
+    {
+      "source": 25,
+      "target": 49,
+      "oneway": false
+    },
+    {
+      "source": 27,
+      "target": 46,
+      "oneway": false
+    },
+    {
+      "source": 30,
+      "target": 5,
+      "oneway": false
+    },
+    {
+      "source": 30,
+      "target": 6,
+      "oneway": false
+    },
+    {
+      "source": 30,
+      "target": 13,
+      "oneway": false
+    },
+    {
+      "source": 30,
+      "target": 14,
+      "oneway": false
+    },
+    {
+      "source": 30,
+      "target": 31,
+      "oneway": false
+    },
+    {
+      "source": 30,
+      "target": 42,
+      "oneway": false
+    },
+    {
+      "source": 31,
+      "target": 15,
+      "oneway": true
+    },
+    {
+      "source": 32,
+      "target": 2,
+      "oneway": false
+    },
+    {
+      "source": 32,
+      "target": 31,
+      "oneway": true
+    },
+    {
+      "source": 33,
+      "target": 38,
+      "oneway": false
+    },
+    {
+      "source": 33,
+      "target": 39,
+      "oneway": false
+    },
+    {
+      "source": 34,
+      "target": 40,
+      "oneway": true
+    },
+    {
+      "source": 35,
+      "target": 8,
+      "oneway": false
+    },
+    {
+      "source": 35,
+      "target": 34,
+      "oneway": true
+    },
+    {
+      "source": 36,
+      "target": 30,
+      "oneway": false
+    },
+    {
+      "source": 37,
+      "target": 3,
+      "oneway": false
+    },
+    {
+      "source": 38,
+      "target": 21,
+      "oneway": false
+    },
+    {
+      "source": 38,
+      "target": 25,
+      "oneway": false
+    },
+    {
+      "source": 39,
+      "target": 46,
+      "oneway": false
+    },
+    {
+      "source": 40,
+      "target": 35,
+      "oneway": true
+    },
+    {
+      "source": 41,
+      "target": 32,
+      "oneway": true
+    },
+    {
+      "source": 42,
+      "target": 43,
+      "oneway": false
+    },
+    {
+      "source": 42,
+      "target": 47,
+      "oneway": false
+    },
+    {
+      "source": 43,
+      "target": 12,
+      "oneway": false
+    },
+    {
+      "source": 44,
+      "target": 16,
+      "oneway": false
+    },
+    {
+      "source": 45,
+      "target": 46,
+      "oneway": false
+    },
+    {
+      "source": 46,
+      "target": 7,
+      "oneway": false
+    },
+    {
+      "source": 47,
+      "target": 29,
+      "oneway": false
+    },
+    {
+      "source": 47,
+      "target": 43,
+      "oneway": false
+    },
+    {
+      "source": 48,
+      "target": 22,
+      "oneway": false
+    },
+    {
+      "source": 49,
+      "target": 26,
+      "oneway": false
+    }
+  ],
+  "objects": [
+    {
+      "id": "C3vhzrsc",
+      "type": "item",
+      "name": "dungeon item 1",
+      "found_in": [
+        4
+      ],
+      "opens": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "7HYFBNx4",
+      "type": "bosskey",
+      "name": "boss key 1",
+      "found_in": [
+        8
+      ],
+      "opens": [
+        10
+      ]
+    },
+    {
+      "id": "t1NeM2kz",
+      "type": "lever",
+      "name": "lever 1",
+      "found_in": [
+        12
+      ],
+      "opens": [
+        13,
+        14
+      ]
+    },
+    {
+      "id": "9d5o4pmG",
+      "type": "lever",
+      "name": "lever 2",
+      "found_in": [
+        16
+      ],
+      "opens": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": "atVdIzCD",
+      "type": "lever",
+      "name": "lever 3",
+      "found_in": [
+        22
+      ],
+      "opens": [
+        23,
+        24
+      ]
+    },
+    {
+      "id": "0h2BoGcT",
+      "type": "key",
+      "name": "small key 1",
+      "found_in": [
+        26
+      ],
+      "opens": [
+        27
+      ]
+    }
+  ]
+}

@@ -1,0 +1,283 @@
+{
+  "schema_version": 2,
+  "grammar": "Combined",
+  "seed": 2,
+  "size": "L",
+  "theme": "zelda",
+  "start": 0,
+  "goal": 1,
+  "solvable": true,
+  "unsolvable_reasons": [],
+  "nodes": [
+    {
+      "id": 0,
+      "type": "st",
+      "name": "START",
+      "kind": "room",
+      "objects": [],
+      "number": 1,
+      "label": "Entrance (START)"
+    },
+    {
+      "id": 1,
+      "type": "gl",
+      "name": "GOAL",
+      "kind": "room",
+      "objects": [],
+      "number": 12,
+      "label": "Dungeon goal (GOAL)"
+    },
+    {
+      "id": 2,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 3,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 3,
+      "type": "em",
+      "name": "em",
+      "kind": "room",
+      "objects": [],
+      "number": 6,
+      "label": "Mini-boss"
+    },
+    {
+      "id": 4,
+      "type": "item",
+      "name": "Get dungeon item 1",
+      "kind": "room",
+      "objects": [
+        "Tas0occ6"
+      ],
+      "number": 8,
+      "label": "Pickup: dungeon item 1"
+    },
+    {
+      "id": 5,
+      "type": "lock",
+      "name": "Use dungeon item 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "Tas0occ6"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 9,
+      "label": "Nothing / explore"
+    },
+    {
+      "id": 7,
+      "type": "bosskey",
+      "name": "Get boss key 1",
+      "kind": "room",
+      "objects": [
+        "GLbKhcmf"
+      ],
+      "number": 15,
+      "label": "Pickup: boss key 1"
+    },
+    {
+      "id": 8,
+      "type": "eb",
+      "name": "eb",
+      "kind": "room",
+      "objects": [],
+      "number": 10,
+      "label": "Boss"
+    },
+    {
+      "id": 9,
+      "type": "lock",
+      "name": "Use boss key 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "GLbKhcmf"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 2,
+      "label": "Puzzle"
+    },
+    {
+      "id": 11,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 11,
+      "label": "Puzzle"
+    },
+    {
+      "id": 12,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 13,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 13,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 4,
+      "label": "Puzzle"
+    },
+    {
+      "id": 14,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 5,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 15,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 14,
+      "label": "Challenge (skill check)"
+    },
+    {
+      "id": 16,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": [],
+      "number": 7,
+      "label": "Trap"
+    }
+  ],
+  "edges": [
+    {
+      "source": 0,
+      "target": 10,
+      "oneway": false
+    },
+    {
+      "source": 2,
+      "target": 5,
+      "oneway": false
+    },
+    {
+      "source": 2,
+      "target": 13,
+      "oneway": false
+    },
+    {
+      "source": 3,
+      "target": 4,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 14,
+      "oneway": false
+    },
+    {
+      "source": 6,
+      "target": 9,
+      "oneway": false
+    },
+    {
+      "source": 6,
+      "target": 11,
+      "oneway": false
+    },
+    {
+      "source": 8,
+      "target": 1,
+      "oneway": false
+    },
+    {
+      "source": 9,
+      "target": 8,
+      "oneway": false
+    },
+    {
+      "source": 10,
+      "target": 2,
+      "oneway": false
+    },
+    {
+      "source": 11,
+      "target": 15,
+      "oneway": true
+    },
+    {
+      "source": 12,
+      "target": 7,
+      "oneway": false
+    },
+    {
+      "source": 12,
+      "target": 11,
+      "oneway": true
+    },
+    {
+      "source": 13,
+      "target": 3,
+      "oneway": false
+    },
+    {
+      "source": 14,
+      "target": 16,
+      "oneway": false
+    },
+    {
+      "source": 15,
+      "target": 12,
+      "oneway": true
+    },
+    {
+      "source": 16,
+      "target": 6,
+      "oneway": false
+    }
+  ],
+  "objects": [
+    {
+      "id": "Tas0occ6",
+      "type": "item",
+      "name": "dungeon item 1",
+      "found_in": [
+        4
+      ],
+      "opens": [
+        5
+      ]
+    },
+    {
+      "id": "GLbKhcmf",
+      "type": "bosskey",
+      "name": "boss key 1",
+      "found_in": [
+        7
+      ],
+      "opens": [
+        9
+      ]
+    }
+  ]
+}
