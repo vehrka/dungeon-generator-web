@@ -1,31 +1,72 @@
-// ruin.json → ruin-map.svg / .png
+// ruin.json → ruin-map.svg / .png, or a generated dungeon → m-7-zelda-map.svg
 //
-//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors]
+//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--key ruin.md]
+//   npm run cli -- --dungeon-seed 7 [--size M] [--theme zelda] [--json m-7-zelda.json] [--key m-7-zelda.md] [...]
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { defaultConfig } from "../engine/config";
+import { generateDungeon, type GenerateOptions } from "../engine/generator/index";
+import { PRESETS, type Preset } from "../engine/generator/grammar";
+import { DEFAULT_THEME, THEMES, type ThemeName } from "../engine/generator/themes";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
+import { dungeonKey } from "../render/key";
 import { draw } from "../render/svg";
 
-export type CliArgs = { input: string; output: string; layoutSeed: number | undefined; corridors: boolean };
+export type CliArgs = {
+  source: { input: string } | { generate: Required<GenerateOptions> };
+  output: string;
+  json?: string;
+  key?: string;
+  layoutSeed: number | undefined;
+  corridors: boolean;
+};
+
+const parseSeed = (flag: string, text: string | undefined): number | undefined => {
+  if (text === undefined) return undefined;
+  const seed = seedFromText(text);
+  if (seed === undefined) throw new Error(`--${flag} must be an integer from 0 to ${maxSeed}: ${text}`);
+  return seed;
+};
 
 export function parseCli(argv: string[]): CliArgs {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
-    options: { output: { type: "string", short: "o" }, "layout-seed": { type: "string" }, "no-corridors": { type: "boolean" } },
+    options: {
+      output: { type: "string", short: "o" },
+      "layout-seed": { type: "string" },
+      "no-corridors": { type: "boolean" },
+      "dungeon-seed": { type: "string" },
+      size: { type: "string" },
+      theme: { type: "string" },
+      json: { type: "string" },
+      key: { type: "string" },
+    },
   });
-  if (positionals.length === 0) throw new Error("Missing input JSON");
   if (positionals.length > 1) throw new Error(`Expected one input JSON, got ${positionals.length}`);
-  const input = positionals[0]!;
-  const output = values.output ?? input.replace(/(\.json)?$/i, "-map.svg");
+  const dungeonSeed = parseSeed("dungeon-seed", values["dungeon-seed"]);
+  let source: CliArgs["source"];
+  let output: string;
+  if (dungeonSeed === undefined) {
+    for (const flag of ["size", "theme", "json"] as const) if (values[flag] !== undefined) throw new Error(`--${flag} needs --dungeon-seed`);
+    if (positionals.length === 0) throw new Error("Missing input JSON, or --dungeon-seed to generate one");
+    const input = positionals[0]!;
+    source = { input };
+    output = values.output ?? input.replace(/(\.json)?$/i, "-map.svg");
+  } else {
+    if (positionals.length) throw new Error("Pass an input JSON or --dungeon-seed, not both");
+    const size = (values.size ?? "M").toUpperCase() as Preset;
+    if (!PRESETS.includes(size)) throw new Error(`Unknown size ${values.size}, expected one of ${PRESETS.join(" ")}`);
+    const theme = (values.theme ?? DEFAULT_THEME) as ThemeName;
+    if (!Object.hasOwn(THEMES, theme)) throw new Error(`Unknown theme ${theme}, expected one of ${Object.keys(THEMES).join(" ")}`);
+    source = { generate: { seed: dungeonSeed, size, theme } };
+    output = values.output ?? `${size.toLowerCase()}-${dungeonSeed}-${theme}-map.svg`;
+  }
   if (!/\.(svg|png)$/i.test(output)) throw new Error(`Output must end in .svg or .png: ${output}`);
-  const seed = values["layout-seed"];
-  const layoutSeed = seed === undefined ? undefined : seedFromText(seed);
-  if (seed !== undefined && layoutSeed === undefined) throw new Error(`--layout-seed must be an integer from 0 to ${maxSeed}: ${seed}`);
-  return { input, output, layoutSeed, corridors: !values["no-corridors"] };
+  const layoutSeed = parseSeed("layout-seed", values["layout-seed"]);
+  return { source, output, json: values.json, key: values.key, layoutSeed, corridors: !values["no-corridors"] };
 }
 
 type Out = { log: (m: string) => void; error: (m: string) => void };
@@ -34,10 +75,14 @@ type Out = { log: (m: string) => void; error: (m: string) => void };
 export async function main(argv: string[], out: Out = console): Promise<number> {
   try {
     const args = parseCli(argv);
-    const json = JSON.parse(readFileSync(args.input, "utf8")) as DungeonJson;
+    const { source } = args;
+    const json: DungeonJson = "input" in source ? JSON.parse(readFileSync(source.input, "utf8")) : generateDungeon(source.generate);
+    // Written before layout, so a dungeon that fails to lay out can still be inspected.
+    if (args.json) writeFileSync(args.json, JSON.stringify(json, null, 2) + "\n");
+    if (args.key) writeFileSync(args.key, dungeonKey(json));
     const seed = isSeed(json.seed) ? json.seed : undefined;
     const layoutSeed = args.layoutSeed ?? seed;
-    if (layoutSeed === undefined) throw new Error(`${args.input} has no usable seed (${json.seed}); pass --layout-seed`);
+    if (layoutSeed === undefined) throw new Error(`${"input" in source ? source.input : "dungeon"} has no usable seed (${json.seed}); pass --layout-seed`);
     const { svg, rooms } = draw(json, layoutSeed, { ...defaultConfig, corridors: args.corridors });
     if (args.output.toLowerCase().endsWith(".png")) {
       const { Resvg } = await import("@resvg/resvg-js"); // native addon, only for PNG
@@ -45,7 +90,8 @@ export async function main(argv: string[], out: Out = console): Promise<number> 
     } else {
       writeFileSync(args.output, svg);
     }
-    out.log(`${args.output} (${rooms} rooms, layout seed ${layoutSeed})`);
+    const generated = "generate" in source ? `, dungeon seed ${source.generate.seed}, size ${source.generate.size}, theme ${source.generate.theme}` : "";
+    out.log(`${args.output} (${rooms} rooms${generated}, layout seed ${layoutSeed})`);
     return 0;
   } catch (e) {
     out.error(e instanceof Error ? e.message : String(e));
