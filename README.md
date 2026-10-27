@@ -9,7 +9,7 @@ laid out with Ondřej Nepožitek's graph-based algorithm (the one behind
 [Edgar](https://github.com/OndrejNepozitek/Edgar-DotNet)): procedural room shapes, doors on every
 edge, optional corridors, locks and one-way paths drawn on the map.
 
-Status: in progress, engine (normalize to layout, no corridors), SVG/PNG render, CLI and viewer done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
+Status: in progress, engine (normalize to layout, with corridors), SVG/PNG render, CLI and viewer done. See [STATUS.md](STATUS.md) and [docs/design.md](docs/design.md).
 
 ## Install
 
@@ -21,8 +21,6 @@ $ npm install
 
 ## Usage
 
-`--corridors` is planned.
-
 1. Generate a dungeon with its JSON export (schema 2) in the generator project
 
    ```bash
@@ -33,12 +31,13 @@ $ npm install
 2. Lay it out and save the map
 
    ```bash
-   $ npm run cli -- ruin.json [-o ruin-map.svg | -o ruin-map.png] [--layout-seed N]
+   $ npm run cli -- ruin.json [-o ruin-map.svg | -o ruin-map.png] [--layout-seed N] [--no-corridors]
    ```
 
    Output defaults to `<input>-map.svg`; `.png` rasterizes it. The layout seed defaults to the
    dungeon seed, so the same JSON gives the same map. Room numbers and names match the GM key
    (`ruin.md`). No layout found → the error names the stuck rooms; try another `--layout-seed`.
+   Most doors lead through a short corridor; `--no-corridors` puts every door in a shared wall.
 
 3. Or open the viewer, load the JSON (or drop it on the page), reroll and export SVG
 
@@ -48,14 +47,15 @@ $ npm install
    ```
 
    The layout seed starts at the dungeon seed; reroll steps it by one, or type any seed and press
-   Enter. Export saves `<name>-map-<seed>.svg`.
+   Enter. The corridors checkbox lays the same seed out again with or without corridors. Export
+   saves `<name>-map-<seed>.svg`.
 
 ## Development
 
 ```bash
 $ npm run typecheck
 $ npm test
-$ npm run bench   # layout benchmark over bench/dungeons
+$ npm run bench   # layout benchmark over bench/dungeons (-- --no-corridors: without corridors)
 ```
 
 Branches: `main` (prod), `dev` (integration), `feature/<slug>` off `dev`.

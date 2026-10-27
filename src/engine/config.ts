@@ -13,11 +13,17 @@ export type LayoutConfig = {
   differenceScale: number; // layouts of one chain must differ by 1 / differenceScale
   greedyMaxPoints: number; // sampled per configuration space segment
   maxTotalIterations: number; // then one retry with 4×, then LayoutError
+  corridors: boolean;
+  corridorRate: number; // chance per room pair of a corridor instead of a direct door
+  corridorLengths: number[]; // straight, doorLength wide
+  roomsCanTouch: boolean; // false: rooms without a direct door must not share a wall or corner
+  maxStageTwoFailures: number; // per chain, corridors that could not be placed
 };
 
 // Edgar's defaults, except our own iteration cap and cornerDistance 0 (doors may touch a corner):
 // small rooms need every door position they can get (docs/design.md, door capacity). Hub sizing is
-// ours: Edgar's hand-made templates have no size rule.
+// ours: Edgar's hand-made templates have no size rule. Edgar puts a corridor on every connection;
+// 0.95 leaves a few rooms touching. Corridor lengths as Edgar's examples (Resources/Rooms/corridors.yml).
 export const defaultConfig: LayoutConfig = {
   doorLength: 1,
   cornerDistance: 0,
@@ -33,4 +39,9 @@ export const defaultConfig: LayoutConfig = {
   differenceScale: 0.4,
   greedyMaxPoints: 20,
   maxTotalIterations: 100_000,
+  corridors: true,
+  corridorRate: 0.95,
+  corridorLengths: [1, 3, 5],
+  roomsCanTouch: true,
+  maxStageTwoFailures: 10_000,
 };

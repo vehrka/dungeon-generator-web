@@ -45,6 +45,8 @@ input[type="text"] {
   border: 1px solid var(--color-ink-black);
 }
 
+input[type="checkbox"] { margin: 0; accent-color: var(--color-ink-black); }
+
 .file { cursor: pointer; }
 .file:hover { text-decoration: underline; }
 .file input { display: none; }

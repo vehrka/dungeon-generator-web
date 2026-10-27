@@ -1,11 +1,13 @@
 import type { LayoutConfig } from "./config";
+import { doorLines, type DoorLine } from "./doors";
 import { rectangle, type Polygon } from "./geometry";
 import { randInt, rng } from "./rng";
 import { sizeRule } from "./shapeRules";
 import type { RoomGraph, RoomId } from "./types";
 
-// Shapes with the same outline share an id, so configuration spaces are cached once per outline.
-export type Shape = { id: string; outline: Polygon };
+// Shapes with the same outline and doors share an id, so configuration spaces are cached once per
+// shape. Without doorLines, every wall takes doors (doors.ts).
+export type Shape = { id: string; outline: Polygon; doorLines?: DoorLine[] };
 export type ShapePool = Map<string, Shape[]>; // poolId → shapes
 
 // A room's pool: its type and its neighbours above hubDegree, so hubs get walls long enough for all
@@ -51,4 +53,18 @@ function rectangles(key: PoolKey, seed: number, config: LayoutConfig): Shape[] {
     if (!shapes.has(id)) shapes.set(id, { id, outline: rectangle(w, h) });
   }
   return [...shapes.values()];
+}
+
+// Straight corridors, doorLength wide, one per length and orientation, doors only on the two ends
+// (Edgar's SpecificPositionsMode in Resources/Rooms/corridors.yml).
+export function corridorShapes(config: LayoutConfig): Shape[] {
+  const w = config.doorLength;
+  return config.corridorLengths.flatMap((length) =>
+    (["v", "h"] as const).map((o) => {
+      const outline = o === "v" ? rectangle(w, length) : rectangle(length, w);
+      // cornerDistance 0: an end is exactly one door wide, any other value would leave it none
+      const ends = doorLines(outline, { doorLength: w, cornerDistance: 0 }).filter((d) => (o === "v" ? d.normal.x === 0 : d.normal.y === 0));
+      return { id: `corridor-${o}${length}`, outline, doorLines: ends };
+    }),
+  );
 }

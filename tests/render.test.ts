@@ -3,7 +3,7 @@ import ruin from "./fixtures/ruin.json";
 import { defaultConfig } from "../src/engine/config";
 import { generate } from "../src/engine/index";
 import type { DungeonJson } from "../src/engine/types";
-import { polygon, rectangle } from "../src/engine/geometry";
+import { polygon, rectangle, type Segment } from "../src/engine/geometry";
 import type { Layout } from "../src/engine/layout";
 import type { RoomGraph } from "../src/engine/types";
 import { draw, render } from "../src/render/svg";
@@ -46,8 +46,18 @@ describe("render", () => {
     expect(out).toContain("&quot;&gt;&lt;img src=x onerror=alert(1)&gt;");
   });
 
-  it("marks every door, tags gates and points one-way doors", () => {
-    const segments = new Set(layout.doors.map(({ segment: s }) => `${s.from.x},${s.from.y},${s.to.x},${s.to.y}`));
+  it("draws one polygon per corridor", () => {
+    const corridors = new Set(layout.doors.flatMap(({ corridor: c }) => (c ? [`${c.shape.id}@${c.at.x},${c.at.y}`] : [])));
+    expect(corridors.size).toBeGreaterThan(0);
+    expect(count(/<polygon class="corridor"/g)).toBe(corridors.size);
+    const direct = generate(json, json.seed, { ...defaultConfig, corridors: false });
+    expect(render(direct.graph, direct.layout, meta)).not.toMatch(/class="(corridor|gap-corridor)"/);
+    expect(count(/class="gap-corridor"/g)).toBe(2 * corridors.size); // both ends of every corridor
+  });
+
+  it("marks every door, both ends of a corridor, tags gates and points one-way doors", () => {
+    const key = (s: Segment) => `${s.from.x},${s.from.y},${s.to.x},${s.to.y}`;
+    const segments = new Set(layout.doors.flatMap((d) => (d.corridor ? [key(d.segment), key(d.corridor.segment)] : [key(d.segment)])));
     expect(count(/<g class="door/g)).toBe(segments.size);
     expect(count(/<g class="door[^"]*gated/g)).toBe(4); // 3 lock, 1 state
     expect(count(/data-gate="lock"/g)).toBe(3);
@@ -90,6 +100,38 @@ describe("render", () => {
       doors: [{ door: g.doors[0]!, segment: { from: { x: 5, y: 7 }, to: { x: 6, y: 7 } } }],
     };
     expect(render(g, l, meta)).toContain(`<polyline class="oneway" points="161,269 165,265 169,269"/>`); // up, into room 1
+  });
+
+  it("tags a corridor's gate and one-way at room a's end, a plain door at room b's", () => {
+    const shape = { id: "rect-3x3", outline: rectangle(3, 3) };
+    const g: RoomGraph = {
+      rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])),
+      doors: [{ a: 0, b: 1, oneway: true, gate: { kind: "lock", requires: [] } }],
+      start: 0,
+      goal: 1,
+    };
+    const v1 = { id: "corridor-v1", outline: rectangle(1, 1) };
+    const l: Layout = {
+      placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 4 } }],
+      doors: [
+        {
+          door: g.doors[0]!,
+          segment: { from: { x: 1, y: 3 }, to: { x: 2, y: 3 } },
+          corridor: { shape: v1, at: { x: 1, y: 3 }, segment: { from: { x: 1, y: 4 }, to: { x: 2, y: 4 } } },
+        },
+      ],
+    };
+    const out = render(g, l, meta);
+    expect(out.match(/<polygon class="corridor"/g)).toHaveLength(1);
+    const marks = out.match(/<g class="door[^>]*>.*?<\/g>/g)!;
+    expect(marks).toHaveLength(2);
+    expect(marks[0]).toMatch(/gated.*data-gate="lock".*class="oneway"/);
+    expect(marks[1]).not.toMatch(/gated|tag|oneway/);
+    expect(marks[1]).toContain('y1="192"'); // jamb on y 4: 33 + 66 + 4·24 = 195 px, − 3
+    // the corridor halves of both gaps are grey: below the door on y 3 (171 px), above y 4
+    expect(marks[0]).toContain('<rect class="gap-corridor" x="58" y="171.5" width="22" height="1.5"/>');
+    expect(marks[1]).toContain('<rect class="gap-corridor" x="58" y="193" width="22" height="1.5"/>');
+    expect(out).toMatch(/<rect class="corridor"[^>]*\/><\/g>\n<text[^>]*>corridor<\/text>/); // legend
   });
 
   it("marks a shared door segment by what all its doors have in common", () => {

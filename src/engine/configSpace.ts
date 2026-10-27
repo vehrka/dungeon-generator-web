@@ -14,11 +14,17 @@ export type ConfigSpace = {
 type DoorConfig = Pick<LayoutConfig, "doorLength" | "cornerDistance">;
 
 // Edgar's ConfigurationSpacesGenerator.cs: offsets where a door of the moving shape lies on a door
-// of the fixed one, facing it, minus the offsets where the shapes overlap.
-export function configSpace(moving: Polygon, fixed: Polygon, config: DoorConfig): ConfigSpace {
-  const fixedLines = doorLines(fixed, config);
+// of the fixed one, facing it, minus the offsets where the shapes overlap. Door lines default to
+// every wall (doors.ts); corridors bring their own.
+export function configSpace(
+  moving: Polygon,
+  fixed: Polygon,
+  config: DoorConfig,
+  lines: { moving?: DoorLine[]; fixed?: DoorLine[] } = {},
+): ConfigSpace {
+  const fixedLines = lines.fixed ?? doorLines(fixed, config);
   const doors: ConfigSpace["doors"] = [];
-  for (const m of doorLines(moving, config)) {
+  for (const m of lines.moving ?? doorLines(moving, config)) {
     for (const f of fixedLines) {
       if (f.length !== m.length || f.normal.x !== -m.normal.x || f.normal.y !== -m.normal.y) continue;
       // door starts coincide: q_f = q_m + offset, so offset ranges over f.line − m.line
@@ -52,18 +58,56 @@ function withoutOverlap(moving: Polygon, fixed: Polygon, s: Segment): Segment[] 
   return runs;
 }
 
-// Cached per (moving, fixed) shape id; shapes with the same outline share an id.
-export function configSpaces(config: DoorConfig): (moving: Shape, fixed: Shape) => ConfigSpace {
-  const cache = new Map<string, ConfigSpace>();
-  return (moving, fixed) => {
-    const key = `${moving.id}|${fixed.id}`;
-    let space = cache.get(key);
-    if (!space) {
-      space = configSpace(moving.outline, fixed.outline, config);
-      cache.set(key, space);
+// Thesis Algorithm 1 (GetConfigurationSpaceOverCorridor): for every offset of a corridor against
+// the fixed shape, the moving shape's offsets against that corridor; merged over the corridor
+// shapes, minus where moving overlaps fixed. No doors: stage two places the corridor itself.
+export function overCorridor(
+  moving: Shape,
+  fixed: Shape,
+  corridors: Shape[],
+  config: DoorConfig,
+  direct: (moving: Shape, fixed: Shape) => ConfigSpace = (m, f) => shapeSpace(m, f, config),
+): ConfigSpace {
+  const raw: Segment[] = [];
+  for (const c of corridors) {
+    const beyond = direct(moving, c).offsets;
+    for (const s of direct(c, fixed).offsets) {
+      const axis = s.from.y === s.to.y ? "x" : "y";
+      for (const t of beyond) {
+        // the sum of two parallel segments (or a point) is one segment; perpendicular ones, point by point
+        if (s.from[axis] === s.to[axis] || t.from[axis === "x" ? "y" : "x"] === t.to[axis === "x" ? "y" : "x"]) {
+          raw.push(segment(translatePoint(s.from, t.from), translatePoint(s.to, t.to)));
+          continue;
+        }
+        for (let v = s.from[axis]; v <= s.to[axis]; v++) {
+          const q = { ...s.from, [axis]: v };
+          raw.push(segment(translatePoint(t.from, q), translatePoint(t.to, q)));
+        }
+      }
     }
-    return space;
+  }
+  return { offsets: merge(merge(raw).flatMap((s) => withoutOverlap(moving.outline, fixed.outline, s))), doors: [] };
+}
+
+const shapeSpace = (moving: Shape, fixed: Shape, config: DoorConfig) =>
+  configSpace(moving.outline, fixed.outline, config, { moving: moving.doorLines, fixed: fixed.doorLines });
+
+// How two placed shapes connect: a door in a shared wall, or a corridor between them.
+export type Link = "door" | "corridor";
+
+// Cached per (moving, fixed) shape id and link; shapes with the same outline and doors share an id.
+export function configSpaces(config: DoorConfig, corridors: Shape[] = []): (moving: Shape, fixed: Shape, link?: Link) => ConfigSpace {
+  const cache = new Map<string, ConfigSpace>();
+  const space = (moving: Shape, fixed: Shape, link: Link = "door"): ConfigSpace => {
+    const key = `${moving.id}|${fixed.id}|${link}`;
+    let s = cache.get(key);
+    if (!s) {
+      s = link === "door" ? shapeSpace(moving, fixed, config) : overCorridor(moving, fixed, corridors, config, space);
+      cache.set(key, s);
+    }
+    return s;
   };
+  return space;
 }
 
 // The door at a valid offset, in the fixed shape's coordinates. Where the wall allows several door

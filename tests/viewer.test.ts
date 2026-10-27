@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { maxSeed } from "../src/engine/rng";
-import { exportName, load, parseSeed, reroll } from "../src/viewer/state";
+import { defaultConfig } from "../src/engine/config";
+import { exportName, layoutConfig, load, parseSeed, reroll } from "../src/viewer/state";
 
 const text = readFileSync(join(import.meta.dirname, "fixtures", "ruin.json"), "utf8");
 
@@ -53,5 +54,12 @@ describe("exportName", () => {
   it("puts the seed in the name", () => {
     expect(exportName("ruin.json", 12)).toBe("ruin-map-12.svg");
     expect(exportName("dungeon", 0)).toBe("dungeon-map-0.svg");
+  });
+});
+
+describe("layoutConfig", () => {
+  it("is the default config with corridors on or off", () => {
+    expect(layoutConfig(true)).toEqual(defaultConfig);
+    expect(layoutConfig(false)).toEqual({ ...defaultConfig, corridors: false });
   });
 });

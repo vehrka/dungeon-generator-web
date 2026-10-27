@@ -5,6 +5,7 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 const file = $<HTMLInputElement>("file");
 const seedField = $<HTMLInputElement>("seed");
 const rerollButton = $<HTMLButtonElement>("reroll");
+const corridorsBox = $<HTMLInputElement>("corridors");
 const exportButton = $<HTMLButtonElement>("export");
 const status = $<HTMLParagraphElement>("status");
 const map = $<HTMLElement>("map");
@@ -64,7 +65,7 @@ function run(seed: number) {
     busy = false;
     fail(e.message || "Layout worker failed");
   };
-  w.postMessage({ json, seed } satisfies DrawRequest);
+  w.postMessage({ json, seed, corridors: corridorsBox.checked } satisfies DrawRequest);
 }
 
 // Reroll steps the seed in the field, the one the user sees, not the last one drawn.
@@ -84,13 +85,13 @@ async function open(f: File) {
   } catch (e) {
     if (n !== opening) return;
     dungeon = undefined;
-    seedField.disabled = rerollButton.disabled = true;
+    seedField.disabled = rerollButton.disabled = corridorsBox.disabled = true;
     fail((e as Error).message);
     return;
   }
   if (n !== opening) return;
   dungeon = loaded;
-  seedField.disabled = rerollButton.disabled = false;
+  seedField.disabled = rerollButton.disabled = corridorsBox.disabled = false;
   if (loaded.seed === undefined) {
     fail(`${f.name} has no usable seed; enter a layout seed`);
     seedField.value = "";
@@ -107,6 +108,7 @@ seedField.addEventListener("keydown", (e) => {
   if (e.key === "Enter") withSeed(run);
 });
 rerollButton.addEventListener("click", () => withSeed((s) => run(reroll(s))));
+corridorsBox.addEventListener("change", () => withSeed(run));
 exportButton.addEventListener("click", () => {
   if (!shown || !dungeon) return;
   const a = document.createElement("a");
