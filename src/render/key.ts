@@ -1,4 +1,4 @@
-import type { DungeonJson, JsonGateNode, JsonNode, JsonRoomNode } from "../engine/types";
+import type { DungeonJson, JsonGateNode, JsonNode } from "../engine/types";
 
 // GM key in Markdown (Python utils/dungeon_key.py), from the schema 2 JSON: normalize drops gate
 // ids, and the key groups doors by gate. Gates show up as conditions on the exits that cross them.
@@ -25,9 +25,8 @@ function exits(json: DungeonJson, nodes: Map<number, JsonNode>): Map<number, Map
       for (const [next, one] of walks.get(id)!) {
         if (seen.has(next)) continue;
         seen.add(next);
-        if (nodes.get(next)!.kind === "room") {
-          if (!found.has(next)) found.set(next, { gates, oneway: oneway || one });
-        } else stack.push([next, [...gates, next], oneway || one]);
+        if (nodes.get(next)!.kind === "room") found.set(next, { gates, oneway: oneway || one });
+        else stack.push([next, [...gates, next], oneway || one]);
       }
     }
     result.set(node.id, found);
@@ -35,8 +34,8 @@ function exits(json: DungeonJson, nodes: Map<number, JsonNode>): Map<number, Map
   return result;
 }
 
-function condition(gate: JsonGateNode, names: Map<string, string>): string {
-  const needs = gate.requires.map((id) => names.get(id)).join(" + ");
+function condition(gate: JsonGateNode, name: (id: string, where: string) => string): string {
+  const needs = gate.requires.map((id) => name(id, `gate ${gate.id}`)).join(" + ");
   if (gate.gate === "secret") return "secret";
   if (gate.gate === "lock") return `locked: ${needs}`;
   if (gate.gate === "on") return `${needs} ON`;
@@ -44,11 +43,26 @@ function condition(gate: JsonGateNode, names: Map<string, string>): string {
   return `needs ${needs}`;
 }
 
+// Expects edges that normalize accepts (the CLI normalizes first); objects' found_in and opens,
+// which normalize does not read, are checked here.
 export function dungeonKey(json: DungeonJson): string {
   const nodes = new Map(json.nodes.map((n) => [n.id, n]));
-  const room = (id: number) => nodes.get(id) as JsonRoomNode;
-  const gateNode = (id: number) => nodes.get(id) as JsonGateNode;
+  const room = (id: number, where = "") => {
+    const n = nodes.get(id);
+    if (n?.kind !== "room") throw new Error(`${where}${id} is not a room`);
+    return n;
+  };
+  const gateNode = (id: number, where = "") => {
+    const n = nodes.get(id);
+    if (n?.kind !== "gate") throw new Error(`${where}${id} is not a gate`);
+    return n;
+  };
   const names = new Map(json.objects.map((o) => [o.id, o.name]));
+  const name = (id: string, where: string) => {
+    const n = names.get(id);
+    if (n === undefined) throw new Error(`${where} refers to unknown object ${id}`);
+    return n;
+  };
   const exitsOf = exits(json, nodes);
   const num = (id: number) => room(id).number;
   const byNumber = (a: number, b: number) => num(a) - num(b);
@@ -78,7 +92,7 @@ export function dungeonKey(json: DungeonJson): string {
         if (!doors.has(g)) doors.set(g, new Set());
         doors.get(g)!.add(door(id, target, oneway));
       }
-      const tags = [...gates.map((g) => condition(gateNode(g), names)), ...(oneway ? ["one-way"] : [])];
+      const tags = [...gates.map((g) => condition(gateNode(g), name)), ...(oneway ? ["one-way"] : [])];
       return tags.length ? `${num(target)} (${tags.join(", ")})` : String(num(target));
     });
     lines.push(`${num(id)}. **${room(id).label}**. Exits: ${links.join(", ") || "none"}`);
@@ -87,10 +101,11 @@ export function dungeonKey(json: DungeonJson): string {
   if (json.objects.length) {
     lines.push("", "## Keys", "", "| Object | Found in | Opens |", "|--------|----------|-------|");
     for (const obj of json.objects) {
-      const found = obj.found_in.map(num).sort((a, b) => a - b).join(", ");
+      const where = `object ${obj.id}: `;
+      const found = obj.found_in.map((id) => room(id, where).number).sort((a, b) => a - b).join(", ");
       const opens = obj.opens.flatMap((g) => {
-        const gate = gateNode(g);
-        const others = gate.requires.filter((id) => id !== obj.id).map((id) => names.get(id));
+        const gate = gateNode(g, where);
+        const others = gate.requires.filter((id) => id !== obj.id).map((id) => name(id, `gate ${g}`));
         const suffix =
           gate.gate === "on" || gate.gate === "off" ? ` (${gate.gate.toUpperCase()})` : gate.requires.length > 1 ? ` (+ ${others.join(" + ")})` : "";
         return [...(doors.get(g) ?? [])].map((d) => d + suffix);

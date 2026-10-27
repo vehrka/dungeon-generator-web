@@ -26,13 +26,13 @@ const config = { ...defaultConfig, corridors: !args.includes("--no-corridors") }
 const generated = args.includes("--generated");
 // Dungeon → why it fails and the step that should fix it, per set and corridor mode.
 // Generated failures: STATUS open points, to review.
-const genL7 = "62 rooms, 10 faces, largest in either set; to review";
-const genM3 = "tree 17-16-22-18-23 hangs off rooms 11 and 12 of two faces sharing 8-11-15; to review";
 const knownFailures = new Map<string, string>(
   generated
-    ? config.corridors
-      ? [["gen-l-7", genL7], ["gen-m-3", genM3]]
-      : [["gen-l-7", genL7], ["gen-m-3", genM3], ["gen-m-7", "tree 2-5-4-1-7-10 (START) hangs off room 3; to review"]]
+    ? [
+        ["gen-l-7", "62 rooms, 10 faces, largest in either set; to review"],
+        ["gen-m-3", "tree 17-16-22-18-23 hangs off rooms 11 and 12 of two faces sharing 8-11-15; to review"],
+        ...(config.corridors ? [] : [["gen-m-7", "tree 2-5-4-1-7-10 (START) hangs off room 3; to review"] as const]),
+      ]
     : config.corridors
       ? []
       : [["m-3", "pendant tree 22-31-34 inside ring 12-7-13-23-29-21, needs corridors"]],
@@ -55,13 +55,13 @@ const width = Math.max(5, ...names.map((n) => n.length));
 let failed = 0;
 let known = 0;
 for (const name of names) {
-  const json = load.get(name)!();
   let graph, roomFaces;
   try {
-    graph = normalize(json);
+    graph = normalize(load.get(name)!());
     roomFaces = faces(graph);
   } catch (e) {
-    // Only rejections skip: normalize throws plain Errors, planarity NonPlanarError. Bugs rethrow.
+    // Only rejections skip: generator and normalize throw plain Errors, planarity NonPlanarError.
+    // Bugs rethrow.
     if (!(e instanceof NonPlanarError) && (e as Error).constructor !== Error) throw e;
     console.log(`${name.padEnd(width)} skipped  ${(e as Error).message}`);
     if (knownFailures.has(name)) failed++; // a skipped known failure loses its acceptance case

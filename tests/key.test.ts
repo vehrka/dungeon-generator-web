@@ -71,4 +71,12 @@ describe("dungeonKey", () => {
     const lines = roomsSection(dungeonKey(dungeon([room(0, 1), room(1, 3), room(2, 2)], [edge(0, 2), edge(2, 1)])));
     expect(lines).toEqual(["1. **Room 1**. Exits: 2", "2. **Room 2**. Exits: 1, 3", "3. **Room 3**. Exits: 2"]);
   });
+
+  it("rejects references the key cannot resolve, by name", () => {
+    const nodes = [room(0), room(1), gate(2, "lock", ["a"])];
+    const edges = [edge(0, 2), edge(2, 1)];
+    expect(() => dungeonKey(dungeon(nodes, edges, []))).toThrow("gate 2 refers to unknown object a");
+    expect(() => dungeonKey(dungeon(nodes, edges, [obj("a", [2], [2])]))).toThrow("object a: 2 is not a room");
+    expect(() => dungeonKey(dungeon(nodes, edges, [obj("a", [0], [1])]))).toThrow("object a: 1 is not a gate");
+  });
 });

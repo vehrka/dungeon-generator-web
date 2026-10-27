@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -110,6 +110,22 @@ describe("main", () => {
     const key = join(dir, "ruin.md");
     expect(await main([fixture, "-o", join(dir, "m.svg"), "--key", key], quiet)).toBe(0);
     expect(readFileSync(key, "utf8")).toBe(readFileSync(join(import.meta.dirname, "fixtures", "ruin-key.md"), "utf8"));
+  });
+
+  it("validates a loaded JSON before writing its key", async () => {
+    const json = JSON.parse(readFileSync(fixture, "utf8"));
+    json.edges.push({ source: 0, target: 999, oneway: false });
+    const dir = tmp();
+    const [bad, key] = [join(dir, "bad.json"), join(dir, "bad.md")];
+    writeFileSync(bad, JSON.stringify(json));
+    const errors: string[] = [];
+    expect(await main([bad, "--key", key], { ...quiet, error: (m: string) => errors.push(m) })).toBe(1);
+    expect(errors).toEqual(["Edge 0 → 999 refers to unknown node 999"]);
+    expect(existsSync(key)).toBe(false);
+  });
+
+  it("takes the theme in any case", () => {
+    expect(parseCli(["--dungeon-seed", "1", "--theme", "Tor-Barrow"]).source).toEqual({ generate: { seed: 1, size: "M", theme: "tor-barrow" } });
   });
 
   it("prints the error and exits 1 without a stack", async () => {

@@ -66,9 +66,11 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   working; bench on generated dungeons; rewrite the generator rules in project `CLAUDE.md` and
   close the gate-chain and mixed one-way open points. Split in two branches:
   - [x] 14a. CLI generate (`--dungeon-seed --size --theme`, `--json`, `--key`), GM key
-    (`render/key.ts`, golden `ref/ruin.md`, byte-equal), bench `--generated`, CLAUDE.md generator
-    rules, gate-chain and mixed one-way points closed. Committed bench unchanged; generated: with
-    corridors 14/16 (gen-l-7, gen-m-3 known), without 13/16 (+ gen-m-7). Plan:
+    (`render/key.ts`, golden `tests/fixtures/ruin-key.md` = `ref/ruin.md`, byte-equal), bench
+    `--generated`, CLAUDE.md generator rules, gate-chain and mixed one-way points closed. Committed
+    bench unchanged; generated: with corridors 14/16 (gen-l-7, gen-m-3 known), without 13/16
+    (+ gen-m-7). Review: generator failures stay known, to review; size/theme checked in both
+    `parseCli` (output name, error lists options) and `generateDungeon` (other callers). Plan:
     `docs/plans/14a-generator-cli.md`.
   - [ ] 14b. Viewer: dungeon row (size, theme, dungeon seed, new dungeon), generation in the
     worker, JSON and key export. Plan: `docs/plans/14b-generator-viewer.md`.

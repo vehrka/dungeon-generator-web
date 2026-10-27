@@ -9,6 +9,7 @@ import { defaultConfig } from "../engine/config";
 import { generateDungeon, type GenerateOptions } from "../engine/generator/index";
 import { PRESETS, type Preset } from "../engine/generator/grammar";
 import { DEFAULT_THEME, THEMES, type ThemeName } from "../engine/generator/themes";
+import { normalize } from "../engine/normalize";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
 import { dungeonKey } from "../render/key";
@@ -59,7 +60,7 @@ export function parseCli(argv: string[]): CliArgs {
     if (positionals.length) throw new Error("Pass an input JSON or --dungeon-seed, not both");
     const size = (values.size ?? "M").toUpperCase() as Preset;
     if (!PRESETS.includes(size)) throw new Error(`Unknown size ${values.size}, expected one of ${PRESETS.join(" ")}`);
-    const theme = (values.theme ?? DEFAULT_THEME) as ThemeName;
+    const theme = (values.theme ?? DEFAULT_THEME).toLowerCase() as ThemeName;
     if (!Object.hasOwn(THEMES, theme)) throw new Error(`Unknown theme ${theme}, expected one of ${Object.keys(THEMES).join(" ")}`);
     source = { generate: { seed: dungeonSeed, size, theme } };
     output = values.output ?? `${size.toLowerCase()}-${dungeonSeed}-${theme}-map.svg`;
@@ -77,12 +78,14 @@ export async function main(argv: string[], out: Out = console): Promise<number> 
     const args = parseCli(argv);
     const { source } = args;
     const json: DungeonJson = "input" in source ? JSON.parse(readFileSync(source.input, "utf8")) : generateDungeon(source.generate);
+    normalize(json); // schema check before any file is written; draw normalizes again
     // Written before layout, so a dungeon that fails to lay out can still be inspected.
     if (args.json) writeFileSync(args.json, JSON.stringify(json, null, 2) + "\n");
     if (args.key) writeFileSync(args.key, dungeonKey(json));
     const seed = isSeed(json.seed) ? json.seed : undefined;
     const layoutSeed = args.layoutSeed ?? seed;
-    if (layoutSeed === undefined) throw new Error(`${"input" in source ? source.input : "dungeon"} has no usable seed (${json.seed}); pass --layout-seed`);
+    // Only a loaded file can lack one: a generated dungeon carries its dungeon seed.
+    if (layoutSeed === undefined) throw new Error(`${(source as { input: string }).input} has no usable seed (${json.seed}); pass --layout-seed`);
     const { svg, rooms } = draw(json, layoutSeed, { ...defaultConfig, corridors: args.corridors });
     if (args.output.toLowerCase().endsWith(".png")) {
       const { Resvg } = await import("@resvg/resvg-js"); // native addon, only for PNG
