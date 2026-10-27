@@ -3,7 +3,7 @@ import ruin from "./fixtures/ruin.json";
 import { defaultConfig } from "../src/engine/config";
 import { generate } from "../src/engine/index";
 import type { DungeonJson } from "../src/engine/types";
-import { rectangle } from "../src/engine/geometry";
+import { polygon, rectangle } from "../src/engine/geometry";
 import type { Layout } from "../src/engine/layout";
 import type { RoomGraph } from "../src/engine/types";
 import { render } from "../src/render/svg";
@@ -62,6 +62,54 @@ describe("render", () => {
     const chevron = (g: RoomGraph) => render(g, l(g), meta).match(/<polyline class="oneway" points="([^"]+)"/)![1];
     expect(chevron(two(0, 1))).toBe("65,169 69,173 73,169"); // down, into room 1
     expect(chevron(two(1, 0))).toBe("65,173 69,169 73,173"); // up, into room 0
+  });
+
+  it("points the chevron by the side room a is on, not its bounding box", () => {
+    // L room 0 with its top-right block cut out; room 1 sits in the cut, door on the inner wall
+    // y 7, x 5–6. Room 0 is below the door, its bounding-box centre (y 5) above it.
+    const g: RoomGraph = {
+      rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])),
+      doors: [{ a: 0, b: 1, oneway: true }],
+      start: 0,
+      goal: 1,
+    };
+    const l: Layout = {
+      placements: [
+        { room: 0, shape: { id: "l", outline: polygon([{ x: 0, y: 0 }, { x: 3, y: 0 }, { x: 3, y: 7 }, { x: 10, y: 7 }, { x: 10, y: 10 }, { x: 0, y: 10 }]) }, at: { x: 0, y: 0 } },
+        { room: 1, shape: { id: "rect-3x3", outline: rectangle(3, 3) }, at: { x: 5, y: 4 } },
+      ],
+      doors: [{ door: g.doors[0]!, segment: { from: { x: 5, y: 7 }, to: { x: 6, y: 7 } } }],
+    };
+    expect(render(g, l, meta)).toContain(`<polyline class="oneway" points="161,269 165,265 169,269"/>`); // up, into room 1
+  });
+
+  it("marks a shared door segment by what all its doors have in common", () => {
+    const shape = { id: "rect-3x3", outline: rectangle(3, 3) };
+    const mark = (doors: RoomGraph["doors"]) => {
+      const g: RoomGraph = {
+        rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])),
+        doors,
+        start: 0,
+        goal: 1,
+      };
+      const segment = { from: { x: 1, y: 3 }, to: { x: 2, y: 3 } };
+      const l: Layout = {
+        placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }],
+        doors: doors.map((door) => ({ door, segment })),
+      };
+      return render(g, l, meta).match(/<g class="door[^>]*>.*?<\/g>/)![0];
+    };
+    const secret = { kind: "secret" as const, requires: [] };
+    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: true }])).toContain("oneway");
+    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: false }])).not.toContain("oneway");
+    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 1, b: 0, oneway: true }])).not.toContain("oneway");
+    expect(mark([{ a: 0, b: 1, oneway: false, gate: secret }])).toContain("dash");
+    expect(mark([{ a: 0, b: 1, oneway: false, gate: secret }, { a: 0, b: 1, oneway: false }])).not.toContain("dash");
+  });
+
+  it("is wide enough for the title", () => {
+    const wide = render(graph, layout, { ...meta, theme: "x".repeat(300) });
+    expect(Number(wide.match(/width="(\d+)"/)![1])).toBeGreaterThanOrEqual(33 + 300 * 7.5);
   });
 
   it("names the gate objects in the key", () => {

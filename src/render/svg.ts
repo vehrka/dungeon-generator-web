@@ -3,7 +3,7 @@ import type { Layout, PlacedDoor } from "../engine/layout";
 import type { Gate, RoomGraph, RoomId } from "../engine/types";
 import { defs, glyphs, glyphSize } from "./icons";
 
-export type RenderMeta = { seed: number; layoutSeed: number; theme?: string; size?: string; grammar?: string };
+export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string };
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no
 // radius or shadow. Amber is the one chromatic note, kept for gates (docs/plans/09-render-cli.md).
@@ -12,7 +12,8 @@ const margin = 33;
 const gap = 66;
 const titleHeight = 66;
 const line = 20;
-const charWidth = 7.5; // rough width of a 13 px character, sizes the key column
+const charWidth = 7.5; // rough width of a 13 px character, sizes the key column and the title
+const titleCharWidth = 11; // the same at 19 px
 const amber = "#f0a000";
 
 const style = `<style>
@@ -58,12 +59,15 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   const mapHeight = (all.y1 - all.y0) * unit;
   const top = margin + titleHeight;
   const px = (p: Point) => ({ x: margin + (p.x - all.x0) * unit, y: top + (p.y - all.y0) * unit });
-  const centre = (id: RoomId) => {
-    const b = bbox(outlines.get(id)!);
-    return px({ x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2 });
+  // +1 when room a lies before the door (above or left): the grid cell below or right of the
+  // door's start is not in a. A bounding-box centre can sit on the wrong side of an L.
+  const side = (a: RoomId, s: Segment): 1 | -1 => {
+    const q = { x: s.from.x + 0.5, y: s.from.y + 0.5 };
+    return partition(outlines.get(a)!).some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1) ? -1 : 1;
   };
 
   const map: string[] = [];
+  const usedGlyphs = new Set<string>();
   for (const [id, outline] of outlines) {
     const room = graph.rooms.get(id)!;
     map.push(`<polygon class="room" points="${outline.map((q) => `${px(q).x},${px(q).y}`).join(" ")}"/>`);
@@ -71,31 +75,34 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
     const r = partition(outline).reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
     const c = px({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
     const marks = roomGlyphs(graph, id);
+    marks.forEach((m) => usedGlyphs.add(m));
     map.push(`<text class="number" data-room="${room.number}" x="${c.x}" y="${c.y + (marks.length ? -1 : 7)}">${room.number}</text>`);
     const width = marks.length * glyphSize + (marks.length - 1) * 3;
     marks.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
   }
 
-  // Doors between the same two rooms share a segment: one mark, one tag for all their gates.
+  // Doors between the same two rooms share a segment: one mark, one tag for all their gates; dashed
+  // and one-way only when every door of the segment is (opposite one-ways cross both ways).
   const groups = new Map<string, PlacedDoor[]>();
   for (const d of layout.doors) {
     const k = `${d.segment.from.x},${d.segment.from.y},${d.segment.to.x},${d.segment.to.y}`;
-    groups.set(k, [...(groups.get(k) ?? []), d]);
+    if (groups.has(k)) groups.get(k)!.push(d);
+    else groups.set(k, [d]);
   }
   const gates: { tag: string; gates: Gate[] }[] = [];
   for (const doors of groups.values()) {
     const tagged = doors.flatMap((d) => (d.door.gate && d.door.gate.kind !== "secret" ? [d.door.gate] : []));
-    const secret = doors.some((d) => d.door.gate?.kind === "secret");
+    const secret = doors.every((d) => d.door.gate?.kind === "secret");
     const tag = tagged.length ? letter(gates.length) : undefined;
     if (tag) gates.push({ tag, gates: tagged });
-    const oneway = doors.find((d) => d.door.oneway);
-    map.push(doorMark(doors[0]!.segment, px, tag && tagged.map((g) => g.kind).join(" "), tag, secret, oneway && centre(oneway.door.a)));
+    const [first] = doors as [PlacedDoor];
+    const oneway = doors.every((d) => d.door.oneway && d.door.a === first.door.a);
+    map.push(doorMark(first.segment, px, tag && tagged.map((g) => g.kind).join(" "), tag, secret, oneway ? side(first.door.a, first.segment) : undefined));
   }
 
   // Key column: rooms by number, gates by tag, legend of what the map uses.
   const rooms = [...graph.rooms.values()].sort((a, b) => a.number - b.number);
   const gateLines = gates.map((g) => ({ tag: g.tag, text: g.gates.map(gateText).join("; ") }));
-  const usedGlyphs = new Set([...graph.rooms.keys()].flatMap((id) => roomGlyphs(graph, id)));
   const legend = [
     ...Object.keys(glyphs).filter((g) => usedGlyphs.has(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name })),
     ...(gates.length ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
@@ -133,17 +140,19 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
     }
   }
 
-  const width = kx + keyWidth + margin;
+  const title = meta.theme ?? "dungeon";
+  const subtitle = [meta.size && `size ${meta.size}`, meta.seed !== undefined && `seed ${meta.seed}`, `layout ${meta.layoutSeed}`, meta.grammar]
+    .filter(Boolean)
+    .join(" · ");
+  const width = Math.max(kx + keyWidth, margin + Math.max(title.length * titleCharWidth, subtitle.length * charWidth)) + margin;
   const height = Math.max(top + mapHeight, y) + margin;
-  const title = esc(meta.theme ?? "dungeon");
-  const subtitle = esc([meta.size && `size ${meta.size}`, `seed ${meta.seed}`, `layout ${meta.layoutSeed}`, meta.grammar].filter(Boolean).join(" · "));
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
     style,
     `<defs>${defs()}</defs>`,
     `<rect width="${width}" height="${height}" fill="#f6f8f7"/>`,
-    `<text class="title" x="${margin}" y="${margin + 19}">${title}</text>`,
-    `<text class="muted" x="${margin}" y="${margin + 40}">${subtitle}</text>`,
+    `<text class="title" x="${margin}" y="${margin + 19}">${esc(title)}</text>`,
+    `<text class="muted" x="${margin}" y="${margin + 40}">${esc(subtitle)}</text>`,
     ...map,
     ...key,
     `</svg>`,
@@ -164,7 +173,7 @@ function doorMark(
   gate: string | undefined,
   tag: string | undefined,
   secret: boolean,
-  from: Point | undefined,
+  d: 1 | -1 | undefined, // one-way: +1 points down or right
 ): string {
   const a = px(s.from);
   const b = px(s.to);
@@ -183,9 +192,7 @@ function doorMark(
       ];
   if (secret) parts.push(`<line class="dash" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`);
   if (tag) parts.push(tagMark(mid.x, mid.y, tag, gate));
-  if (from) {
-    // d: +1 when room a lies before the door on the axis across the wall.
-    const d = (horizontal ? from.y < mid.y : from.x < mid.x) ? 1 : -1;
+  if (d) {
     const o = tag ? 12 * d : 0;
     const pts = horizontal
       ? [[mid.x - 4, mid.y + o - 2 * d], [mid.x, mid.y + o + 2 * d], [mid.x + 4, mid.y + o - 2 * d]]

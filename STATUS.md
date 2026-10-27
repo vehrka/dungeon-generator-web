@@ -58,4 +58,6 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   on direction"; generator `--size L --seed 5`, gate 22). Should probably be a one-way door.
 - Render: the key column width is estimated from character counts (no font metrics); a wide
   fallback font can overflow it. Gate tags and one-way chevrons can touch on short walls with
-  several doors; not seen on the fixture or M-1.
+  several doors; not seen on the fixture or M-1. The glyph row of a room is not clipped to it: 4+
+  glyphs (start/goal, objects, treasure) on a 3-unit room spill over the wall. No generator room
+  holds more than one object today; revisit with L/T shapes (step 12), whose arms are narrower.

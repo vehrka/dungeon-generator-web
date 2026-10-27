@@ -20,6 +20,8 @@ describe("parseCli", () => {
     expect(() => parseCli([])).toThrow(/input/);
     expect(() => parseCli(["a.json", "b.json"])).toThrow(/one input/);
     expect(() => parseCli(["a.json", "--layout-seed", "x"])).toThrow(/layout-seed/);
+    expect(() => parseCli(["a.json", "--layout-seed", "4294967296"])).toThrow(/layout-seed/);
+    expect(parseCli(["a.json", "--layout-seed", "4294967295"]).layoutSeed).toBe(4294967295);
     expect(() => parseCli(["a.json", "-o", "a.jpg"])).toThrow(/\.svg or \.png/);
     expect(() => parseCli(["a.json", "--corridors"])).toThrow();
   });
@@ -43,9 +45,20 @@ describe("main", () => {
   it("prints the error and exits 1 without a stack", async () => {
     const dir = tmp();
     const bad = join(dir, "bad.json");
-    writeFileSync(bad, JSON.stringify({ schema_version: 3 }));
+    writeFileSync(bad, JSON.stringify({ schema_version: 3, seed: 1 }));
     const errors: string[] = [];
     expect(await main([bad], { ...quiet, error: (m: string) => errors.push(m) })).toBe(1);
     expect(errors).toEqual(["Unsupported schema_version 3, expected 2"]);
+  });
+
+  it("rejects a dungeon without a usable seed when no layout seed is given", async () => {
+    const json = JSON.parse(readFileSync(fixture, "utf8"));
+    delete json.seed;
+    const bad = join(tmp(), "noseed.json");
+    writeFileSync(bad, JSON.stringify(json));
+    const errors: string[] = [];
+    expect(await main([bad], { ...quiet, error: (m: string) => errors.push(m) })).toBe(1);
+    expect(errors[0]).toMatch(/seed/);
+    expect(await main([bad, "-o", join(tmp(), "m.svg"), "--layout-seed", "2"], quiet)).toBe(0);
   });
 });
