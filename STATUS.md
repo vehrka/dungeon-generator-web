@@ -2,8 +2,8 @@
 
 **updated:** 2026-10-27
 
-Steps 1–8 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
-and layout, hub shape sizes) done. Details of each step in [docs/design.md](docs/design.md).
+Steps 1–9 (normalize, planarity, chains, geometry, shapes and doors, configuration spaces, energy
+and layout, hub shape sizes, render and CLI) done. Details of each step in [docs/design.md](docs/design.md).
 
 ## Done
 
@@ -33,8 +33,10 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [x] 8b. **M-3**: deferred to step 11. Room 22 and its pendant tree `31-34` must sit inside ring
   12-7-13-23-29-21, closed tight by cycle chains 3 and 4; touching rooms leave no cavity. No engine change:
   M-3 is a bench known failure (`knownFailures` in `bench/run.ts`). Plan: `docs/plans/08b-m3.md`.
-- [ ] 9. **render and CLI**: SVG (rooms, numbers, labels, doors, locks, one-way, icons), PNG, CLI.
-  Style: teenage engineering, `ref/webdesign/design.md`.
+- [x] 9. **render and CLI**: SVG (rooms, numbers, doors, gate tags, one-way, glyphs, key column with
+  labels and gates, legend), PNG via `@resvg/resvg-js` 2.6.2, CLI (`-o`, `--layout-seed`), pipeline
+  in `engine/index.ts` (`generate`). Neutral rooms, amber gates, labels in the key column.
+  Plan: `docs/plans/09-render-cli.md`.
 - [ ] 10. **viewer**: load JSON, show map, reroll, export SVG. Style: teenage engineering,
   `ref/webdesign/design.md` (tokens in `ref/webdesign/cssvars`).
 - [ ] 11. **corridors**: over-corridor configuration spaces, touching constraint, stage two.
@@ -54,4 +56,8 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   `docs/design.md`, open points.
 - `normalize` rejects a gate with one one-way leg and one two-way leg ("one-way edges that disagree
   on direction"; generator `--size L --seed 5`, gate 22). Should probably be a one-way door.
-- PNG library (step 9).
+- Render: the key column width is estimated from character counts (no font metrics); a wide
+  fallback font can overflow it. Gate tags and one-way chevrons can touch on short walls with
+  several doors; not seen on the fixture or M-1. The glyph row of a room is not clipped to it: 4+
+  glyphs (start/goal, objects, treasure) on a 3-unit room spill over the wall. No generator room
+  holds more than one object today; revisit with L/T shapes (step 12), whose arms are narrower.
