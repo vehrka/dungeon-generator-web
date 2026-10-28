@@ -209,9 +209,13 @@ Layout seed 1, Dyson core (no wobble, shadow or door symbols), Node 24, mean of 
 | l-1 | 0.6 ms | 78 ms | 390 kB |
 | l-8 | 0.3 ms | 32 ms | 166 kB |
 
-Within target (< 100 ms, < 1 MB). l-1: 5,240 clusters, 15,758 strokes, nearly all the time in
-`hatch`. Doors are plain gaps in the wall, half a wall short at each end, so a door flush with a
-corner leaves the other wall whole. On this machine the serif stack falls back to DejaVu Serif
+Size within target (< 1 MB). Time at the edge: l-1 measures 78–102 ms from run to run on the same
+code (machine load); 5,240 clusters, 15,758 strokes, nearly all the time in `hatch`. If the viewer
+reroll feels slow: fewer Bridson tries (30 now) or a jittered grid. Doors are plain gaps in the
+wall, half a wall short at each end, so a door flush with a corner leaves the other wall whole;
+the gaps are filled and gridded like the floors. Until step 3, gate tags and one-way chevrons sit on
+the door as in the catalogue, and a secret door is the wall unbroken with a bold serif S (white
+halo), so no default map loses information while the symbols are pending. On this machine the serif stack falls back to DejaVu Serif
 (no Palatino); the 7.5 px/char key column estimate fits it.
 
 ## Testing

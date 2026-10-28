@@ -228,6 +228,7 @@ describe("draw", () => {
 describe("styleFor", () => {
   it("draws cyber as a catalogue, any other theme or none Dyson", () => {
     expect(styleFor("cyber")).toBe("catalogue");
+    expect(styleFor("Cyber")).toBe("catalogue");
     for (const theme of ["zelda", "tor-barrow", "", undefined]) expect(styleFor(theme)).toBe("dyson");
   });
 });
@@ -256,9 +257,37 @@ describe("dyson", () => {
     expect(dyson.indexOf('class="hatch"')).toBeLessThan(dyson.indexOf('<use href="#floors"'));
   });
 
-  it("cuts a gap in the wall at every door and both ends of every corridor", () => {
+  it("cuts a gap in the wall at every door and both ends of every corridor, gridded like the floor", () => {
     const groups = new Set(layout.doors.map((d) => (d.corridor ? `${d.corridor.shape.id}@${d.corridor.at.x},${d.corridor.at.y}` : `${d.segment.from.x},${d.segment.from.y},${d.segment.to.x},${d.segment.to.y}`)));
-    expect(n(/<rect class="gap"/g)).toBe(groups.size + corridors.size);
+    expect(n(/<rect class="gap"/g)).toBe(groups.size + corridors.size); // the fixture has no secret door
+    expect(n(/<use href="#gaps"/g)).toBe(2);
+  });
+
+  it("tags every gate on the map as in the key", () => {
+    const tags = [...dyson.matchAll(/<rect class="tag" data-gate="[^"]+"[^>]*\/><text class="tag-letter" [^>]*>([A-Z]+)<\/text>/g)].map((m) => m[1]);
+    expect(tags.length).toBeGreaterThan(0);
+    expect(new Set(tags).size).toBe(tags.length);
+    expect(n(/data-gate="lock"/g) + n(/data-gate="state"/g)).toBeGreaterThan(0);
+    expect(dyson).toMatch(/<text[^>]*>gate<\/text>/); // legend
+  });
+
+  it("draws a secret door as an unbroken wall with an S, a one-way door with a chevron, both in the legend", () => {
+    const shape = { id: "rect-3x3", outline: rectangle(3, 3) };
+    const two = (doors: RoomGraph["doors"]) =>
+      render(
+        { rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])), doors, start: 0, goal: 1 },
+        { placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }], doors: doors.map((door) => ({ door, segment: { from: { x: 1, y: 3 }, to: { x: 2, y: 3 } } })) },
+        { ...meta, style: "dyson" },
+      );
+    const secret = two([{ a: 0, b: 1, oneway: false, gate: { kind: "secret", requires: [] } }]);
+    expect(secret).not.toContain('<rect class="gap"');
+    expect(secret).toContain('<text class="secret"');
+    expect(secret).toMatch(/<text[^>]*>secret door<\/text>/);
+    const oneway = two([{ a: 0, b: 1, oneway: true }]);
+    expect(oneway).toContain('<rect class="gap"');
+    expect(oneway).toContain('<polyline class="oneway" points="113,217 117,221 121,217"/>'); // down, away from room 1 above
+    expect(oneway).toMatch(/<text[^>]*>one-way<\/text>/);
+    expect(two([{ a: 0, b: 1, oneway: false }])).not.toMatch(/class="(secret|oneway)"/);
   });
 
   it("numbers every room and lists every label once, escaped", () => {

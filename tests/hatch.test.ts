@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rectangle, translate } from "../src/engine/geometry";
-import { distance, floorCells, hatch, hatchDepth, isFloor } from "../src/render/hatch";
+import { distance, floorCells, hatch, hatchDepth, hatchReach, isFloor } from "../src/render/hatch";
 
 // Two rooms joined by a one-cell corridor, an L-shaped gap between them.
 const floors = [rectangle(4, 3), translate(rectangle(1, 2), { x: 4, y: 1 }), translate(rectangle(3, 5), { x: 5, y: 0 })];
@@ -43,6 +43,13 @@ describe("hatch", () => {
   it("hatches all round, the gap between the rooms too", () => {
     const near = (x: number, y: number) => clusters.some(({ centre: c }) => Math.hypot(c.x - x, c.y - y) < 0.6);
     for (const [x, y] of [[-0.5, 1.5], [2, -0.5], [2, 3.5], [8.5, 2.5], [4.5, 0.5], [4.5, 3.5]] as const) expect(near(x, y)).toBe(true);
+  });
+
+  it("keeps every stroke within hatchReach of the floors", () => {
+    // to the floors' rectangles directly: distance() stops at hatchDepth
+    const rects = [[0, 0, 4, 3], [4, 1, 5, 3], [5, 0, 8, 5]] as const;
+    const far = (p: { x: number; y: number }) => Math.min(...rects.map(([x0, y0, x1, y1]) => Math.hypot(Math.max(x0 - p.x, 0, p.x - x1), Math.max(y0 - p.y, 0, p.y - y1))));
+    for (const { strokes } of clusters) for (const { from, to } of strokes) for (const p of [from, to]) expect(far(p)).toBeLessThanOrEqual(hatchReach);
   });
 
   it("draws 2 to 4 parallel strokes per cluster", () => {

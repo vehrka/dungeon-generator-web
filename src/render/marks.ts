@@ -20,6 +20,16 @@ export const useGlyph = (id: string, x: number, y: number) =>
 export const tagMark = (x: number, y: number, tag: string, gate?: string) =>
   `<rect class="tag"${gate ? ` data-gate="${esc(gate)}"` : ""} x="${x - 7}" y="${y - 7}" width="14" height="14"/><text class="tag-letter" x="${x}" y="${y + 4}">${tag}</text>`;
 
+// One-way chevron at a door's middle m, pointing away from room a (d +1: down or right), past the
+// gate tag when there is one.
+export function chevron(m: Point, horizontal: boolean, d: 1 | -1, tag: boolean): string {
+  const o = tag ? 12 * d : 0;
+  const pts = horizontal
+    ? [[m.x - 4, m.y + o - 2 * d], [m.x, m.y + o + 2 * d], [m.x + 4, m.y + o - 2 * d]]
+    : [[m.x + o - 2 * d, m.y - 4], [m.x + o + 2 * d, m.y], [m.x + o - 2 * d, m.y + 4]];
+  return `<polyline class="oneway" points="${pts.map((p) => p.join(",")).join(" ")}"/>`;
+}
+
 // Room number at the anchor c, a row of glyphs under it; dy lowers a number without glyphs to the
 // middle (font-size dependent).
 export function roomMarks(room: SceneRoom, c: Point, dy: number): string[] {

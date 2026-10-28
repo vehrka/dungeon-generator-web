@@ -6,7 +6,7 @@ import { isSeed } from "../engine/rng";
 import type { DungeonJson, Gate, RoomGraph } from "../engine/types";
 import { dyson } from "./dyson";
 import { defs, glyphs } from "./icons";
-import { esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
+import { chevron, esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
 import { scene } from "./scene";
 
 export type MapStyle = "catalogue" | "dyson";
@@ -15,7 +15,7 @@ export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; si
 
 // Cyber keeps the catalogue look; every other theme, or none (a loaded JSON may lack one), is Dyson
 // (docs/dyson-style.md, style selection).
-export const styleFor = (theme?: string): MapStyle => (theme === "cyber" ? "catalogue" : "dyson");
+export const styleFor = (theme?: string): MapStyle => (theme?.toLowerCase() === "cyber" ? "catalogue" : "dyson");
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no
 // radius or shadow. Amber is the one chromatic note, kept for gates (docs/plans/09-render-cli.md).
@@ -191,12 +191,6 @@ function doorMark(
   }
   if (secret) parts.push(`<line class="dash" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`);
   if (tag) parts.push(tagMark(mid.x, mid.y, tag, gate));
-  if (d) {
-    const o = tag ? 12 * d : 0;
-    const pts = horizontal
-      ? [[mid.x - 4, mid.y + o - 2 * d], [mid.x, mid.y + o + 2 * d], [mid.x + 4, mid.y + o - 2 * d]]
-      : [[mid.x + o - 2 * d, mid.y - 4], [mid.x + o + 2 * d, mid.y], [mid.x + o - 2 * d, mid.y + 4]];
-    parts.push(`<polyline class="oneway" points="${pts.map((p) => p.join(",")).join(" ")}"/>`);
-  }
+  if (d) parts.push(chevron(mid, horizontal, d, !!tag));
   return `<g class="door${tag ? " gated" : ""}${secret ? " secret" : ""}">${parts.join("")}</g>`;
 }

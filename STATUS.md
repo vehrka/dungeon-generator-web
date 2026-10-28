@@ -18,7 +18,7 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   catalogue, else Dyson), `render`/`draw` style argument, CLI `--style`; white page, floors
   (rooms and corridors alike), floor grid pattern, thick walls, hatching (`render/hatch.ts`),
   serif numbers, black glyphs, key column and title in the serif. Doors as plain gaps for now.
-  Done: l-1 78 ms, 390 kB; catalogue dump byte-identical (`docs/plans/16-dyson-core.md`). The
+  Done: l-1 78–102 ms (noisy), 390 kB; gate tags, S and chevrons on the doors meanwhile; catalogue dump byte-identical (`docs/plans/16-dyson-core.md`). The
   viewer draws Dyson for non-cyber themes already, with no style select until step 5.
 - [ ] 3. **doors and gates**: door rectangle, archway at corridor ends, secret S, locked bar,
   portcullis dots, boxed gate tags beside the door, black one-way chevron, legend.

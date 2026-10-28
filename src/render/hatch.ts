@@ -10,6 +10,8 @@ const spacing = 0.12; // between the strokes of a cluster
 const length = 0.45; // of a stroke, ± 20% per cluster
 const tries = 30; // Bridson's k
 const reach = Math.ceil(hatchDepth); // cells to search around a point
+// Farthest a stroke end gets from a floor: depth, half the longest stroke, the outer stroke's offset.
+export const hatchReach = hatchDepth + (length * 1.2) / 2 + 1.5 * spacing;
 
 export type Cluster = { centre: Point; strokes: Segment[] };
 // Unit cells on a dense grid over the floors' bounding box grown by reach + 1, so every cell a
