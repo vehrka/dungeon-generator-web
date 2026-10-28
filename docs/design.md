@@ -55,6 +55,8 @@ Edgar's room template repeat modes (thesis 2.2.2).
   ids are internal only.
 - Gate kinds: `lock`, `state`, `on`, `off`, `secret`.
 - Reject input with `schema_version` other than 2, with a clear error.
+- Why 2: the version comes from the Python generator, whose schema 1 had no room `number` or
+  `label`. This project never read schema 1.
 
 ## Pipeline
 
