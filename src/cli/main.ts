@@ -1,6 +1,6 @@
 // ruin.json → ruin-map.svg / .png, or a generated dungeon → m-7-zelda-map.svg
 //
-//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--key ruin.md]
+//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--style dyson] [--key ruin.md]
 //   npm run cli -- --dungeon-seed 7 [--size M] [--theme zelda] [--json m-7-zelda.json] [--key m-7-zelda.md] [...]
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -13,7 +13,7 @@ import { normalize } from "../engine/normalize";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
 import { dungeonKey } from "../render/key";
-import { draw } from "../render/svg";
+import { draw, mapStyles, type MapStyle } from "../render/svg";
 
 export type CliArgs = {
   source: { input: string } | { generate: Required<GenerateOptions> };
@@ -22,6 +22,7 @@ export type CliArgs = {
   key?: string;
   layoutSeed: number | undefined;
   corridors: boolean;
+  style?: MapStyle; // the theme's when absent
 };
 
 const parseSeed = (flag: string, text: string | undefined): number | undefined => {
@@ -44,6 +45,7 @@ export function parseCli(argv: string[]): CliArgs {
       theme: { type: "string" },
       json: { type: "string" },
       key: { type: "string" },
+      style: { type: "string" },
     },
   });
   if (positionals.length > 1) throw new Error(`Expected one input JSON, got ${positionals.length}`);
@@ -67,7 +69,9 @@ export function parseCli(argv: string[]): CliArgs {
   }
   if (!/\.(svg|png)$/i.test(output)) throw new Error(`Output must end in .svg or .png: ${output}`);
   const layoutSeed = parseSeed("layout-seed", values["layout-seed"]);
-  return { source, output, json: values.json, key: values.key, layoutSeed, corridors: !values["no-corridors"] };
+  const style = values.style?.toLowerCase() as MapStyle | undefined;
+  if (style !== undefined && !mapStyles.includes(style)) throw new Error(`Unknown style ${values.style}, expected one of ${mapStyles.join(" ")}`);
+  return { source, output, json: values.json, key: values.key, layoutSeed, corridors: !values["no-corridors"], style };
 }
 
 type Out = { log: (m: string) => void; error: (m: string) => void };
@@ -86,7 +90,7 @@ export async function main(argv: string[], out: Out = console): Promise<number> 
     const layoutSeed = args.layoutSeed ?? seed;
     // Only a loaded file can lack one: a generated dungeon carries its dungeon seed.
     if (layoutSeed === undefined) throw new Error(`${(source as { input: string }).input} has no usable seed (${json.seed}); pass --layout-seed`);
-    const { svg, rooms } = draw(json, layoutSeed, { ...defaultConfig, corridors: args.corridors });
+    const { svg, rooms } = draw(json, layoutSeed, { ...defaultConfig, corridors: args.corridors }, args.style);
     if (args.output.toLowerCase().endsWith(".png")) {
       const { Resvg } = await import("@resvg/resvg-js"); // native addon, only for PNG
       writeFileSync(args.output, new Resvg(svg, { font: { loadSystemFonts: true } }).render().asPng());

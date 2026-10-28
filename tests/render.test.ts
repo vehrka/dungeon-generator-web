@@ -6,7 +6,7 @@ import type { DungeonJson } from "../src/engine/types";
 import { polygon, rectangle, type Segment } from "../src/engine/geometry";
 import type { Layout } from "../src/engine/layout";
 import type { RoomGraph } from "../src/engine/types";
-import { draw, render } from "../src/render/svg";
+import { draw, render, styleFor } from "../src/render/svg";
 
 const json = ruin as DungeonJson;
 const meta = { seed: json.seed, layoutSeed: json.seed, theme: json.theme, size: json.size, grammar: json.grammar };
@@ -202,7 +202,13 @@ describe("render", () => {
 describe("draw", () => {
   it("equals render over generate, titled from the JSON, with the room count", () => {
     const { graph, layout } = generate(json, 3, defaultConfig);
-    expect(draw(json, 3, defaultConfig)).toEqual({ svg: render(graph, layout, { ...meta, layoutSeed: 3 }), rooms: graph.rooms.size });
+    expect(draw(json, 3, defaultConfig, "catalogue")).toEqual({ svg: render(graph, layout, { ...meta, layoutSeed: 3 }), rooms: graph.rooms.size });
+  });
+
+  it("picks the style from the theme unless given", () => {
+    const { graph, layout } = generate(json, 3, defaultConfig);
+    expect(draw(json, 3, defaultConfig).svg).toBe(render(graph, layout, { ...meta, layoutSeed: 3, style: "dyson" }));
+    expect(draw({ ...json, theme: "cyber" }, 3, defaultConfig).svg).toContain('class="room"');
   });
 
   it("leaves an unusable dungeon seed out of the title", () => {
@@ -211,5 +217,77 @@ describe("draw", () => {
 
   it("throws the engine's error", () => {
     expect(() => draw({ ...json, schema_version: 3 }, 1, defaultConfig)).toThrow("Unsupported schema_version 3, expected 2");
+  });
+});
+
+describe("styleFor", () => {
+  it("draws cyber as a catalogue, any other theme or none Dyson", () => {
+    expect(styleFor("cyber")).toBe("catalogue");
+    for (const theme of ["zelda", "tor-barrow", "", undefined]) expect(styleFor(theme)).toBe("dyson");
+  });
+});
+
+describe("dyson", () => {
+  const dyson = render(graph, layout, { ...meta, style: "dyson" });
+  const n = (re: RegExp) => dyson.match(re)?.length ?? 0;
+  const corridors = new Set(layout.doors.flatMap(({ corridor: c }) => (c ? [`${c.shape.id}@${c.at.x},${c.at.y}`] : [])));
+
+  it("is a standalone svg on white paper", () => {
+    expect(dyson).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" [^>]*viewBox="0 0 \d+ \d+"/);
+    expect(dyson.endsWith("</svg>")).toBe(true);
+    expect(dyson).toMatch(/<rect width="\d+" height="\d+" fill="#ffffff"\/>/);
+  });
+
+  it("draws one floor per room and corridor, filled, gridded and walled from the same polygons", () => {
+    expect(n(/<polygon class="floor"/g)).toBe(graph.rooms.size + corridors.size);
+    expect(n(/<use href="#floors"/g)).toBe(3);
+    expect(dyson).toContain('<pattern id="grid"');
+    expect(dyson).not.toContain('class="room"');
+    expect(dyson).not.toContain('class="corridor"');
+  });
+
+  it("hatches the rock in one path, under the floors", () => {
+    expect(n(/<path class="hatch"/g)).toBe(1);
+    expect(dyson.indexOf('class="hatch"')).toBeLessThan(dyson.indexOf('<use href="#floors"'));
+  });
+
+  it("cuts a gap in the wall at every door and both ends of every corridor", () => {
+    const groups = new Set(layout.doors.map((d) => (d.corridor ? `${d.corridor.shape.id}@${d.corridor.at.x},${d.corridor.at.y}` : `${d.segment.from.x},${d.segment.from.y},${d.segment.to.x},${d.segment.to.y}`)));
+    expect(n(/<rect class="gap"/g)).toBe(groups.size + corridors.size);
+  });
+
+  it("numbers every room and lists every label once, escaped", () => {
+    for (const room of graph.rooms.values()) {
+      expect(n(new RegExp(`<text class="number" data-room="${room.number}"`, "g"))).toBe(1);
+      expect(n(new RegExp(`data-key="${room.number}"`, "g"))).toBe(1);
+    }
+    const hostile = '"><img src=x onerror=alert(1)>';
+    const rooms = new Map([...graph.rooms].map(([id, r]) => [id, { ...r, number: hostile as unknown as number, label: hostile }]));
+    const doors = layout.doors.map((d) => (d.door.gate ? { ...d, door: { ...d.door, gate: { ...d.door.gate, kind: hostile as never } } } : d));
+    const out = render({ ...graph, rooms }, { ...layout, doors }, { ...meta, style: "dyson" });
+    expect(out).not.toContain("<img");
+  });
+
+  it("uses ink, paper and the grid colour only, in a serif", () => {
+    expect(dyson).not.toMatch(/#f0a000|#e5e5e5|#f6f8f7|#b2b2b2/i);
+    expect(dyson).toMatch(/text\{font-family:'Palatino Linotype'.*serif;/);
+    expect(dyson).toContain('<use href="#glyph-start"');
+  });
+
+  it("keeps the hatching inside the page", () => {
+    const [w, h] = dyson.match(/viewBox="0 0 (\d+) (\d+)"/)!.slice(1).map(Number) as [number, number];
+    const coords = dyson.match(/<path class="hatch" d="([^"]+)"/)![1]!.match(/-?[\d.]+/g)!.map(Number);
+    for (let i = 0; i < coords.length; i += 2) {
+      expect(coords[i]).toBeGreaterThanOrEqual(0);
+      expect(coords[i]).toBeLessThanOrEqual(w);
+      expect(coords[i + 1]).toBeGreaterThanOrEqual(0);
+      expect(coords[i + 1]).toBeLessThanOrEqual(h);
+    }
+  });
+
+  it("is deterministic, the layout seed driving the hatching", () => {
+    expect(render(graph, layout, { ...meta, style: "dyson" })).toBe(dyson);
+    expect(render(graph, layout, { ...meta, style: "dyson", layoutSeed: 1 })).not.toBe(dyson);
+    expect(dyson).toMatchSnapshot();
   });
 });
