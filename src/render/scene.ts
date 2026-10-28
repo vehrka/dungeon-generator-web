@@ -13,7 +13,7 @@ export type SceneDoor = {
   oneway?: 1 | -1; // room a's side of the door: +1 above or left, so pointing down or right
   corridor?: { segment: Segment; sideA: 1 | -1; sideB: 1 | -1 }; // the door on room b; +1 corridor below or right of a door
 };
-export type Scene = { rooms: SceneRoom[]; corridors: Polygon[]; doors: SceneDoor[]; bbox: Rect; anySecret: boolean; anyOneway: boolean };
+export type Scene = { rooms: SceneRoom[]; corridors: Polygon[]; doors: SceneDoor[]; bbox: Rect };
 
 // A, B, … Z, AA, AB, …
 const letter = (i: number): string => (i < 26 ? "" : letter(Math.floor(i / 26) - 1)) + String.fromCharCode(65 + (i % 26));
@@ -78,7 +78,5 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
     corridors: [...corridors.values()],
     doors,
     bbox: bbox([...outlines.values(), ...corridors.values()].flat()),
-    anySecret: layout.doors.some((d) => d.door.gate?.kind === "secret"),
-    anyOneway: layout.doors.some((d) => d.door.oneway),
   };
 }

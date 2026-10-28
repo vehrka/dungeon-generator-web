@@ -157,14 +157,19 @@ describe("render", () => {
         placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }],
         doors: doors.map((door) => ({ door, segment })),
       };
-      return render(g, l, meta).match(/<g class="door[^>]*>.*?<\/g>/)![0];
+      return render(g, l, meta);
     };
+    const door = (doors: RoomGraph["doors"]) => mark(doors).match(/<g class="door[^>]*>.*?<\/g>/)![0];
+    const legend = (doors: RoomGraph["doors"]) => [...mark(doors).matchAll(/<text x="\d+" y="\d+">(secret door|one-way)<\/text>/g)].map((m) => m[1]);
     const secret = { kind: "secret" as const, requires: [] };
-    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: true }])).toContain("oneway");
-    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: false }])).not.toContain("oneway");
-    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 1, b: 0, oneway: true }])).not.toContain("oneway");
-    expect(mark([{ a: 0, b: 1, oneway: false, gate: secret }])).toContain("dash");
-    expect(mark([{ a: 0, b: 1, oneway: false, gate: secret }, { a: 0, b: 1, oneway: false }])).not.toContain("dash");
+    expect(door([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: true }])).toContain("oneway");
+    expect(door([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: false }])).not.toContain("oneway");
+    expect(door([{ a: 0, b: 1, oneway: true }, { a: 1, b: 0, oneway: true }])).not.toContain("oneway");
+    expect(door([{ a: 0, b: 1, oneway: false, gate: secret }])).toContain("dash");
+    expect(door([{ a: 0, b: 1, oneway: false, gate: secret }, { a: 0, b: 1, oneway: false }])).not.toContain("dash");
+    // the legend lists only the marks drawn
+    expect(legend([{ a: 0, b: 1, oneway: true, gate: secret }])).toEqual(["secret door", "one-way"]);
+    expect(legend([{ a: 0, b: 1, oneway: true, gate: secret }, { a: 0, b: 1, oneway: false }])).toEqual([]);
   });
 
   it("is wide enough for the title", () => {
