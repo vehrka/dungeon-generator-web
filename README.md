@@ -51,7 +51,8 @@ layout seed ─▶ room shapes ─▶ configuration spaces ──┘
      backtracking when a chain cannot fit. Most doors get a short corridor (`--no-corridors`: rooms
      touch at every door).
 4. **Render.** SVG with room numbers, door symbols per gate kind, a key column and a title; PNG via
-   resvg in the CLI. The GM key lists rooms, gates and objects, numbered as on the map.
+   resvg in the CLI. Two styles: a clean catalogue look for the cyber theme, hand-inked Dyson Logos
+   look (hatched rock, thick walls, floor grid) for every other theme; `--style` overrides. The GM key lists rooms, gates and objects, numbered as on the map.
 
 All randomness goes through one seeded PRNG, split into named streams. Dungeon seed + size + theme
 give one dungeon; the layout seed (default: the dungeon seed) gives one map of it.
@@ -67,14 +68,15 @@ Full design, constants and trade-offs: [docs/design.md](docs/design.md); map sty
 # generate
 $ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber] \
     [--json m-7-zelda.json] [--key m-7-zelda.md] [-o m-7-zelda-map.svg | .png] \
-    [--layout-seed N] [--no-corridors]
+    [--layout-seed N] [--no-corridors] [--style catalogue|dyson]
 
 # or load a dungeon JSON
-$ npm run cli -- ruin.json [-o ruin-map.svg | .png] [--key ruin.md] [--layout-seed N] [--no-corridors]
+$ npm run cli -- ruin.json [-o ruin-map.svg | .png] [--key ruin.md] [--layout-seed N] [--no-corridors] \
+    [--style catalogue|dyson]
 ```
 
 Defaults: size M, theme zelda, output `<size>-<seed>-<theme>-map.svg` (or `<input>-map.svg`), layout
-seed = dungeon seed (or the JSON's seed). No layout found → the error names the stuck rooms; try
+seed = dungeon seed (or the JSON's seed), style catalogue for cyber and Dyson otherwise. No layout found → the error names the stuck rooms; try
 another `--layout-seed`.
 
 ### Viewer

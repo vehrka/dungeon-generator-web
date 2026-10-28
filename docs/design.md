@@ -317,8 +317,9 @@ one-way), so the renderer never re-derives geometry. The renderer draws corridor
 ### 7. Render (`render/svg.ts`)
 
 `render(graph, layout, meta) → string` (SVG). It depends only on the engine types, not on the DOM.
-`draw(json, layoutSeed, config) → { svg, rooms }` runs `generate` and `render` with the title meta from
-the JSON; the CLI and the viewer both draw through it. Every value taken from the JSON is escaped
+`draw(json, layoutSeed, config, style = styleFor(json.theme)) → { svg, rooms }` runs `generate` and
+`render` with the title meta from the JSON; the CLI and the viewer both draw through it. `render`
+draws the catalogue style unless `meta.style` says `dyson`. Every value taken from the JSON is escaped
 (labels, names, room numbers, gate kinds: the JSON is not type-checked at runtime).
 Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 `docs/plans/09-render-cli.md`.
@@ -449,9 +450,9 @@ src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, 
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/engine/generator/   graph.ts, grammar.ts, themes.ts, types.ts, config.ts, expand.ts, reduce.ts,
                solve.ts, json.ts, index.ts
-src/render/    svg.ts, icons.ts, key.ts
+src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts
 src/cli/       main.ts     ruin.json | --dungeon-seed [--size] [--theme] → map.svg / .png
-                           [-o] [--json] [--key] [--layout-seed] [--no-corridors]
+                           [-o] [--json] [--key] [--layout-seed] [--no-corridors] [--style]
 src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   generate or load JSON, seeds, reroll, corridors, export
 tests/         one test file per engine module, fixture ruin.json; tests/generator/ likewise
 ```
