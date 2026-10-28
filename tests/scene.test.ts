@@ -80,16 +80,6 @@ describe("scene", () => {
     expect(door([{ a: 0, b: 1, oneway: false, gate: secret }, { a: 0, b: 1, oneway: false }])).toMatchObject([{ secret: false }]);
   });
 
-  it("flags secret and one-way doors anywhere, for the legend", () => {
-    const flags = (doors: RoomGraph["doors"]) => {
-      const { anySecret, anyOneway } = stacked(doors);
-      return { anySecret, anyOneway };
-    };
-    const secret = { kind: "secret" as const, requires: [] };
-    expect(flags([{ a: 0, b: 1, oneway: false }])).toEqual({ anySecret: false, anyOneway: false });
-    expect(flags([{ a: 0, b: 1, oneway: true, gate: secret }, { a: 0, b: 1, oneway: false }])).toEqual({ anySecret: true, anyOneway: true });
-  });
-
   it("sides room a by the cell next to the door, not its bounding box", () => {
     // L room 0 with its top-right block cut out; room 1 in the cut, door on the inner wall y 7,
     // x 5–6. Room 0 is below the door, its bounding-box centre (y 5) above it.

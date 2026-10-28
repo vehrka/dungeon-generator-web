@@ -6,7 +6,7 @@ import type { DungeonJson } from "../src/engine/types";
 import { polygon, rectangle, type Segment } from "../src/engine/geometry";
 import type { Layout } from "../src/engine/layout";
 import type { RoomGraph } from "../src/engine/types";
-import { draw, render } from "../src/render/svg";
+import { draw, render, styleFor } from "../src/render/svg";
 
 const json = ruin as DungeonJson;
 const meta = { seed: json.seed, layoutSeed: json.seed, theme: json.theme, size: json.size, grammar: json.grammar };
@@ -157,14 +157,19 @@ describe("render", () => {
         placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }],
         doors: doors.map((door) => ({ door, segment })),
       };
-      return render(g, l, meta).match(/<g class="door[^>]*>.*?<\/g>/)![0];
+      return render(g, l, meta);
     };
+    const door = (doors: RoomGraph["doors"]) => mark(doors).match(/<g class="door[^>]*>.*?<\/g>/)![0];
+    const legend = (doors: RoomGraph["doors"]) => [...mark(doors).matchAll(/<text x="\d+" y="\d+">(secret door|one-way)<\/text>/g)].map((m) => m[1]);
     const secret = { kind: "secret" as const, requires: [] };
-    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: true }])).toContain("oneway");
-    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: false }])).not.toContain("oneway");
-    expect(mark([{ a: 0, b: 1, oneway: true }, { a: 1, b: 0, oneway: true }])).not.toContain("oneway");
-    expect(mark([{ a: 0, b: 1, oneway: false, gate: secret }])).toContain("dash");
-    expect(mark([{ a: 0, b: 1, oneway: false, gate: secret }, { a: 0, b: 1, oneway: false }])).not.toContain("dash");
+    expect(door([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: true }])).toContain("oneway");
+    expect(door([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: false }])).not.toContain("oneway");
+    expect(door([{ a: 0, b: 1, oneway: true }, { a: 1, b: 0, oneway: true }])).not.toContain("oneway");
+    expect(door([{ a: 0, b: 1, oneway: false, gate: secret }])).toContain("dash");
+    expect(door([{ a: 0, b: 1, oneway: false, gate: secret }, { a: 0, b: 1, oneway: false }])).not.toContain("dash");
+    // the legend lists only the marks drawn
+    expect(legend([{ a: 0, b: 1, oneway: true, gate: secret }])).toEqual(["secret door", "one-way"]);
+    expect(legend([{ a: 0, b: 1, oneway: true, gate: secret }, { a: 0, b: 1, oneway: false }])).toEqual([]);
   });
 
   it("is wide enough for the title", () => {
@@ -202,7 +207,13 @@ describe("render", () => {
 describe("draw", () => {
   it("equals render over generate, titled from the JSON, with the room count", () => {
     const { graph, layout } = generate(json, 3, defaultConfig);
-    expect(draw(json, 3, defaultConfig)).toEqual({ svg: render(graph, layout, { ...meta, layoutSeed: 3 }), rooms: graph.rooms.size });
+    expect(draw(json, 3, defaultConfig, "catalogue")).toEqual({ svg: render(graph, layout, { ...meta, layoutSeed: 3 }), rooms: graph.rooms.size });
+  });
+
+  it("picks the style from the theme unless given", () => {
+    const { graph, layout } = generate(json, 3, defaultConfig);
+    expect(draw(json, 3, defaultConfig).svg).toBe(render(graph, layout, { ...meta, layoutSeed: 3, style: "dyson" }));
+    expect(draw({ ...json, theme: "cyber" }, 3, defaultConfig).svg).toContain('class="room"');
   });
 
   it("leaves an unusable dungeon seed out of the title", () => {
@@ -211,5 +222,106 @@ describe("draw", () => {
 
   it("throws the engine's error", () => {
     expect(() => draw({ ...json, schema_version: 3 }, 1, defaultConfig)).toThrow("Unsupported schema_version 3, expected 2");
+  });
+});
+
+describe("styleFor", () => {
+  it("draws cyber as a catalogue, any other theme or none Dyson", () => {
+    expect(styleFor("cyber")).toBe("catalogue");
+    expect(styleFor("Cyber")).toBe("catalogue");
+    for (const theme of ["zelda", "tor-barrow", "", undefined]) expect(styleFor(theme)).toBe("dyson");
+  });
+});
+
+describe("dyson", () => {
+  const dyson = render(graph, layout, { ...meta, style: "dyson" });
+  const n = (re: RegExp) => dyson.match(re)?.length ?? 0;
+  const corridors = new Set(layout.doors.flatMap(({ corridor: c }) => (c ? [`${c.shape.id}@${c.at.x},${c.at.y}`] : [])));
+
+  it("is a standalone svg on white paper", () => {
+    expect(dyson).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" [^>]*viewBox="0 0 \d+ \d+"/);
+    expect(dyson.endsWith("</svg>")).toBe(true);
+    expect(dyson).toMatch(/<rect width="\d+" height="\d+" fill="#ffffff"\/>/);
+  });
+
+  it("draws one floor per room and corridor, filled, gridded and walled from the same polygons", () => {
+    expect(n(/<polygon class="floor"/g)).toBe(graph.rooms.size + corridors.size);
+    expect(n(/<use href="#floors"/g)).toBe(3);
+    expect(dyson).toContain('<pattern id="grid"');
+    expect(dyson).not.toContain('class="room"');
+    expect(dyson).not.toContain('class="corridor"');
+  });
+
+  it("hatches the rock in one path, under the floors", () => {
+    expect(n(/<path class="hatch"/g)).toBe(1);
+    expect(dyson.indexOf('class="hatch"')).toBeLessThan(dyson.indexOf('<use href="#floors"'));
+  });
+
+  it("cuts a gap in the wall at every door and both ends of every corridor, gridded like the floor", () => {
+    const groups = new Set(layout.doors.map((d) => (d.corridor ? `${d.corridor.shape.id}@${d.corridor.at.x},${d.corridor.at.y}` : `${d.segment.from.x},${d.segment.from.y},${d.segment.to.x},${d.segment.to.y}`)));
+    expect(n(/<rect class="gap"/g)).toBe(groups.size + corridors.size); // the fixture has no secret door
+    expect(n(/<use href="#gaps"/g)).toBe(2);
+  });
+
+  it("tags every gate on the map as in the key", () => {
+    const tags = [...dyson.matchAll(/<rect class="tag" data-gate="[^"]+"[^>]*\/><text class="tag-letter" [^>]*>([A-Z]+)<\/text>/g)].map((m) => m[1]);
+    expect(tags.length).toBeGreaterThan(0);
+    expect(new Set(tags).size).toBe(tags.length);
+    expect(n(/data-gate="lock"/g) + n(/data-gate="state"/g)).toBeGreaterThan(0);
+    expect(dyson).toMatch(/<text[^>]*>gate<\/text>/); // legend
+  });
+
+  it("draws a secret door as an unbroken wall with an S, a one-way door with a chevron, both in the legend", () => {
+    const shape = { id: "rect-3x3", outline: rectangle(3, 3) };
+    const two = (doors: RoomGraph["doors"]) =>
+      render(
+        { rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])), doors, start: 0, goal: 1 },
+        { placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }], doors: doors.map((door) => ({ door, segment: { from: { x: 1, y: 3 }, to: { x: 2, y: 3 } } })) },
+        { ...meta, style: "dyson" },
+      );
+    const secret = two([{ a: 0, b: 1, oneway: false, gate: { kind: "secret", requires: [] } }]);
+    expect(secret).not.toContain('<rect class="gap"');
+    expect(secret).toContain('<text class="secret"');
+    expect(secret).toMatch(/<text[^>]*>secret door<\/text>/);
+    const oneway = two([{ a: 0, b: 1, oneway: true }]);
+    expect(oneway).toContain('<rect class="gap"');
+    expect(oneway).toContain('<polyline class="oneway" points="113,217 117,221 121,217"/>'); // down, away from room 1 above
+    expect(oneway).toMatch(/<text[^>]*>one-way<\/text>/);
+    expect(two([{ a: 0, b: 1, oneway: false }])).not.toMatch(/class="(secret|oneway)"/);
+  });
+
+  it("numbers every room and lists every label once, escaped", () => {
+    for (const room of graph.rooms.values()) {
+      expect(n(new RegExp(`<text class="number" data-room="${room.number}"`, "g"))).toBe(1);
+      expect(n(new RegExp(`data-key="${room.number}"`, "g"))).toBe(1);
+    }
+    const hostile = '"><img src=x onerror=alert(1)>';
+    const rooms = new Map([...graph.rooms].map(([id, r]) => [id, { ...r, number: hostile as unknown as number, label: hostile }]));
+    const doors = layout.doors.map((d) => (d.door.gate ? { ...d, door: { ...d.door, gate: { ...d.door.gate, kind: hostile as never } } } : d));
+    const out = render({ ...graph, rooms }, { ...layout, doors }, { ...meta, style: "dyson" });
+    expect(out).not.toContain("<img");
+  });
+
+  it("uses ink, paper and the grid colour only, in a serif", () => {
+    expect(dyson).not.toMatch(/#f0a000|#e5e5e5|#f6f8f7|#b2b2b2/i);
+    expect(dyson).toMatch(/text\{font-family:'Palatino Linotype'.*serif;/);
+    expect(dyson).toContain('<use href="#glyph-start"');
+  });
+
+  it("keeps the hatching inside the page", () => {
+    const [w, h] = dyson.match(/viewBox="0 0 (\d+) (\d+)"/)!.slice(1).map(Number) as [number, number];
+    const coords = dyson.match(/<path class="hatch" d="([^"]+)"/)![1]!.match(/-?[\d.]+/g)!.map(Number);
+    for (let i = 0; i < coords.length; i += 2) {
+      expect(coords[i]).toBeGreaterThanOrEqual(0);
+      expect(coords[i]).toBeLessThanOrEqual(w);
+      expect(coords[i + 1]).toBeGreaterThanOrEqual(0);
+      expect(coords[i + 1]).toBeLessThanOrEqual(h);
+    }
+  });
+
+  it("is deterministic, the layout seed driving the hatching", () => {
+    expect(render(graph, layout, { ...meta, style: "dyson" })).toBe(dyson);
+    expect(render(graph, layout, { ...meta, style: "dyson", layoutSeed: 1 })).not.toBe(dyson);
+    expect(dyson).toMatchSnapshot();
   });
 });

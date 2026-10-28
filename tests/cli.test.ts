@@ -71,11 +71,30 @@ describe("main", () => {
 
   it("writes a map without corridors", async () => {
     const [on, off] = [join(tmp(), "on.svg"), join(tmp(), "off.svg")];
-    expect(await main([fixture, "-o", on], quiet)).toBe(0);
-    expect(await main([fixture, "-o", off, "--no-corridors"], quiet)).toBe(0);
+    expect(await main([fixture, "-o", on, "--style", "catalogue"], quiet)).toBe(0);
+    expect(await main([fixture, "-o", off, "--no-corridors", "--style", "catalogue"], quiet)).toBe(0);
     expect(readFileSync(on, "utf8")).toContain('class="corridor"');
     expect(readFileSync(off, "utf8")).not.toContain('class="corridor"');
   });
+
+  it("draws Dyson by default for a non-cyber theme, catalogue for cyber, unless --style says otherwise", async () => {
+    const dir = tmp();
+    const svg = async (...args: string[]) => {
+      const out = join(dir, "s.svg");
+      expect(await main([...args, "-o", out], quiet)).toBe(0);
+      return readFileSync(out, "utf8");
+    };
+    expect(await svg(fixture)).toContain('class="hatch"');
+    expect(await svg(fixture, "--style", "catalogue")).not.toContain('class="hatch"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber")).not.toContain('class="hatch"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber", "--style", "dyson")).toContain('class="hatch"');
+  });
+
+  it("writes a Dyson png", async () => {
+    const out = join(tmp(), "map.png");
+    expect(await main([fixture, "-o", out, "--style", "dyson"], quiet)).toBe(0);
+    expect(readFileSync(out).subarray(1, 4).toString()).toBe("PNG");
+  }, 20_000);
 
   it("writes a png", async () => {
     const out = join(tmp(), "map.png");
@@ -122,6 +141,13 @@ describe("main", () => {
     expect(await main([bad, "--key", key], { ...quiet, error: (m: string) => errors.push(m) })).toBe(1);
     expect(errors).toEqual(["Edge 0 → 999 refers to unknown node 999"]);
     expect(existsSync(key)).toBe(false);
+  });
+
+  it("takes a style in any case, rejects others", () => {
+    expect(parseCli(["a.json", "--style", "Dyson"]).style).toBe("dyson");
+    expect(parseCli(["a.json", "--style", "catalogue"]).style).toBe("catalogue");
+    expect(parseCli(["a.json"]).style).toBeUndefined();
+    expect(() => parseCli(["a.json", "--style", "ink"])).toThrow("Unknown style ink, expected one of catalogue dyson");
   });
 
   it("takes the theme in any case", () => {

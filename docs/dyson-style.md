@@ -92,13 +92,19 @@ Split `svg.ts` before adding the second style:
 
 - `render/scene.ts`: style-free geometry from graph + layout, in grid units: room outlines,
   corridor outlines, door groups (segment, corridor segment, gates, secret, one-way direction,
-  corridor side), gate letters, number anchor per room, glyph list per room, bbox, legend flags
-  (`anySecret`, `anyOneway`). Pure data. Done (step 1, `docs/plans/15-render-scene.md`).
-- `render/svg.ts`: catalogue painter (current code, reading the scene) + shared key column, title,
-  `esc`, `draw`. Output byte-identical to today.
+  corridor side), gate letters, number anchor per room, glyph list per room, bbox. Pure data. Done
+  (step 1, `docs/plans/15-render-scene.md`). The legend flags `anySecret` / `anyOneway` went in
+  step 2: the painters read `s.doors`, so the legend lists secret and one-way only as drawn.
+- `render/svg.ts`: `MapStyle`, `styleFor`, `render`, `draw`; the shared frame (key column, title,
+  page) and the catalogue painter. A `Painter` gives CSS, page colour, `pad` (grid units of room
+  around the map, 2 for Dyson so the hatching stays on the page) and `paint(scene, px, layoutSeed)
+  → { defs, map, legend }`. Catalogue output byte-identical to step 1.
+- `render/marks.ts`: `unit`, `esc`, glyph, gate tag and room-number marks shared by both
+  painters; own module so `svg.ts` and `dyson.ts` do not import each other.
 - `render/dyson.ts`: Dyson painter (floors, grid, walls, hatching, doors, numbers) and its
-  stylesheet. Reuses the key column and title with its own CSS.
-- `render/hatch.ts`: hatching and wobble, pure functions on grid geometry, unit-tested alone.
+  stylesheet. The floors are one `<g id="floors">` in `defs`, drawn three times through `<use>`
+  (paper, grid, wall), so fill, grid and wall share every point.
+- `render/hatch.ts`: hatching (wobble in step 4), pure functions on grid geometry, unit-tested alone.
 
 ### Paint order (Dyson)
 
@@ -121,11 +127,13 @@ the wobble is shared (below).
 Dyson hatching: clusters of 3–4 short parallel strokes, each cluster at its own angle, packed in a
 band along the outside of the walls, the band's outer edge ragged.
 
-- Floor test: rasterize floors (rooms + corridors) through `partition` into a set of unit cells;
-  distance of a point to the floor = distance to the nearest floor rectangle, looked up through the
-  cell set (only rectangles within `hatchDepth` matter).
+- Floor test: rasterize floors (rooms + corridors) through `partition` into a dense grid of unit
+  cells (`Uint8Array` over the floors' bbox grown by ⌈hatchDepth⌉ + 1): floor, rock to hatch
+  (within ⌈hatchDepth⌉ cells of a floor), other rock. Distance of a point to the floor = distance
+  to the nearest floor cell within reach. String-keyed sets were 3–4× slower (240 ms on l-1).
 - Samples: Poisson-disc (Bridson, deterministic with `rng(layoutSeed, "render/hatch")`), radius
-  ≈ 0.3 unit, over the bbox grown by `hatchDepth`. Keep a sample when 0 < d ≤ `hatchDepth` (≈ 1.5
+  0.3 unit, over the rock cells to hatch only, restarted in every such cell it has not reached (rock
+  enclosed by a ring of rooms is a separate region). Keep a sample when 0 < d ≤ `hatchDepth` (≈ 1.5
   unit); past `0.6 × hatchDepth` keep it with a probability falling linearly to 0 (ragged edge).
 - Cluster per sample: angle uniform in [0, π); `randInt(2, 4)` strokes, spacing ≈ 0.12 unit,
   length ≈ 0.45 unit ± 20%, centred on the sample. Strokes may poke into the floor: the floors paint
@@ -190,6 +198,25 @@ one-way direction come from the scene, as in the catalogue.
 | shadow | `#c8c8c8` | wall shadow band |
 
 No other colour. Values tuned against PNG renders of m-1 and l-1; record the final ones here.
+
+## Measured (step 2)
+
+Layout seed 1, Dyson core (no wobble, shadow or door symbols), Node 24, mean of 10 renders:
+
+| dungeon | catalogue | Dyson | Dyson SVG |
+|---------|-----------|-------|-----------|
+| m-1 | 0.7 ms | 67 ms | 366 kB |
+| l-1 | 0.6 ms | 78 ms | 390 kB |
+| l-8 | 0.3 ms | 32 ms | 166 kB |
+
+Size within target (< 1 MB). Time at the edge: l-1 measures 78–102 ms from run to run on the same
+code (machine load); 5,240 clusters, 15,758 strokes, nearly all the time in `hatch`. If the viewer
+reroll feels slow: fewer Bridson tries (30 now) or a jittered grid. Doors are plain gaps in the
+wall, half a wall short at each end, so a door flush with a corner leaves the other wall whole;
+the gaps are filled and gridded like the floors. Until step 3, gate tags and one-way chevrons sit on
+the door as in the catalogue, and a secret door is the wall unbroken with a bold serif S (white
+halo), so no default map loses information while the symbols are pending. On this machine the serif stack falls back to DejaVu Serif
+(no Palatino); the 7.5 px/char key column estimate fits it.
 
 ## Testing
 

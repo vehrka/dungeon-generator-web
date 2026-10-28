@@ -4,14 +4,21 @@ import { generate } from "../engine/index";
 import type { Layout } from "../engine/layout";
 import { isSeed } from "../engine/rng";
 import type { DungeonJson, Gate, RoomGraph } from "../engine/types";
-import { defs, glyphs, glyphSize } from "./icons";
+import { dyson } from "./dyson";
+import { defs, glyphs } from "./icons";
+import { chevron, esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
 import { scene } from "./scene";
 
-export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string };
+export type MapStyle = "catalogue" | "dyson";
+export const mapStyles: MapStyle[] = ["catalogue", "dyson"];
+export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string; style?: MapStyle };
+
+// Cyber keeps the catalogue look; every other theme, or none (a loaded JSON may lack one), is Dyson
+// (docs/dyson-style.md, style selection).
+export const styleFor = (theme?: string): MapStyle => (theme?.toLowerCase() === "cyber" ? "catalogue" : "dyson");
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no
 // radius or shadow. Amber is the one chromatic note, kept for gates (docs/plans/09-render-cli.md).
-const unit = 24; // px per grid unit
 const margin = 33;
 const gap = 66;
 const titleHeight = 66;
@@ -39,46 +46,55 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 .rule{stroke:#e5e5e5;stroke-width:1}
 </style>`;
 
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
 const gateText = (g: Gate) => [g.kind, g.requires.map((o) => o.name).join(", ")].filter(Boolean).join("  ");
 
-// Graph + layout → standalone SVG: map on the left, key column (rooms, gates, legend) on the right.
+// The catalogue painter: rooms white, corridors grey, doors as gaps with jambs, amber gate tags.
+const catalogue: Painter = {
+  css: style,
+  page: "#f6f8f7",
+  pad: 0,
+  paint(s, px) {
+    const points = (outline: Polygon) => outline.map((q) => `${px(q).x},${px(q).y}`).join(" ");
+    const map: string[] = s.corridors.map((c) => `<polygon class="corridor" points="${points(c)}"/>`);
+    for (const room of s.rooms) map.push(`<polygon class="room" points="${points(room.outline)}"/>`, ...roomMarks(room, px(room.anchor), 7));
+    // One mark per door group. A corridor's tag and chevron sit at room a's end, a plain door at room b's.
+    for (const d of s.doors) {
+      map.push(doorMark(d.segment, px, d.tag && d.gates.map((g) => g.kind).join(" "), d.tag, d.secret, d.oneway, d.corridor?.sideA));
+      if (d.corridor) map.push(doorMark(d.corridor.segment, px, undefined, undefined, d.secret, undefined, d.corridor.sideB));
+    }
+    // Secret and one-way as drawn: a group is only when all its doors are.
+    const legend = [
+      ...(s.corridors.length ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
+      ...(s.doors.some((d) => d.tag) ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
+      ...(s.doors.some((d) => d.secret) ? [{ mark: `<line class="dash" x1="0" y1="-4" x2="14" y2="-4"/>`, text: "secret door" }] : []),
+      ...(s.doors.some((d) => d.oneway) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
+    ];
+    return { defs: "", map, legend };
+  },
+};
+
+const painters: Record<MapStyle, Painter> = { catalogue, dyson };
+
+// Graph + layout → standalone SVG: map on the left, key column (rooms, gates, legend) on the right,
+// in the style of meta.style (catalogue when absent).
 export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): string {
+  const painter = painters[meta.style ?? "catalogue"];
   const s = scene(graph, layout);
   const { bbox } = s;
-  const mapWidth = (bbox.x1 - bbox.x0) * unit;
-  const mapHeight = (bbox.y1 - bbox.y0) * unit;
+  const pad = painter.pad * unit;
+  const mapWidth = (bbox.x1 - bbox.x0) * unit + 2 * pad;
+  const mapHeight = (bbox.y1 - bbox.y0) * unit + 2 * pad;
   const top = margin + titleHeight;
-  const px = (p: Point) => ({ x: margin + (p.x - bbox.x0) * unit, y: top + (p.y - bbox.y0) * unit });
-
-  const points = (outline: Polygon) => outline.map((q) => `${px(q).x},${px(q).y}`).join(" ");
-  const map: string[] = s.corridors.map((c) => `<polygon class="corridor" points="${points(c)}"/>`);
-  const usedGlyphs = new Set<string>();
-  for (const room of s.rooms) {
-    map.push(`<polygon class="room" points="${points(room.outline)}"/>`);
-    const c = px(room.anchor);
-    room.glyphs.forEach((m) => usedGlyphs.add(m));
-    map.push(`<text class="number" data-room="${esc(String(room.number))}" x="${c.x}" y="${c.y + (room.glyphs.length ? -1 : 7)}">${esc(String(room.number))}</text>`);
-    const width = room.glyphs.length * glyphSize + (room.glyphs.length - 1) * 3;
-    room.glyphs.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
-  }
-
-  // One mark per door group. A corridor's tag and chevron sit at room a's end, a plain door at room b's.
-  for (const d of s.doors) {
-    map.push(doorMark(d.segment, px, d.tag && d.gates.map((g) => g.kind).join(" "), d.tag, d.secret, d.oneway, d.corridor?.sideA));
-    if (d.corridor) map.push(doorMark(d.corridor.segment, px, undefined, undefined, d.secret, undefined, d.corridor.sideB));
-  }
+  const px = (p: Point) => ({ x: margin + pad + (p.x - bbox.x0) * unit, y: top + pad + (p.y - bbox.y0) * unit });
+  const painted = painter.paint(s, px, meta.layoutSeed);
 
   // Key column: rooms by number, gates by tag, legend of what the map uses.
   const rooms = [...graph.rooms.values()].sort((a, b) => a.number - b.number);
   const gateLines = s.doors.flatMap((d) => (d.tag ? [{ tag: d.tag, text: d.gates.map(gateText).join("; ") }] : []));
+  const usedGlyphs = new Set(s.rooms.flatMap((r) => r.glyphs));
   const legend = [
     ...Object.keys(glyphs).filter((g) => usedGlyphs.has(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name })),
-    ...(s.corridors.length ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
-    ...(gateLines.length ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
-    ...(s.anySecret ? [{ mark: `<line class="dash" x1="0" y1="-4" x2="14" y2="-4"/>`, text: "secret door" }] : []),
-    ...(s.anyOneway ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
+    ...painted.legend,
   ];
   const keyWidth = Math.max(200, 28 + charWidth * Math.max(...rooms.map((r) => r.label.length), ...gateLines.map((g) => g.text.length)));
 
@@ -120,29 +136,23 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   const height = Math.max(top + mapHeight, y) + margin;
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
-    style,
-    `<defs>${defs()}</defs>`,
-    `<rect width="${width}" height="${height}" fill="#f6f8f7"/>`,
+    painter.css,
+    `<defs>${defs()}${painted.defs}</defs>`,
+    `<rect width="${width}" height="${height}" fill="${painter.page}"/>`,
     `<text class="title" x="${margin}" y="${margin + 19}">${esc(title)}</text>`,
     `<text class="muted" x="${margin}" y="${margin + 40}">${esc(subtitle)}</text>`,
-    ...map,
+    ...painted.map,
     ...key,
     `</svg>`,
   ].join("\n");
 }
 
 // JSON → SVG at a layout seed, titled from the JSON: the CLI and the viewer draw through this.
-export function draw(json: DungeonJson, layoutSeed: number, config: LayoutConfig): { svg: string; rooms: number } {
+export function draw(json: DungeonJson, layoutSeed: number, config: LayoutConfig, style = styleFor(json.theme)): { svg: string; rooms: number } {
   const { graph, layout } = generate(json, layoutSeed, config);
-  const meta = { seed: isSeed(json.seed) ? json.seed : undefined, layoutSeed, theme: json.theme, size: json.size, grammar: json.grammar };
+  const meta = { seed: isSeed(json.seed) ? json.seed : undefined, layoutSeed, theme: json.theme, size: json.size, grammar: json.grammar, style };
   return { svg: render(graph, layout, meta), rooms: graph.rooms.size };
 }
-
-const useGlyph = (id: string, x: number, y: number) =>
-  `<use href="#glyph-${id}" class="glyph" x="${x}" y="${y}" width="${glyphSize}" height="${glyphSize}"/>`;
-
-const tagMark = (x: number, y: number, tag: string, gate?: string) =>
-  `<rect class="tag"${gate ? ` data-gate="${esc(gate)}"` : ""} x="${x - 7}" y="${y - 7}" width="14" height="14"/><text class="tag-letter" x="${x}" y="${y + 4}">${tag}</text>`;
 
 // A gap of the door's length across the wall with a jamb at each end; secret doors dashed; a gate
 // tag on the door; a one-way chevron pointing away from room a (past the tag when there is one).
@@ -181,12 +191,6 @@ function doorMark(
   }
   if (secret) parts.push(`<line class="dash" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`);
   if (tag) parts.push(tagMark(mid.x, mid.y, tag, gate));
-  if (d) {
-    const o = tag ? 12 * d : 0;
-    const pts = horizontal
-      ? [[mid.x - 4, mid.y + o - 2 * d], [mid.x, mid.y + o + 2 * d], [mid.x + 4, mid.y + o - 2 * d]]
-      : [[mid.x + o - 2 * d, mid.y - 4], [mid.x + o + 2 * d, mid.y], [mid.x + o - 2 * d, mid.y + 4]];
-    parts.push(`<polyline class="oneway" points="${pts.map((p) => p.join(",")).join(" ")}"/>`);
-  }
+  if (d) parts.push(chevron(mid, horizontal, d, !!tag));
   return `<g class="door${tag ? " gated" : ""}${secret ? " secret" : ""}">${parts.join("")}</g>`;
 }

@@ -14,10 +14,12 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   (outlines, corridors, door groups, gate letters, number anchors, glyphs), catalogue painter reads
   it. Catalogue snapshot byte-identical, render tests unchanged. Done: 240 bench and generated
   maps byte-identical (`docs/plans/15-render-scene.md`).
-- [ ] 2. **Dyson core** (`feature/dyson-core`): `MapStyle`, `styleFor(theme)` (cyber →
+- [x] 2. **Dyson core** (`feature/dyson-core`): `MapStyle`, `styleFor(theme)` (cyber →
   catalogue, else Dyson), `render`/`draw` style argument, CLI `--style`; white page, floors
   (rooms and corridors alike), floor grid pattern, thick walls, hatching (`render/hatch.ts`),
-  serif numbers, black glyphs, key column and title in the serif. Doors as plain gaps for now. Measure render time and SVG size on l-1.
+  serif numbers, black glyphs, key column and title in the serif. Doors as plain gaps for now.
+  Done: l-1 78–102 ms (noisy), 390 kB; gate tags, S and chevrons on the doors meanwhile; catalogue dump byte-identical (`docs/plans/16-dyson-core.md`). The
+  viewer draws Dyson for non-cyber themes already, with no style select until step 5.
 - [ ] 3. **doors and gates**: door rectangle, archway at corridor ends, secret S, locked bar,
   portcullis dots, boxed gate tags beside the door, black one-way chevron, legend.
 - [ ] 4. **wobble and shadow**: point-hashed wobble on all floor outlines (shared walls stay one
@@ -42,7 +44,3 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - Render (catalogue, applies to Dyson too): key column width estimated from character counts; gate
   tags and chevrons can touch on short walls with several doors; 4+ glyphs spill out of a 3-unit
   room.
-- Legend lists secret door / one-way when any door is, but a door group is drawn secret or one-way
-  only when all its doors are: a mixed group gets a legend entry with no mark on the map
-  (`anySecret`, `anyOneway` in `render/scene.ts`, kept for the byte-identical refactor). Decide in
-  step 2, before the Dyson legend reads them.
