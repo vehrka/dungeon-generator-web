@@ -1,10 +1,10 @@
-# Dungeon Layout Helper: Dyson map style
+# Delve Generator: Dyson map style
 
 A second map style, after Dyson Logos' hand-inked dungeon maps
 (https://dysonlogos.blog/maps/commercial-maps/): black ink on white, thick walls, hatched rock
 around the rooms, a faint grid on the floors. The catalogue style (`docs/design.md` §7,
-`ref/webdesign/design.md`) stays as it is and fits the cyber theme; every other theme (zelda,
-tor-barrow, tor-dwarf) and a JSON without a theme get the Dyson style. Decided 2026-10-27.
+`ref/webdesign/design.md`) stays as it is and fits the cyber theme; zelda, any other theme and a JSON
+without a theme get the Dyson style. Decided 2026-10-27.
 
 This file is the source of truth for the Dyson style. `docs/design.md` covers everything else
 (engine, layout, catalogue render, CLI, viewer) and links here from §7. Progress: `STATUS.md`.
@@ -56,7 +56,7 @@ config) → { svg, rooms }`:
 - Key column: rooms (number, label), gates (tag, text), legend. Width estimated at 7.5 px/char.
 
 Gate kinds (`GateKind`): `lock`, `state`, `on`, `off`, `secret`. Room types used by glyphs: start,
-goal, `gb:*` (treasure). Themes: `zelda` (default), `cyber`, `tor-barrow`, `tor-dwarf`.
+goal, `gb:*` (treasure). Themes: `zelda` (default), `cyber`.
 
 Size of the hatching job, measured on the bench at layout seed 1 (grid cells):
 
@@ -202,12 +202,12 @@ No other colour. Values tuned against PNG renders of m-1 and l-1; record the fin
   label once, escaped (same hostile-input test as catalogue); no amber, no `#e5e5e5`; door symbol
   counts by kind on the fixture (3 lock, 1 state); one-way chevrons point a → b; snapshot of the
   fixture; same input same string.
-- `styleFor`: cyber → catalogue; zelda, tor-barrow, tor-dwarf, undefined → dyson.
+- `styleFor`: cyber → catalogue; zelda, any other string, undefined → dyson.
 - CLI: `--style dyson` writes SVG and PNG; default follows the theme; bad style exits 1 with the
   options listed. Existing CLI tests that render a non-cyber dungeon now get Dyson: pass
   `--style catalogue` where they check catalogue output.
 - Viewer: `state.ts` style parsing and export name.
-- By hand: CLI PNG of `bench/dungeons/m-1.json`, `l-1.json` and a generated tor-dwarf L, viewed
+- By hand: CLI PNG of `bench/dungeons/m-1.json`, `l-1.json` and a generated zelda L, viewed
   side by side with a Dyson map; viewer in both styles. Time and SVG size of l-1 noted here
   (target < 100 ms render, < 1 MB SVG).
 

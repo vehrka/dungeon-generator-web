@@ -1,4 +1,4 @@
-# Dungeon Layout Helper — Style Reference
+# Delve Generator — Style Reference
 
 > teenage engineering product guide, applied to a map tool: flat neutral planes, all-capital
 > technical type, dark numbered bands for sections, one chromatic note (amber) for gates and errors.

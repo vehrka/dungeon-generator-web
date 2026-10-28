@@ -1,4 +1,4 @@
-# Dungeon Layout Helper: design
+# Delve Generator: design
 
 Generates a dungeon (port of the Combined grammar of `101.02_dungeon_generator`) as schema 2 JSON,
 or loads one, and turns it into a 2D map, laid out with Nepožitek's graph-based algorithm. Outputs
@@ -55,6 +55,8 @@ Edgar's room template repeat modes (thesis 2.2.2).
   ids are internal only.
 - Gate kinds: `lock`, `state`, `on`, `off`, `secret`.
 - Reject input with `schema_version` other than 2, with a clear error.
+- Why 2: the version comes from the Python generator, whose schema 1 had no room `number` or
+  `label`. This project never read schema 1.
 
 ## Pipeline
 
@@ -393,7 +395,7 @@ the same that `normalize` reads; in the CLI since step 14a, in the viewer since 
 
 - `graph.ts`: directed multigraph, stable ids in insertion order (replaces igraph; order, not
   index parity, is what expansion and merging depend on). `simplify`, undirected Dijkstra.
-- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 4 themes, `ROOM_STYLE`; data dumped from
+- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 2 themes (zelda, cyber; Python's tor-barrow and tor-dwarf dropped), `ROOM_STYLE`; data dumped from
   Python into typed literals.
 - `expand.ts`: START, GOAL, the `Start` rule, then the first non-terminal in vertex order, R last
   (pacing by progress START → boss, last tier within `nearBoss` steps of `em`/`eb`). One d20 per

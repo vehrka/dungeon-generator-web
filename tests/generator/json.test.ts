@@ -65,11 +65,11 @@ describe("json", () => {
   });
 
   it("same options give byte-identical JSON; theme changes text only", () => {
-    const a = generateDungeon({ seed: 9, size: "L", theme: "tor-barrow" });
-    expect(JSON.stringify(generateDungeon({ seed: 9, size: "L", theme: "tor-barrow" }))).toBe(JSON.stringify(a));
+    const a = generateDungeon({ seed: 9, size: "L", theme: "cyber" });
+    expect(JSON.stringify(generateDungeon({ seed: 9, size: "L", theme: "cyber" }))).toBe(JSON.stringify(a));
     const shape = (d: typeof a) => JSON.stringify([d.edges, d.nodes.map((n) => [n.id, n.kind, n.kind === "room" ? n.number : n.gate])]);
     expect(shape(generateDungeon({ seed: 9, size: "L" }))).toBe(shape(a));
-    expect(a.theme).toBe("tor-barrow");
+    expect(a.theme).toBe("cyber");
   });
 
   it("rejects bad options", () => {
