@@ -1,4 +1,4 @@
-# Dungeon Layout Helper
+# Delve Generator
 
 **version:** 0.1.0
 

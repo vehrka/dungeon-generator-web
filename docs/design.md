@@ -1,4 +1,4 @@
-# Dungeon Layout Helper: design
+# Delve Generator: design
 
 Generates a dungeon (port of the Combined grammar of `101.02_dungeon_generator`) as schema 2 JSON,
 or loads one, and turns it into a 2D map, laid out with Nepožitek's graph-based algorithm. Outputs

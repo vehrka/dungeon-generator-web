@@ -1,4 +1,4 @@
-# Dungeon Layout Helper: Dyson map style
+# Delve Generator: Dyson map style
 
 A second map style, after Dyson Logos' hand-inked dungeon maps
 (https://dysonlogos.blog/maps/commercial-maps/): black ink on white, thick walls, hatched rock

@@ -1,4 +1,4 @@
-# Dungeon Layout Helper
+# Delve Generator
 
 Generates dungeons (TS port of the Combined grammar of `../101.02_dungeon_generator`,
 `src/engine/generator/`) and lays them out (TS port of Nepožitek's graph-based layout, Edgar).
