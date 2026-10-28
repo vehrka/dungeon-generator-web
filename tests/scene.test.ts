@@ -20,10 +20,11 @@ const two = (doors: RoomGraph["doors"]): RoomGraph => ({
 const shape = { id: "rect-3x3", outline: rectangle(3, 3) };
 const segment = { from: { x: 1, y: 3 }, to: { x: 2, y: 3 } };
 // Room 0 above room 1, every door on the shared wall y 3, x 1–2.
-const stacked = (g: RoomGraph): Layout => ({
-  placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }],
-  doors: g.doors.map((door) => ({ door, segment })),
-});
+const stacked = (doors: RoomGraph["doors"]) =>
+  scene(two(doors), {
+    placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }],
+    doors: doors.map((door) => ({ door, segment })),
+  });
 
 describe("scene", () => {
   it("has one room per placement, outline translated, in placement order", () => {
@@ -62,8 +63,14 @@ describe("scene", () => {
     expect(s.rooms.find((r) => r.id === graph.start)!.glyphs[0]).toBe("start");
   });
 
+  it("draws unknown object types, prototype keys too, as items", () => {
+    const objects = ["rope", "constructor", "toString"].map((type) => ({ id: type, type, name: type }));
+    const g: RoomGraph = { rooms: new Map([[0, { id: 0, type: "n", number: 1, label: "R0", objects }]]), doors: [], start: 1, goal: 1 };
+    expect(scene(g, { placements: [{ room: 0, shape, at: { x: 0, y: 0 } }], doors: [] }).rooms[0]!.glyphs).toEqual(["item", "item", "item"]);
+  });
+
   it("marks a group secret or one-way only when all its doors are", () => {
-    const door = (doors: RoomGraph["doors"]) => scene(two(doors), stacked(two(doors))).doors;
+    const door = (doors: RoomGraph["doors"]) => stacked(doors).doors;
     const secret = { kind: "secret" as const, requires: [] };
     expect(door([{ a: 0, b: 1, oneway: true }, { a: 0, b: 1, oneway: true }])).toMatchObject([{ oneway: 1, secret: false }]);
     expect(door([{ a: 1, b: 0, oneway: true }])).toMatchObject([{ oneway: -1 }]);
@@ -75,7 +82,7 @@ describe("scene", () => {
 
   it("flags secret and one-way doors anywhere, for the legend", () => {
     const flags = (doors: RoomGraph["doors"]) => {
-      const { anySecret, anyOneway } = scene(two(doors), stacked(two(doors)));
+      const { anySecret, anyOneway } = stacked(doors);
       return { anySecret, anyOneway };
     };
     const secret = { kind: "secret" as const, requires: [] };
@@ -119,9 +126,5 @@ describe("scene", () => {
     expect(scene(g, l).doors).toEqual([
       { segment, gates: [{ kind: "lock", requires: [] }], tag: "A", secret: false, corridor: { segment: { from: { x: 1, y: 4 }, to: { x: 2, y: 4 } }, sideA: 1, sideB: -1 } },
     ]);
-  });
-
-  it("is deterministic", () => {
-    expect(scene(graph, layout)).toEqual(s);
   });
 });

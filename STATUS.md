@@ -44,4 +44,5 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   room.
 - Legend lists secret door / one-way when any door is, but a door group is drawn secret or one-way
   only when all its doors are: a mixed group gets a legend entry with no mark on the map
-  (`anySecret`, `anyOneway` in `render/scene.ts`, kept for the byte-identical refactor).
+  (`anySecret`, `anyOneway` in `render/scene.ts`, kept for the byte-identical refactor). Decide in
+  step 2, before the Dyson legend reads them.

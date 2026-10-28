@@ -46,11 +46,11 @@ const gateText = (g: Gate) => [g.kind, g.requires.map((o) => o.name).join(", ")]
 // Graph + layout → standalone SVG: map on the left, key column (rooms, gates, legend) on the right.
 export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): string {
   const s = scene(graph, layout);
-  const all = s.bbox;
-  const mapWidth = (all.x1 - all.x0) * unit;
-  const mapHeight = (all.y1 - all.y0) * unit;
+  const { bbox } = s;
+  const mapWidth = (bbox.x1 - bbox.x0) * unit;
+  const mapHeight = (bbox.y1 - bbox.y0) * unit;
   const top = margin + titleHeight;
-  const px = (p: Point) => ({ x: margin + (p.x - all.x0) * unit, y: top + (p.y - all.y0) * unit });
+  const px = (p: Point) => ({ x: margin + (p.x - bbox.x0) * unit, y: top + (p.y - bbox.y0) * unit });
 
   const points = (outline: Polygon) => outline.map((q) => `${px(q).x},${px(q).y}`).join(" ");
   const map: string[] = s.corridors.map((c) => `<polygon class="corridor" points="${points(c)}"/>`);
@@ -58,28 +58,25 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   for (const room of s.rooms) {
     map.push(`<polygon class="room" points="${points(room.outline)}"/>`);
     const c = px(room.anchor);
-    const marks = room.glyphs;
-    marks.forEach((m) => usedGlyphs.add(m));
-    map.push(`<text class="number" data-room="${esc(String(room.number))}" x="${c.x}" y="${c.y + (marks.length ? -1 : 7)}">${esc(String(room.number))}</text>`);
-    const width = marks.length * glyphSize + (marks.length - 1) * 3;
-    marks.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
+    room.glyphs.forEach((m) => usedGlyphs.add(m));
+    map.push(`<text class="number" data-room="${esc(String(room.number))}" x="${c.x}" y="${c.y + (room.glyphs.length ? -1 : 7)}">${esc(String(room.number))}</text>`);
+    const width = room.glyphs.length * glyphSize + (room.glyphs.length - 1) * 3;
+    room.glyphs.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
   }
 
   // One mark per door group. A corridor's tag and chevron sit at room a's end, a plain door at room b's.
-  const gates: { tag: string; gates: Gate[] }[] = [];
   for (const d of s.doors) {
-    if (d.tag) gates.push({ tag: d.tag, gates: d.gates });
     map.push(doorMark(d.segment, px, d.tag && d.gates.map((g) => g.kind).join(" "), d.tag, d.secret, d.oneway, d.corridor?.sideA));
     if (d.corridor) map.push(doorMark(d.corridor.segment, px, undefined, undefined, d.secret, undefined, d.corridor.sideB));
   }
 
   // Key column: rooms by number, gates by tag, legend of what the map uses.
   const rooms = [...graph.rooms.values()].sort((a, b) => a.number - b.number);
-  const gateLines = gates.map((g) => ({ tag: g.tag, text: g.gates.map(gateText).join("; ") }));
+  const gateLines = s.doors.flatMap((d) => (d.tag ? [{ tag: d.tag, text: d.gates.map(gateText).join("; ") }] : []));
   const legend = [
     ...Object.keys(glyphs).filter((g) => usedGlyphs.has(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name })),
     ...(s.corridors.length ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
-    ...(gates.length ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
+    ...(gateLines.length ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
     ...(s.anySecret ? [{ mark: `<line class="dash" x1="0" y1="-4" x2="14" y2="-4"/>`, text: "secret door" }] : []),
     ...(s.anyOneway ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
   ];

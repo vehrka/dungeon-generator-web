@@ -24,7 +24,7 @@ function roomGlyphs(graph: RoomGraph, id: RoomId): string[] {
   return [
     ...(id === graph.start ? ["start"] : []),
     ...(id === graph.goal ? ["goal"] : []),
-    ...room.objects.map((o) => (o.type in glyphs ? o.type : "item")), // unknown object types draw as items
+    ...room.objects.map((o) => (Object.hasOwn(glyphs, o.type) ? o.type : "item")), // unknown object types draw as items
     ...(room.type.split(":")[0] === "gb" ? ["treasure"] : []),
   ];
 }
@@ -34,17 +34,18 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
   // Doors between the same two rooms share a corridor; one polygon each.
   const corridorKey = (c: NonNullable<PlacedDoor["corridor"]>) => `${c.shape.id}@${c.at.x},${c.at.y}`;
   const corridors = new Map(layout.doors.flatMap(({ corridor: c }) => (c ? [[corridorKey(c), translate(c.shape.outline, c.at)] as const] : [])));
+  const cells = new Map([...outlines].map(([id, o]) => [id, partition(o)]));
   // +1 when room a lies before the door (above or left): the grid cell below or right of the
   // door's start is not in a. A bounding-box centre can sit on the wrong side of an L.
   const side = (a: RoomId, s: Segment): 1 | -1 => {
     const q = { x: s.from.x + 0.5, y: s.from.y + 0.5 };
-    return partition(outlines.get(a)!).some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1) ? -1 : 1;
+    return cells.get(a)!.some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1) ? -1 : 1;
   };
 
   const rooms = [...outlines].map(([id, outline]): SceneRoom => {
     // Number and glyphs in the middle of the largest rectangle of both slab cuts, so an L, T or
     // plus keeps them inside its longest arm.
-    const r = [...partition(outline), ...partition(outline, "rows")].reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
+    const r = [...cells.get(id)!, ...partition(outline, "rows")].reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
     return { id, number: graph.rooms.get(id)!.number, outline, anchor: { x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 }, glyphs: roomGlyphs(graph, id) };
   });
 
@@ -61,13 +62,14 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
     const [first] = group as [PlacedDoor];
     const gates = group.flatMap((d) => (d.door.gate && d.door.gate.kind !== "secret" ? [d.door.gate] : []));
     const oneway = group.every((d) => d.door.oneway && d.door.a === first.door.a);
+    const sideA = side(first.door.a, first.segment);
     return {
       segment: first.segment,
       gates,
       ...(gates.length ? { tag: letter(tags++) } : {}),
       secret: group.every((d) => d.door.gate?.kind === "secret"),
-      ...(oneway ? { oneway: side(first.door.a, first.segment) } : {}),
-      ...(first.corridor ? { corridor: { segment: first.corridor.segment, sideA: side(first.door.a, first.segment), sideB: side(first.door.b, first.corridor.segment) } } : {}),
+      ...(oneway ? { oneway: sideA } : {}),
+      ...(first.corridor ? { corridor: { segment: first.corridor.segment, sideA, sideB: side(first.door.b, first.corridor.segment) } } : {}),
     };
   });
 
