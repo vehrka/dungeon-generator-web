@@ -4,7 +4,8 @@
 
 Generator, layout, catalogue render, CLI and viewer done (`docs/design.md`; history in git and
 `docs/plans/`). Current work: a second map style after Dyson Logos, design in
-[docs/dyson-style.md](docs/dyson-style.md).
+[docs/dyson-style.md](docs/dyson-style.md). Next: a third style, neon, for the cyber theme, design
+in [docs/neon-style.md](docs/neon-style.md).
 
 ## Steps: Dyson map style
 
@@ -21,12 +22,30 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   Done: l-1 78–102 ms (noisy), 390 kB; gate tags, S and chevrons on the doors meanwhile; catalogue dump byte-identical (`docs/plans/16-dyson-core.md`). The
   viewer draws Dyson for non-cyber themes already, with no style select until step 5.
 - [ ] 3. **doors and gates**: door rectangle, archway at corridor ends, secret S, locked bar,
-  portcullis dots, boxed gate tags beside the door, black one-way chevron, legend.
+  portcullis dots, boxed gate tags beside the door, black one-way chevron, legend. Door and gate
+  geometry (symbol rectangles, archways, bars, tag positions) goes in `scene.ts`, not `dyson.ts`,
+  so the neon painter reuses it.
 - [ ] 4. **wobble and shadow**: point-hashed wobble on all floor outlines (shared walls stay one
   line), grey wall-shadow band. Tune tokens on PNGs of m-1 and l-1, record them in the design.
 - [ ] 5. **viewer**: style select preset from the theme, export name `-dyson` suffix.
 - [ ] 6. *(later, ask first)* **dressing**: stairs in the start room, rubble, columns; not in the
   JSON, so drawn from the layout seed.
+
+## Steps: neon map style (after Dyson)
+
+Third style `neon` beside catalogue and Dyson, for the cyber theme, screen only (viewer, VTT).
+Decided 2026-10-28: stacked-stroke glow, no SVG filters; colour by room role from schema 2.
+Design in [docs/neon-style.md](docs/neon-style.md).
+
+- [ ] 1. **design and mock-up**: complete `docs/neon-style.md` (tokens, role colours, type), a
+  hand-made m-1 SVG mock-up compared with the reference image.
+- [ ] 2. **neon core** (`feature/neon-core`): `MapStyle` `neon`, `render/neon.ts`, black page,
+  dark corridors, role fills, stacked-stroke glow, walls, type, `--style neon`;
+  `styleFor("cyber")` → neon. Measure time and size on l-1.
+- [ ] 3. **doors and gates**: Dyson's symbol set from `scene.ts`, in neon.
+- [ ] 4. **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
+  clear of numbers and glyphs.
+- [ ] 5. **viewer**: neon in the style select, export name `-neon` suffix.
 
 ## Open points
 
