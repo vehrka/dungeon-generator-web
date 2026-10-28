@@ -92,7 +92,8 @@ Split `svg.ts` before adding the second style:
 
 - `render/scene.ts`: style-free geometry from graph + layout, in grid units: room outlines,
   corridor outlines, door groups (segment, corridor segment, gates, secret, one-way direction,
-  corridor side), gate letters, number anchor per room, glyph list per room, bbox. Pure data.
+  corridor side), gate letters, number anchor per room, glyph list per room, bbox, legend flags
+  (`anySecret`, `anyOneway`). Pure data. Done (step 1, `docs/plans/15-render-scene.md`).
 - `render/svg.ts`: catalogue painter (current code, reading the scene) + shared key column, title,
   `esc`, `draw`. Output byte-identical to today.
 - `render/dyson.ts`: Dyson painter (floors, grid, walls, hatching, doors, numbers) and its

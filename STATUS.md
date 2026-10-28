@@ -1,6 +1,6 @@
 # Status
 
-**updated:** 2026-10-27
+**updated:** 2026-10-28
 
 Generator, layout, catalogue render, CLI and viewer done (`docs/design.md`; history in git and
 `docs/plans/`). Current work: a second map style after Dyson Logos, design in
@@ -10,9 +10,10 @@ Generator, layout, catalogue render, CLI and viewer done (`docs/design.md`; hist
 
 One feature branch per step, off `dev`, test first, `/code-review` before merging into `dev`.
 
-- [ ] 1. **scene refactor** (`feature/render-scene`): style-free geometry in `render/scene.ts`
+- [x] 1. **scene refactor** (`feature/render-scene`): style-free geometry in `render/scene.ts`
   (outlines, corridors, door groups, gate letters, number anchors, glyphs), catalogue painter reads
-  it. Catalogue snapshot byte-identical, render tests unchanged.
+  it. Catalogue snapshot byte-identical, render tests unchanged. Done: 240 bench and generated
+  maps byte-identical (`docs/plans/15-render-scene.md`).
 - [ ] 2. **Dyson core** (`feature/dyson-core`): `MapStyle`, `styleFor(theme)` (cyber →
   catalogue, else Dyson), `render`/`draw` style argument, CLI `--style`; white page, floors
   (rooms and corridors alike), floor grid pattern, thick walls, hatching (`render/hatch.ts`),
@@ -41,3 +42,7 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - Render (catalogue, applies to Dyson too): key column width estimated from character counts; gate
   tags and chevrons can touch on short walls with several doors; 4+ glyphs spill out of a 3-unit
   room.
+- Legend lists secret door / one-way when any door is, but a door group is drawn secret or one-way
+  only when all its doors are: a mixed group gets a legend entry with no mark on the map
+  (`anySecret`, `anyOneway` in `render/scene.ts`, kept for the byte-identical refactor). Decide in
+  step 2, before the Dyson legend reads them.

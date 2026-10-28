@@ -1,10 +1,11 @@
 import type { LayoutConfig } from "../engine/config";
-import { bbox, partition, translate, type Point, type Polygon, type Segment } from "../engine/geometry";
+import type { Point, Polygon, Segment } from "../engine/geometry";
 import { generate } from "../engine/index";
-import type { Layout, PlacedDoor } from "../engine/layout";
+import type { Layout } from "../engine/layout";
 import { isSeed } from "../engine/rng";
-import type { DungeonJson, Gate, RoomGraph, RoomId } from "../engine/types";
+import type { DungeonJson, Gate, RoomGraph } from "../engine/types";
 import { defs, glyphs, glyphSize } from "./icons";
+import { scene } from "./scene";
 
 export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string };
 
@@ -40,88 +41,44 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-// A, B, … Z, AA, AB, …
-const letter = (i: number): string => (i < 26 ? "" : letter(Math.floor(i / 26) - 1)) + String.fromCharCode(65 + (i % 26));
-
 const gateText = (g: Gate) => [g.kind, g.requires.map((o) => o.name).join(", ")].filter(Boolean).join("  ");
-
-// Room glyphs: start/goal, then the objects found there, then treasure for bonus goals.
-function roomGlyphs(graph: RoomGraph, id: RoomId): string[] {
-  const room = graph.rooms.get(id)!;
-  return [
-    ...(id === graph.start ? ["start"] : []),
-    ...(id === graph.goal ? ["goal"] : []),
-    ...room.objects.map((o) => (o.type in glyphs ? o.type : "item")), // unknown object types draw as items
-    ...(room.type.split(":")[0] === "gb" ? ["treasure"] : []),
-  ];
-}
 
 // Graph + layout → standalone SVG: map on the left, key column (rooms, gates, legend) on the right.
 export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): string {
-  const outlines = new Map<RoomId, Polygon>(layout.placements.map((pl) => [pl.room, translate(pl.shape.outline, pl.at)]));
-  // Doors between the same two rooms share a corridor; one polygon each.
-  const corridorKey = (c: NonNullable<PlacedDoor["corridor"]>) => `${c.shape.id}@${c.at.x},${c.at.y}`;
-  const corridors = new Map(layout.doors.flatMap(({ corridor: c }) => (c ? [[corridorKey(c), translate(c.shape.outline, c.at)] as const] : [])));
-  const all = bbox([...outlines.values(), ...corridors.values()].flat());
-  const mapWidth = (all.x1 - all.x0) * unit;
-  const mapHeight = (all.y1 - all.y0) * unit;
+  const s = scene(graph, layout);
+  const { bbox } = s;
+  const mapWidth = (bbox.x1 - bbox.x0) * unit;
+  const mapHeight = (bbox.y1 - bbox.y0) * unit;
   const top = margin + titleHeight;
-  const px = (p: Point) => ({ x: margin + (p.x - all.x0) * unit, y: top + (p.y - all.y0) * unit });
-  // +1 when room a lies before the door (above or left): the grid cell below or right of the
-  // door's start is not in a. A bounding-box centre can sit on the wrong side of an L.
-  const side = (a: RoomId, s: Segment): 1 | -1 => {
-    const q = { x: s.from.x + 0.5, y: s.from.y + 0.5 };
-    return partition(outlines.get(a)!).some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1) ? -1 : 1;
-  };
+  const px = (p: Point) => ({ x: margin + (p.x - bbox.x0) * unit, y: top + (p.y - bbox.y0) * unit });
 
   const points = (outline: Polygon) => outline.map((q) => `${px(q).x},${px(q).y}`).join(" ");
-  const map: string[] = [...corridors.values()].map((c) => `<polygon class="corridor" points="${points(c)}"/>`);
+  const map: string[] = s.corridors.map((c) => `<polygon class="corridor" points="${points(c)}"/>`);
   const usedGlyphs = new Set<string>();
-  for (const [id, outline] of outlines) {
-    const room = graph.rooms.get(id)!;
-    map.push(`<polygon class="room" points="${points(outline)}"/>`);
-    // Number and glyphs in the middle of the largest rectangle of both slab cuts, so an L, T or plus
-    // keeps them inside its longest arm.
-    const r = [...partition(outline), ...partition(outline, "rows")].reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
-    const c = px({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
-    const marks = roomGlyphs(graph, id);
-    marks.forEach((m) => usedGlyphs.add(m));
-    map.push(`<text class="number" data-room="${esc(String(room.number))}" x="${c.x}" y="${c.y + (marks.length ? -1 : 7)}">${esc(String(room.number))}</text>`);
-    const width = marks.length * glyphSize + (marks.length - 1) * 3;
-    marks.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
+  for (const room of s.rooms) {
+    map.push(`<polygon class="room" points="${points(room.outline)}"/>`);
+    const c = px(room.anchor);
+    room.glyphs.forEach((m) => usedGlyphs.add(m));
+    map.push(`<text class="number" data-room="${esc(String(room.number))}" x="${c.x}" y="${c.y + (room.glyphs.length ? -1 : 7)}">${esc(String(room.number))}</text>`);
+    const width = room.glyphs.length * glyphSize + (room.glyphs.length - 1) * 3;
+    room.glyphs.forEach((m, i) => map.push(useGlyph(m, c.x - width / 2 + i * (glyphSize + 3), c.y + 3)));
   }
 
-  // Doors between the same two rooms share a segment or a corridor: one mark, one tag for all their
-  // gates; dashed and one-way only when every door of the group is (opposite one-ways cross both
-  // ways). A corridor's tag and chevron sit at room a's end, a plain door at room b's.
-  const groups = new Map<string, PlacedDoor[]>();
-  for (const d of layout.doors) {
-    const k = d.corridor ? corridorKey(d.corridor) : `${d.segment.from.x},${d.segment.from.y},${d.segment.to.x},${d.segment.to.y}`;
-    if (groups.has(k)) groups.get(k)!.push(d);
-    else groups.set(k, [d]);
-  }
-  const gates: { tag: string; gates: Gate[] }[] = [];
-  for (const doors of groups.values()) {
-    const tagged = doors.flatMap((d) => (d.door.gate && d.door.gate.kind !== "secret" ? [d.door.gate] : []));
-    const secret = doors.every((d) => d.door.gate?.kind === "secret");
-    const tag = tagged.length ? letter(gates.length) : undefined;
-    if (tag) gates.push({ tag, gates: tagged });
-    const [first] = doors as [PlacedDoor];
-    const oneway = doors.every((d) => d.door.oneway && d.door.a === first.door.a);
-    const corridorSide = (room: RoomId, s: Segment) => (first.corridor ? side(room, s) : undefined); // the corridor is past the room
-    map.push(doorMark(first.segment, px, tag && tagged.map((g) => g.kind).join(" "), tag, secret, oneway ? side(first.door.a, first.segment) : undefined, corridorSide(first.door.a, first.segment)));
-    if (first.corridor) map.push(doorMark(first.corridor.segment, px, undefined, undefined, secret, undefined, side(first.door.b, first.corridor.segment)));
+  // One mark per door group. A corridor's tag and chevron sit at room a's end, a plain door at room b's.
+  for (const d of s.doors) {
+    map.push(doorMark(d.segment, px, d.tag && d.gates.map((g) => g.kind).join(" "), d.tag, d.secret, d.oneway, d.corridor?.sideA));
+    if (d.corridor) map.push(doorMark(d.corridor.segment, px, undefined, undefined, d.secret, undefined, d.corridor.sideB));
   }
 
   // Key column: rooms by number, gates by tag, legend of what the map uses.
   const rooms = [...graph.rooms.values()].sort((a, b) => a.number - b.number);
-  const gateLines = gates.map((g) => ({ tag: g.tag, text: g.gates.map(gateText).join("; ") }));
+  const gateLines = s.doors.flatMap((d) => (d.tag ? [{ tag: d.tag, text: d.gates.map(gateText).join("; ") }] : []));
   const legend = [
     ...Object.keys(glyphs).filter((g) => usedGlyphs.has(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name })),
-    ...(corridors.size ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
-    ...(gates.length ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
-    ...(layout.doors.some((d) => d.door.gate?.kind === "secret") ? [{ mark: `<line class="dash" x1="0" y1="-4" x2="14" y2="-4"/>`, text: "secret door" }] : []),
-    ...(layout.doors.some((d) => d.door.oneway) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
+    ...(s.corridors.length ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
+    ...(gateLines.length ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
+    ...(s.anySecret ? [{ mark: `<line class="dash" x1="0" y1="-4" x2="14" y2="-4"/>`, text: "secret door" }] : []),
+    ...(s.anyOneway ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
   ];
   const keyWidth = Math.max(200, 28 + charWidth * Math.max(...rooms.map((r) => r.label.length), ...gateLines.map((g) => g.text.length)));
 
