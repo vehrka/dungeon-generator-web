@@ -393,7 +393,7 @@ the same that `normalize` reads; in the CLI since step 14a, in the viewer since 
 
 - `graph.ts`: directed multigraph, stable ids in insertion order (replaces igraph; order, not
   index parity, is what expansion and merging depend on). `simplify`, undirected Dijkstra.
-- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 4 themes, `ROOM_STYLE`; data dumped from
+- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 2 themes (zelda, cyber; Python's tor-barrow and tor-dwarf dropped), `ROOM_STYLE`; data dumped from
   Python into typed literals.
 - `expand.ts`: START, GOAL, the `Start` rule, then the first non-terminal in vertex order, R last
   (pacing by progress START → boss, last tier within `nearBoss` steps of `em`/`eb`). One d20 per

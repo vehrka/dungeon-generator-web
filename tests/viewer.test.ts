@@ -73,7 +73,7 @@ describe("parseSize", () => {
 
 describe("parseTheme", () => {
   it("accepts the generator themes", () => {
-    for (const t of ["zelda", "cyber", "tor-barrow", "tor-dwarf"]) expect(parseTheme(t)).toBe(t);
+    for (const t of ["zelda", "cyber"]) expect(parseTheme(t)).toBe(t);
   });
 
   it("rejects anything else", () => {
@@ -84,7 +84,7 @@ describe("parseTheme", () => {
 describe("names", () => {
   it("names a generated dungeon as the CLI", () => {
     expect(dungeonName({ seed: 7, size: "M", theme: "zelda" })).toBe("m-7-zelda");
-    expect(dungeonName({ seed: 0, size: "XS", theme: "tor-dwarf" })).toBe("xs-0-tor-dwarf");
+    expect(dungeonName({ seed: 0, size: "XS", theme: "cyber" })).toBe("xs-0-cyber");
   });
 
   it("names the JSON and key exports", () => {

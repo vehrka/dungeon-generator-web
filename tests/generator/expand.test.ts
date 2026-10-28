@@ -60,8 +60,8 @@ describe("expand", () => {
       const cyber = expand(seed, "M", THEMES.cyber, defaultGeneratorConfig);
       expect(shape(cyber), `seed ${seed}`).toBe(shape(zelda));
     }
-    const names = expand(1, "L", THEMES["tor-dwarf"], defaultGeneratorConfig).vertices().map(([, v]) => v.name);
-    expect(names).toContain("Get ring of the vault-keeper 1");
+    const names = expand(1, "L", THEMES.cyber, defaultGeneratorConfig).vertices().map(([, v]) => v.name);
+    expect(names).toContain("Get root key 1");
   });
 
   it("names objects by type count and ids by type", () => {

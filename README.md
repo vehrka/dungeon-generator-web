@@ -25,7 +25,7 @@ $ npm install
 1. Generate a dungeon, lay it out and save the map, its JSON (schema 2) and GM key
 
    ```bash
-   $ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber|tor-barrow|tor-dwarf] \
+   $ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber] \
        [--json m-7-zelda.json] [--key m-7-zelda.md] [-o m-7-zelda-map.svg | .png] \
        [--layout-seed N] [--no-corridors]
    ```

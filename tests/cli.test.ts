@@ -125,7 +125,7 @@ describe("main", () => {
   });
 
   it("takes the theme in any case", () => {
-    expect(parseCli(["--dungeon-seed", "1", "--theme", "Tor-Barrow"]).source).toEqual({ generate: { seed: 1, size: "M", theme: "tor-barrow" } });
+    expect(parseCli(["--dungeon-seed", "1", "--theme", "Cyber"]).source).toEqual({ generate: { seed: 1, size: "M", theme: "cyber" } });
   });
 
   it("prints the error and exits 1 without a stack", async () => {
