@@ -103,18 +103,17 @@ Split `svg.ts` before adding the second style:
   painters; own module so `svg.ts` and `dyson.ts` do not import each other.
 - `render/dyson.ts`: Dyson painter (floors, grid, walls, hatching, doors, numbers) and its
   stylesheet. The floors are one `<g id="floors">` in `defs`, drawn four times through `<use>`
-  (shadow, paper, grid, wall), so fill, grid and wall share every point.
+  (paper, grid, wall), so fill, grid and wall share every point.
 - `render/hatch.ts`: hatching and wobble, pure functions on grid geometry, unit-tested alone.
 
 ### Paint order (Dyson)
 
 1. Page white `#ffffff`. Title and key column.
 2. Hatching (one `<path class="hatch">`).
-3. Wall shadow: every floor polygon stroked light grey, width ≈ 0.6 unit; its inner half is hidden
-   by step 4, so a grey band ≈ 0.3 unit is left on the rock side of every wall (Dyson's newer maps).
-4. Floors white: rooms and corridors alike (no grey corridors).
-5. Floor grid: the same polygons filled `url(#grid)`, a `<pattern>` 24 × 24 px,
+3. Floors white: rooms and corridors alike (no grey corridors).
+4. Floor grid: the same polygons filled `url(#grid)`, a `<pattern>` 24 × 24 px,
    `patternUnits="userSpaceOnUse"`, origin at the map's grid origin, so lines fall on grid units.
+5. Wall shadow, inside the floors (one `<path class="shadow">`, see below), over the grid.
 6. Walls: every floor polygon stroked black, ≈ 3 px, `stroke-linejoin: miter`, no fill.
 7. Doors and gate symbols (they cut the wall, so after it).
 8. Numbers and glyphs.
@@ -160,7 +159,7 @@ Lines a touch irregular, as if inked by hand. Done (step 4, `docs/plans/18-dyson
   no float formatting in the key; not a draw from a running stream. Two rooms sharing an edge then
   move it the same way: one wall, not two. A running stream would draw a double line on every
   shared wall; this is the main trap of the feature.
-- Shadow, floor fill, grid and wall use the same wobbled outline through `<use>` (no white slivers);
+- Floor fill, grid and wall use the same wobbled outline through `<use>` (no white slivers);
   points rounded to 0.1 px.
 - Doors, gaps and tags stay on the straight segment: the gap's half-width (2.5 px) and the door
   rectangle (4 px) still cover a 1.5 px half-wall plus 0.8 px of wobble. Door ends are on whole
@@ -168,6 +167,26 @@ Lines a touch irregular, as if inked by hand. Done (step 4, `docs/plans/18-dyson
 - Tuned on 1× PNGs of m-1 and l-1: a 0.25 step read saw-toothed, 0.5 px amplitude nearly straight;
   0.5 step at 0.8 px reads hand-drawn. Smooth noise not needed.
 - Off switch: amplitude 0 gives the outline back (tests).
+
+### Wall shadow
+
+Dyson's newer maps (e.g. Cairn Tower, 2026) shade the inside of each room along the walls facing
+away from the light: a darker grey band under the top walls and beside the left ones, none on the
+bottom and right. Decided 2026-10-29, replacing step 4's grey stroke on the rock side.
+
+- Light at compass bearing 330° (NNW, constant `light` in `dyson.ts`); the walls' shadow reaches
+  `shadowLength` 0.35 unit away from it, so offset (0.175, 0.303) unit: the top band is 7.3 px
+  (5.8 past the half-wall), the left 4.2 px (2.7). 315° would make them equal.
+- `wallShadow(floor, offset, open)` in `hatch.ts`: the floor minus itself moved by the offset,
+  per floor polygon, so a wall shared by two rooms shades the room below or right of it. Exact on
+  unit cells: a cell's top strip is shaded where the cell above (above-left for its first
+  offset.x) is not floor, its left strip likewise; strips merged into runs, ~4 rectangles per
+  room. Offset must be in (0, 1) on both axes (light from the upper left), else an error.
+- Open doors (every symbol but secret, both ends of a corridor) count as floor across, so a
+  doorway casts no shadow; a secret door is a wall and does.
+- Straight edges, painted before the wobbled wall, which covers the 0.8 px of difference.
+- Measured, layout seed 1: m-1 397 kB, l-1 421 kB, l-8 179 kB (+3–4 kB over the outside band),
+  time within noise (l-1 95–103 ms).
 
 ### Doors and gates
 
@@ -222,7 +241,7 @@ one-way direction come from the scene, as in the catalogue. Done (step 3,
 | ink | `#000000` | walls, hatching, doors, text |
 | paper | `#ffffff` | page, floors |
 | grid | `#a9bcc6` | floor grid, 0.5 px (blue-grey, tune by eye) |
-| shadow | `#c8c8c8` | wall shadow band, stroke 0.6 unit (14.4 px), ≈ 0.3 unit left outside the wall |
+| shadow | `#999999` | wall shadow inside the floors, light 330°, 0.35 unit (Dyson's grey, sampled) |
 | wobble | 0.8 px every 0.5 unit | floor outlines, across the edge |
 
 No other colour. Values tuned against PNG renders of m-1 and l-1 (step 4).

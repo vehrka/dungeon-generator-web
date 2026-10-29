@@ -1,4 +1,4 @@
-import { partition, type Point, type Polygon, type Segment } from "../engine/geometry";
+import { bbox, partition, type Point, type Polygon, type Rect, type Segment } from "../engine/geometry";
 import { randInt, rng, type Rng } from "../engine/rng";
 
 // Dyson rock hatching (docs/dyson-style.md, hatching): clusters of short parallel strokes in a
@@ -151,4 +151,58 @@ export function wobble(outline: Polygon, layoutSeed: number, amplitude: number):
       return dy === 0 ? { x: qx / cuts, y: qy / cuts + o } : { x: qx / cuts + o, y: qy / cuts };
     });
   });
+}
+
+// Wall shadow (docs/dyson-style.md, wall shadow): the part of a floor its own walls hide from a light
+// at the upper left, the floor minus itself moved by offset (0 < x, y < 1). Exact on unit cells:
+// a cell's strip at its top (b = offset.y high) is shaded where the cell above, or above-left for
+// its first offset.x, is not floor; its strip at the left likewise from the cell to the left.
+// Strips merged into runs; a corner goes in the left strip when the cell has one. Across an open door
+// the floor goes on, so a doorway casts none. Grid units.
+export function wallShadow(floor: Polygon, offset: Point, open: Segment[]): Rect[] {
+  const { x: a, y: b } = offset;
+  if (!(a > 0 && a < 1 && b > 0 && b < 1)) throw new Error(`wallShadow: offset (${a},${b}) not within (0, 1)`);
+  const key = (x: number, y: number) => `${x},${y}`;
+  const cells = new Set<string>();
+  for (const r of partition(floor)) for (let y = r.y0; y < r.y1; y++) for (let x = r.x0; x < r.x1; x++) cells.add(key(x, y));
+  const lit = new Set(cells); // floor, plus the cells across an open door
+  for (const { from, to } of open) {
+    const [x0, x1, y0, y1] = [Math.min(from.x, to.x), Math.max(from.x, to.x), Math.min(from.y, to.y), Math.max(from.y, to.y)];
+    if (y0 === y1) for (let x = x0; x < x1; x++) lit.add(key(x, y0 - 1)).add(key(x, y0));
+    else for (let y = y0; y < y1; y++) lit.add(key(x0 - 1, y)).add(key(x0, y));
+  }
+  const has = (x: number, y: number) => lit.has(key(x, y));
+  const box = bbox(floor);
+  const out: Rect[] = [];
+  // Extends the run in progress when piece [p0, p1] starts where it ends, else starts a new one.
+  const runs = (make: (p0: number, p1: number) => Rect, along: "x" | "y") => {
+    let run: Rect | undefined;
+    return (p0?: number, p1?: number) => {
+      const [k0, k1] = along === "x" ? (["x0", "x1"] as const) : (["y0", "y1"] as const);
+      if (p0 !== undefined && run && run[k1] === p0) run[k1] = p1!;
+      else {
+        if (run) out.push(run);
+        run = p0 === undefined ? undefined : make(p0, p1!);
+      }
+    };
+  };
+  for (let y = box.y0; y < box.y1; y++) {
+    const piece = runs((p0, p1) => ({ x0: p0, y0: y, x1: p1, y1: y + b }), "x");
+    for (let x = box.x0; x < box.x1; x++) {
+      if (!cells.has(key(x, y))) continue;
+      if (!has(x - 1, y - 1) && has(x - 1, y)) piece(x, x + a); // else the left strip has it
+      if (!has(x, y - 1)) piece(x + a, x + 1);
+    }
+    piece();
+  }
+  for (let x = box.x0; x < box.x1; x++) {
+    const piece = runs((p0, p1) => ({ x0: x, y0: p0, x1: x + a, y1: p1 }), "y");
+    for (let y = box.y0; y < box.y1; y++) {
+      if (!cells.has(key(x, y)) || has(x - 1, y)) continue;
+      if (!has(x - 1, y - 1)) piece(y, y + b);
+      piece(y + b, y + 1);
+    }
+    piece();
+  }
+  return out;
 }

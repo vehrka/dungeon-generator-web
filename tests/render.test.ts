@@ -247,16 +247,17 @@ describe("dyson", () => {
 
   it("draws one floor per room and corridor, shadowed, filled, gridded and walled from the same polygons", () => {
     expect(n(/<polygon class="floor"/g)).toBe(graph.rooms.size + corridors.size);
-    expect(n(/<use href="#floors"/g)).toBe(4);
-    expect([...dyson.matchAll(/<use href="#floors" class="(\w+)"/g)].map((m) => m[1])).toEqual(["shadow", "paper", "grid", "wall"]);
+    expect(n(/<use href="#floors"/g)).toBe(3);
+    expect([...dyson.matchAll(/<use href="#floors" class="(\w+)"|<path class="(shadow)"/g)].map((m) => m[1] ?? m[2])).toEqual(["paper", "grid", "shadow", "wall"]);
     expect(dyson).toContain('<pattern id="grid"');
     expect(dyson).not.toContain('class="room"');
     expect(dyson).not.toContain('class="corridor"');
   });
 
-  it("hatches the rock in one path, under the shadow and the floors", () => {
+  it("hatches the rock in one path, under the floors; shades the floors in one path, under the walls", () => {
     expect(n(/<path class="hatch"/g)).toBe(1);
-    expect(dyson).toContain(".shadow{fill:none;stroke:#c8c8c8;");
+    expect(n(/<path class="shadow" d="M/g)).toBe(1);
+    expect(dyson).toContain(".shadow{fill:#999999;stroke:none}");
     expect(dyson.indexOf('class="hatch"')).toBeLessThan(dyson.indexOf('<use href="#floors"'));
   });
 

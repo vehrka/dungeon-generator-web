@@ -1,5 +1,5 @@
 import type { Point, Polygon, Segment } from "../engine/geometry";
-import { hatch, hatchReach, wobble } from "./hatch";
+import { hatch, hatchReach, wallShadow, wobble } from "./hatch";
 import { chevron, roomMarks, tagMark, unit, type Painter } from "./marks";
 
 // Dyson Logos look (docs/dyson-style.md): black ink on white, thick walls, hatched rock, a faint
@@ -9,18 +9,19 @@ import { chevron, roomMarks, tagMark, unit, type Painter } from "./marks";
 const ink = "#000000";
 const paper = "#ffffff";
 const grid = "#a9bcc6";
-const shadow = "#c8c8c8";
+const shadow = "#999999"; // Dyson's own grey, sampled from his maps
 const wall = 3; // px
-const shadowWidth = (6 * unit) / 10; // px, 0.6 unit; the floors paint over its inner half
+const light = (330 * Math.PI) / 180; // compass bearing of the light, NNW: top walls shade most, left walls less
+const shadowLength = 0.35; // grid units the walls' shadow reaches away from the light
 const wobbleAmp = 0.8 / unit; // grid units, 0.8 px: a gap or door still covers half a wall plus this
 const serif = `'Palatino Linotype','Book Antiqua',Palatino,Georgia,'DejaVu Serif','Noto Serif',serif`; // resvg maps generic serif to Times
 
 const css = `<style>
 text{font-family:${serif};font-size:13px;fill:${ink}}
 .hatch{fill:none;stroke:${ink};stroke-width:0.9;stroke-linecap:round}
-.shadow{fill:none;stroke:${shadow};stroke-width:${shadowWidth};stroke-linejoin:miter}
 .paper{fill:${paper};stroke:none}
 .grid{fill:url(#grid);stroke:none}
+.shadow{fill:${shadow};stroke:none}
 .grid-line{fill:none;stroke:${grid};stroke-width:0.5}
 .wall{fill:none;stroke:${ink};stroke-width:${wall};stroke-linejoin:miter}
 .secret{font-size:13px;font-weight:bold;text-anchor:middle;stroke:${paper};stroke-width:3;paint-order:stroke}
@@ -45,11 +46,11 @@ const dotRadius = 1.5; // px
 
 const round = (v: number) => Math.round(v * 10) / 10;
 
-// Paint order: hatching, wall shadow (its inner half under the floors), floors white, floor grid,
-// walls, gaps (white, gridded: archways and portcullis), door symbols, then tags and chevrons (a tag
-// beside one door can reach another's rectangle at a corner, so symbols first), numbers and glyphs.
-// Floors (wobbled) and gaps (straight, on the door segment) are groups drawn more than once, so
-// shadow, fill, grid and wall share every point.
+// Paint order: hatching, floors white, floor grid, wall shadow inside the floors (light from the
+// upper left), walls, gaps (white, gridded: archways and portcullis), door symbols, then tags and
+// chevrons (a tag beside one door can reach another's rectangle at a corner, so symbols first),
+// numbers and glyphs. Floors (wobbled) and gaps (straight, on the door segment) are groups drawn
+// more than once, so fill, grid and wall share every point.
 export const dyson: Painter = {
   css,
   page: paper,
@@ -58,6 +59,17 @@ export const dyson: Painter = {
     const floors: Polygon[] = [...s.rooms.map((r) => r.outline), ...s.corridors];
     const points = (outline: Polygon) => wobble(outline, layoutSeed, wobbleAmp).map((q) => px(q)).map((q) => `${round(q.x)},${round(q.y)}`).join(" ");
     const strokes = hatch(floors, layoutSeed).flatMap((c) => c.strokes);
+    // Straight edges, under the wobbled wall: 1.5 px of half-wall covers 0.8 px of wobble. Doors open
+    // the wall except a secret one, so a doorway casts none.
+    const offset = { x: -Math.sin(light) * shadowLength, y: Math.cos(light) * shadowLength };
+    const open = s.doors.filter((door) => door.symbol !== "secret").flatMap((door) => [door.segment, ...(door.corridor ? [door.corridor.segment] : [])]);
+    const shade = floors
+      .flatMap((f) => wallShadow(f, offset, open))
+      .map((r) => {
+        const [a, b] = [px({ x: r.x0, y: r.y0 }), px({ x: r.x1, y: r.y1 })];
+        return `M${round(a.x)} ${round(a.y)}H${round(b.x)}V${round(b.y)}H${round(a.x)}Z`;
+      })
+      .join("");
     const d = strokes
       .map(({ from, to }) => {
         const [a, b] = [px(from), px(to)];
@@ -105,9 +117,9 @@ export const dyson: Painter = {
       defs: defs + (gaps.length ? `<g id="gaps">${gaps.join("")}</g>` : ""),
       map: [
         `<path class="hatch" d="${d}"/>`,
-        `<use href="#floors" class="shadow"/>`,
         `<use href="#floors" class="paper"/>`,
         `<use href="#floors" class="grid"/>`,
+        `<path class="shadow" d="${shade}"/>`,
         `<use href="#floors" class="wall"/>`,
         ...(gaps.length ? [`<use href="#gaps" class="paper"/>`, `<use href="#gaps" class="grid"/>`] : []),
         ...symbols,
