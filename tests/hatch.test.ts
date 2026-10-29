@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rectangle, translate } from "../src/engine/geometry";
-import { distance, floorCells, hatch, hatchDepth, hatchReach, isFloor } from "../src/render/hatch";
+import { distance, floorCells, hatch, hatchDepth, hatchReach, isFloor, wobble, wobbleAmp, wobbleStep } from "../src/render/hatch";
 
 // Two rooms joined by a one-cell corridor, an L-shaped gap between them.
 const floors = [rectangle(4, 3), translate(rectangle(1, 2), { x: 4, y: 1 }), translate(rectangle(3, 5), { x: 5, y: 0 })];
@@ -69,5 +69,46 @@ describe("hatch", () => {
   it("is deterministic per layout seed", () => {
     expect(hatch(floors, 7)).toEqual(clusters);
     expect(hatch(floors, 8)).not.toEqual(clusters);
+  });
+});
+
+describe("wobble", () => {
+  const a = rectangle(4, 3);
+  const b = translate(rectangle(3, 2), { x: 4, y: 1 }); // touches a along x = 4, y 1–3; its corner (4, 1) on a's edge
+  const [wa, wb] = [wobble(a, 7), wobble(b, 7)];
+  const on = (w: readonly { x: number; y: number }[], x: number, y0: number, y1: number) =>
+    w.filter((p) => Math.abs(p.x - x) <= wobbleAmp && p.y >= y0 && p.y <= y1).map((p) => `${p.x},${p.y}`).sort();
+  const whole = (v: number) => Number.isInteger(v);
+
+  it("draws a shared stretch with the same points from both rooms", () => {
+    expect(on(wa, 4, 1, 3)).toEqual(on(wb, 4, 1, 3));
+    expect(on(wa, 4, 1, 3).length).toBe(2 / wobbleStep + 1);
+  });
+
+  it("keeps every whole-unit point, so corners and T-junctions, in place", () => {
+    for (const p of [...a, ...b]) expect(wa.concat(wb)).toContainEqual(p);
+    expect(wa).toContainEqual({ x: 4, y: 1 });
+    expect(wa.filter((p) => whole(p.x) && whole(p.y)).length).toBe(14);
+  });
+
+  it("moves every other point at most the amplitude, across its edge only", () => {
+    for (const p of wa) {
+      const [qx, qy] = [Math.round(p.x / wobbleStep) * wobbleStep, Math.round(p.y / wobbleStep) * wobbleStep];
+      const horizontal = qy === 0 || qy === 3; // a's edges: y 0 and 3 horizontal, x 0 and 4 vertical
+      if (whole(qx) && whole(qy)) expect(p).toEqual({ x: qx, y: qy });
+      else if (horizontal) expect(p.x === qx && Math.abs(p.y - qy) <= wobbleAmp && p.y !== qy).toBe(true);
+      else expect(p.y === qy && Math.abs(p.x - qx) <= wobbleAmp && p.x !== qx).toBe(true);
+    }
+    expect(wa.length).toBe(14 / wobbleStep);
+  });
+
+  it("gives the outline back at amplitude 0", () => {
+    expect(wobble(a, 7, 0)).toEqual(a);
+    expect(wobble(b, 7, 0)).toEqual(b);
+  });
+
+  it("is deterministic per layout seed", () => {
+    expect(wobble(a, 7)).toEqual(wa);
+    expect(wobble(a, 8)).not.toEqual(wa);
   });
 });
