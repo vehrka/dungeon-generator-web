@@ -1,8 +1,9 @@
 import type { GenerateOptions } from "../engine/generator/index";
 import type { DungeonJson } from "../engine/types";
+import { styleFor, type MapStyle } from "../render/svg";
 import { dungeonKey } from "../render/key";
 import type { DrawRequest, DrawResult } from "./worker";
-import { dungeonName, exportName, jsonName, keyName, load, parseSeed, parseSize, parseTheme, randomSeed } from "./state";
+import { dungeonName, exportName, jsonName, keyName, layoutFailed, load, parseSeed, parseSize, parseStyle, parseTheme, randomSeed } from "./state";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const dungeonSeedField = $<HTMLInputElement>("dungeon-seed");
@@ -13,6 +14,7 @@ const file = $<HTMLInputElement>("file");
 const seedField = $<HTMLInputElement>("seed");
 const rerollButton = $<HTMLButtonElement>("reroll");
 const corridorsBox = $<HTMLInputElement>("corridors");
+const styleSelect = $<HTMLSelectElement>("style");
 const svgButton = $<HTMLButtonElement>("export-svg");
 const jsonButton = $<HTMLButtonElement>("export-json");
 const keyButton = $<HTMLButtonElement>("export-key");
@@ -27,12 +29,18 @@ let current: { source: DrawRequest["source"]; name: string; options?: Options } 
 // From the worker's replies, so exports always match what was drawn: the dungeon (JSON and key, also
 // when its layout failed) and the map.
 let dungeon: { json: DungeonJson; name: string; options?: Options } | undefined;
-let drawn: { svg: string; seed: number } | undefined;
+let drawn: { svg: string; seed: number; style: MapStyle } | undefined;
+// The theme the style select was last preset from, lower case: generate keeps a style picked by hand
+// until the theme changes; a load always presets.
+let styleTheme: string | undefined;
 let worker: Worker | undefined;
 let busy = false;
 let opening = 0; // the latest load; an older file read that resolves late is dropped
 
+// The loading bar shows while the worker runs, also under a panel error raised meanwhile.
 function say(lines: string[], error = false) {
+  result.parentElement!.classList.toggle("busy", busy);
+  result.setAttribute("aria-busy", String(busy));
   result.replaceChildren(
     ...lines.map((line) => {
       const p = document.createElement("p");
@@ -64,7 +72,18 @@ function fail(message: string) {
   say([message], true);
 }
 
-function run(seed: number) {
+// A loaded JSON's theme is unchecked: anything but a string counts as none.
+function presetStyle(theme: unknown, always: boolean) {
+  const t = typeof theme === "string" ? theme.toLowerCase() : undefined;
+  if (!always && t === styleTheme) return;
+  styleTheme = t;
+  styleSelect.value = styleFor(t);
+}
+
+const selectedStyle = () => parseStyle(styleSelect.value);
+
+// Callers that change current parse the style first, so a bad select leaves the dungeon as it was.
+function run(seed: number, style = selectedStyle()) {
   const c = current;
   if (!c) return; // never after the first generate: a failed load keeps the dungeon before it
   stop();
@@ -83,10 +102,10 @@ function run(seed: number) {
     if ("error" in e.data) {
       map.replaceChildren();
       drawn = undefined;
-      return say([e.data.error], true);
+      return say(e.data.stuck ? layoutFailed(e.data.stuck, c.options !== undefined) : [e.data.error], true);
     }
     map.innerHTML = e.data.svg; // render() escapes everything taken from the JSON
-    drawn = { svg: e.data.svg, seed };
+    drawn = { svg: e.data.svg, seed, style };
     svgButton.disabled = false;
     say([c.name, `${e.data.rooms} rooms`, ...(c.options ? [`dungeon seed ${c.options.seed}`] : []), `layout seed ${seed}`, `${e.data.ms} ms`]);
   };
@@ -96,7 +115,7 @@ function run(seed: number) {
     busy = false;
     fail(e.message || "Layout worker failed");
   };
-  w.postMessage({ source: c.source, seed, corridors: corridorsBox.checked } satisfies DrawRequest);
+  w.postMessage({ source: c.source, seed, corridors: corridorsBox.checked, style } satisfies DrawRequest);
 }
 
 // Errors from the panel's fields go to the result block, the map stays as it is.
@@ -111,10 +130,12 @@ function attempt(f: () => void) {
 // Generate from the panel's values; layoutSeed undefined resets the layout seed to the dungeon seed.
 function generate(layoutSeed?: number) {
   const options = { seed: parseSeed(dungeonSeedField.value, "Dungeon seed"), size: parseSize(sizeSelect.value), theme: parseTheme(themeSelect.value) };
+  presetStyle(options.theme, false);
+  const style = selectedStyle();
   opening++; // a file read still pending must not replace this dungeon
   dungeonSeedField.value = String(options.seed);
   current = { source: { generate: options }, name: dungeonName(options), options };
-  run(layoutSeed ?? options.seed);
+  run(layoutSeed ?? options.seed, style);
 }
 
 const layoutSeed = () => parseSeed(seedField.value);
@@ -147,6 +168,7 @@ async function open(f: File) {
     return;
   }
   if (n !== opening) return;
+  presetStyle(loaded.json.theme, true); // the select now holds a valid style
   current = { source: { json: loaded.json }, name: loaded.name };
   if (loaded.seed === undefined) {
     fail(`${f.name} has no usable seed; enter a layout seed`);
@@ -180,8 +202,9 @@ themeSelect.addEventListener("change", () => reselect(true));
 seedField.addEventListener("keydown", (e) => {
   if (e.key === "Enter") attempt(() => run(layoutSeed()));
 });
-rerollButton.addEventListener("click", () => run(randomSeed()));
+rerollButton.addEventListener("click", () => attempt(() => run(randomSeed())));
 corridorsBox.addEventListener("change", () => attempt(() => run(layoutSeed())));
+styleSelect.addEventListener("change", () => attempt(() => run(layoutSeed())));
 
 file.addEventListener("change", () => {
   if (file.files?.[0]) void open(file.files[0]);
@@ -189,7 +212,7 @@ file.addEventListener("change", () => {
 });
 
 svgButton.addEventListener("click", () => {
-  if (drawn && dungeon) download(drawn.svg, "image/svg+xml", exportName(dungeon.name, drawn.seed));
+  if (drawn && dungeon) download(drawn.svg, "image/svg+xml", exportName(dungeon.name, drawn.seed, drawn.style));
 });
 jsonButton.addEventListener("click", () => {
   if (dungeon?.options) download(JSON.stringify(dungeon.json, null, 2) + "\n", "application/json", jsonName(dungeon.name));

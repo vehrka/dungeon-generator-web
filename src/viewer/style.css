@@ -138,7 +138,11 @@ button.primary:disabled { background: var(--color-steel-gray); }
 
 /* Result and exports: a subsection band, the guide's lighter grey; exports with the result, as
    dungen's download next to its seed, so they stay in view on a short window. */
-.result { margin: 0 0 10px; padding: 8px var(--spacing-15); background: var(--color-band); }
+.result { position: relative; overflow: hidden; margin: 0 0 10px; padding: 8px var(--spacing-15); background: var(--color-band); }
+/* Loading: a carbon hairline sweeping the band's foot while the worker runs; still without motion. */
+.result.busy::after { content: ""; position: absolute; bottom: 0; left: -30%; width: 30%; height: 2px; background: var(--color-carbon); animation: sweep 1.2s linear infinite; }
+@keyframes sweep { to { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .result.busy::after { left: 0; width: 100%; animation: none; } }
 .result:has(.error) { background: var(--color-amber); }
 #result p { margin: 0; }
 #result p:first-child { font-size: 15px; margin-bottom: 2px; }

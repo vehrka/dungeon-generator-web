@@ -3,7 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { isSeed, maxSeed } from "../src/engine/rng";
 import { defaultConfig } from "../src/engine/config";
-import { dungeonName, exportName, jsonName, keyName, layoutConfig, load, parseSeed, randomSeed, parseSize, parseTheme } from "../src/viewer/state";
+import { LayoutError } from "../src/engine/layout";
+import { layoutCache, dungeonName, exportName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseStyle, parseTheme } from "../src/viewer/state";
 
 const text = readFileSync(join(import.meta.dirname, "fixtures", "ruin.json"), "utf8");
 
@@ -81,6 +82,16 @@ describe("parseTheme", () => {
   });
 });
 
+describe("parseStyle", () => {
+  it("accepts the map styles", () => {
+    for (const s of ["catalogue", "dyson"]) expect(parseStyle(s)).toBe(s);
+  });
+
+  it("rejects anything else", () => {
+    for (const s of ["", "Dyson", "toString", "__proto__"]) expect(() => parseStyle(s)).toThrow(/^Unknown style .*, expected one of catalogue dyson$/);
+  });
+});
+
 describe("names", () => {
   it("names a generated dungeon as the CLI", () => {
     expect(dungeonName({ seed: 7, size: "M", theme: "zelda" })).toBe("m-7-zelda");
@@ -96,9 +107,62 @@ describe("names", () => {
 
 describe("exportName", () => {
   it("puts the seed in the name", () => {
-    expect(exportName("ruin", 12)).toBe("ruin-map-12.svg");
-    expect(exportName("m-7-zelda", 7)).toBe("m-7-zelda-map-7.svg");
-    expect(exportName("dungeon", 0)).toBe("dungeon-map-0.svg");
+    expect(exportName("ruin", 12, "catalogue")).toBe("ruin-map-12.svg");
+    expect(exportName("m-7-cyber", 7, "catalogue")).toBe("m-7-cyber-map-7.svg");
+    expect(exportName("dungeon", 0, "catalogue")).toBe("dungeon-map-0.svg");
+  });
+
+  it("names any style but catalogue", () => {
+    expect(exportName("m-7-zelda", 7, "dyson")).toBe("m-7-zelda-map-7-dyson.svg");
+  });
+});
+
+describe("layoutFailed", () => {
+  it("says no layout was found and what to change, then the stuck rooms", () => {
+    expect(layoutFailed([23, 18, 21], true)).toEqual([
+      "No layout could be completed for this dungeon.",
+      "Try another layout seed (reroll), or another dungeon seed or size.",
+      "Stuck on rooms 23, 18, 21.",
+    ]);
+  });
+
+  it("suggests only the layout seed for a loaded file", () => {
+    expect(layoutFailed([4], false)[1]).toBe("Try another layout seed (reroll).");
+  });
+});
+
+describe("layoutCache", () => {
+  const json = JSON.parse(text);
+  const catchIt = (f: () => unknown) => {
+    try {
+      f();
+    } catch (e) {
+      return e;
+    }
+  };
+
+  it("reuses the last layout for the same dungeon, seed and config", () => {
+    const place = layoutCache();
+    const a = place(json, 3, defaultConfig);
+    expect(place(structuredClone(json), 3, defaultConfig)).toBe(a); // the worker gets a copy each time
+    expect(place(json, 4, defaultConfig)).not.toBe(a);
+    expect(place(json, 3, layoutConfig(false))).not.toBe(place(json, 3, defaultConfig));
+  });
+
+  it("keeps a layout failure, so a style change does not run it again", () => {
+    const place = layoutCache();
+    const stuck = { ...defaultConfig, maxTotalIterations: 1 };
+    const e = catchIt(() => place(json, 1, stuck));
+    expect(e).toBeInstanceOf(LayoutError);
+    expect(catchIt(() => place(json, 1, stuck))).toBe(e);
+  });
+
+  it("tries any other error again", () => {
+    const place = layoutCache();
+    const bad = { ...json, schema_version: 3 };
+    const e = catchIt(() => place(bad, 1, defaultConfig));
+    expect(e).toBeInstanceOf(Error);
+    expect(catchIt(() => place(bad, 1, defaultConfig))).not.toBe(e);
   });
 });
 

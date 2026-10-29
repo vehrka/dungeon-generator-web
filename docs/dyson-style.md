@@ -81,10 +81,13 @@ most of the bbox stays white, as in Dyson's maps.
   style = styleFor(json.theme))`, so CLI and viewer share the rule.
 - CLI: `--style catalogue|dyson` overrides the theme's default; unknown value → error listing the
   options (same pattern as `--size`, `--theme`). Output name unchanged unless `-o` is given.
-- Viewer: a `style` select in the layout section next to corridors, preset from the theme
-  (generate) or the loaded JSON's theme, changeable by hand; redraws without a new layout
-  only if cheap to wire, otherwise a normal redraw (layout is deterministic, same map). Export name
-  `<name>-map-<seed>.svg` for catalogue, `<name>-map-<seed>-dyson.svg` for Dyson.
+- Viewer: a `style` select in the layout section under corridors, preset from the theme
+  (generate) or the loaded JSON's theme, changeable by hand. A load always presets; generate
+  presets only when the theme changes (case ignored), so a style picked by hand survives reroll,
+  layout seed, corridors, size and generate with the same theme. A style change redraws through the worker, which keeps its last
+  layout (`layoutCache` in `viewer/state.ts`, layout failures included), so only the render runs; a style
+change during a run restarts it. Export name `<name>-map-<seed>.svg` for
+  catalogue, `<name>-map-<seed>-<style>.svg` otherwise.
 
 ### Code structure
 
