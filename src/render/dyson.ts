@@ -1,5 +1,5 @@
 import type { Point, Polygon, Segment } from "../engine/geometry";
-import { hatch, hatchReach } from "./hatch";
+import { hatch, hatchReach, wobble } from "./hatch";
 import { chevron, roomMarks, tagMark, unit, type Painter } from "./marks";
 
 // Dyson Logos look (docs/dyson-style.md): black ink on white, thick walls, hatched rock, a faint
@@ -9,12 +9,16 @@ import { chevron, roomMarks, tagMark, unit, type Painter } from "./marks";
 const ink = "#000000";
 const paper = "#ffffff";
 const grid = "#a9bcc6";
+const shadow = "#c8c8c8";
 const wall = 3; // px
+const shadowWidth = (6 * unit) / 10; // px, 0.6 unit; the floors paint over its inner half
+const wobbleAmp = 0.8 / unit; // grid units, 0.8 px: a gap or door still covers half a wall plus this
 const serif = `'Palatino Linotype','Book Antiqua',Palatino,Georgia,'DejaVu Serif','Noto Serif',serif`; // resvg maps generic serif to Times
 
 const css = `<style>
 text{font-family:${serif};font-size:13px;fill:${ink}}
 .hatch{fill:none;stroke:${ink};stroke-width:0.9;stroke-linecap:round}
+.shadow{fill:none;stroke:${shadow};stroke-width:${shadowWidth};stroke-linejoin:miter}
 .paper{fill:${paper};stroke:none}
 .grid{fill:url(#grid);stroke:none}
 .grid-line{fill:none;stroke:${grid};stroke-width:0.5}
@@ -41,17 +45,18 @@ const dotRadius = 1.5; // px
 
 const round = (v: number) => Math.round(v * 10) / 10;
 
-// Paint order: hatching, floors white, floor grid, walls, gaps (white, gridded: archways and
-// portcullis), door symbols, then tags and chevrons (a tag beside one door can reach another's
-// rectangle at a corner, so symbols first), numbers and glyphs. Floors and gaps are groups drawn more than once, so fill, grid and wall share
-// every point.
+// Paint order: hatching, wall shadow (its inner half under the floors), floors white, floor grid,
+// walls, gaps (white, gridded: archways and portcullis), door symbols, then tags and chevrons (a tag
+// beside one door can reach another's rectangle at a corner, so symbols first), numbers and glyphs.
+// Floors (wobbled) and gaps (straight, on the door segment) are groups drawn more than once, so
+// shadow, fill, grid and wall share every point.
 export const dyson: Painter = {
   css,
   page: paper,
   pad: Math.ceil(hatchReach),
   paint(s, px, layoutSeed) {
     const floors: Polygon[] = [...s.rooms.map((r) => r.outline), ...s.corridors];
-    const points = (outline: Polygon) => outline.map((q) => px(q)).map((q) => `${q.x},${q.y}`).join(" ");
+    const points = (outline: Polygon) => wobble(outline, layoutSeed, wobbleAmp).map((q) => px(q)).map((q) => `${round(q.x)},${round(q.y)}`).join(" ");
     const strokes = hatch(floors, layoutSeed).flatMap((c) => c.strokes);
     const d = strokes
       .map(({ from, to }) => {
@@ -100,6 +105,7 @@ export const dyson: Painter = {
       defs: defs + (gaps.length ? `<g id="gaps">${gaps.join("")}</g>` : ""),
       map: [
         `<path class="hatch" d="${d}"/>`,
+        `<use href="#floors" class="shadow"/>`,
         `<use href="#floors" class="paper"/>`,
         `<use href="#floors" class="grid"/>`,
         `<use href="#floors" class="wall"/>`,

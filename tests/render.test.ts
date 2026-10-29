@@ -245,16 +245,18 @@ describe("dyson", () => {
     expect(dyson).toMatch(/<rect width="\d+" height="\d+" fill="#ffffff"\/>/);
   });
 
-  it("draws one floor per room and corridor, filled, gridded and walled from the same polygons", () => {
+  it("draws one floor per room and corridor, shadowed, filled, gridded and walled from the same polygons", () => {
     expect(n(/<polygon class="floor"/g)).toBe(graph.rooms.size + corridors.size);
-    expect(n(/<use href="#floors"/g)).toBe(3);
+    expect(n(/<use href="#floors"/g)).toBe(4);
+    expect([...dyson.matchAll(/<use href="#floors" class="(\w+)"/g)].map((m) => m[1])).toEqual(["shadow", "paper", "grid", "wall"]);
     expect(dyson).toContain('<pattern id="grid"');
     expect(dyson).not.toContain('class="room"');
     expect(dyson).not.toContain('class="corridor"');
   });
 
-  it("hatches the rock in one path, under the floors", () => {
+  it("hatches the rock in one path, under the shadow and the floors", () => {
     expect(n(/<path class="hatch"/g)).toBe(1);
+    expect(dyson).toContain(".shadow{fill:none;stroke:#c8c8c8;");
     expect(dyson.indexOf('class="hatch"')).toBeLessThan(dyson.indexOf('<use href="#floors"'));
   });
 
@@ -349,7 +351,13 @@ describe("dyson", () => {
     expect(out).not.toContain("<img");
   });
 
-  it("uses ink, paper and the grid colour only, in a serif", () => {
+  it("wobbles the floors, more points than corners", () => {
+    const pts = [...dyson.matchAll(/<polygon class="floor" points="([^"]+)"/g)].flatMap((m) => m[1]!.split(" "));
+    expect(pts.some((p) => p.includes("."))).toBe(true);
+    expect(pts.length).toBeGreaterThan(2 * 4 * (graph.rooms.size + corridors.size)); // every floor at least twice its corners
+  });
+
+  it("uses ink, paper, the grid and shadow colours only, in a serif", () => {
     expect(dyson).not.toMatch(/#f0a000|#e5e5e5|#f6f8f7|#b2b2b2/i);
     expect(dyson).toMatch(/text\{font-family:'Palatino Linotype'.*serif;/);
     expect(dyson).toContain('<use href="#glyph-start"');

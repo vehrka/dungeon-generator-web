@@ -102,9 +102,9 @@ Split `svg.ts` before adding the second style:
 - `render/marks.ts`: `unit`, `esc`, glyph, gate tag and room-number marks shared by both
   painters; own module so `svg.ts` and `dyson.ts` do not import each other.
 - `render/dyson.ts`: Dyson painter (floors, grid, walls, hatching, doors, numbers) and its
-  stylesheet. The floors are one `<g id="floors">` in `defs`, drawn three times through `<use>`
-  (paper, grid, wall), so fill, grid and wall share every point.
-- `render/hatch.ts`: hatching (wobble in step 4), pure functions on grid geometry, unit-tested alone.
+  stylesheet. The floors are one `<g id="floors">` in `defs`, drawn four times through `<use>`
+  (shadow, paper, grid, wall), so fill, grid and wall share every point.
+- `render/hatch.ts`: hatching and wobble, pure functions on grid geometry, unit-tested alone.
 
 ### Paint order (Dyson)
 
@@ -145,17 +145,29 @@ band along the outside of the walls, the band's outer edge ragged.
 
 ### Wobble
 
-Lines a touch irregular, as if inked by hand.
+Lines a touch irregular, as if inked by hand. Done (step 4, `docs/plans/18-dyson-wobble.md`):
+`wobble(outline, layoutSeed, amplitude)` in `hatch.ts`.
 
-- Subdivide every wall edge at a fixed step (0.5 unit) in absolute grid coordinates; move each
-  inner point perpendicular to the edge by `wobble(x, y)` ≤ ~0.8 px. Corners stay put.
-- `wobble` is a hash of the point and the layout seed (e.g. the first draw of
-  `rng(layoutSeed, "render/wobble/<x>,<y>")`), not a draw from a running stream. Two rooms sharing an edge then
+- Subdivide every floor edge (rooms and corridors) every `wobbleStep` (0.5 unit) in absolute grid
+  coordinates; move each cut perpendicular to its edge by up to `wobbleAmp` (0.8 px), signed in
+  absolute axes (dy on a horizontal edge, dx on a vertical one), never along the outline's normal:
+  two rooms walk a shared wall in opposite directions.
+- Whole-unit rule: points on whole grid units stay put, not only corners. A room's corner can sit in
+  the middle of a neighbour's edge (T-junction); fixing only own corners would leave a sliver there.
+  Every corner is on whole units, so this covers corners too.
+- The offset is a hash of the point and the layout seed, the first draw of
+  `rng(layoutSeed, "render/wobble/<x>,<y>")` with x, y in whole cuts (twice the grid coordinate), so
+  no float formatting in the key; not a draw from a running stream. Two rooms sharing an edge then
   move it the same way: one wall, not two. A running stream would draw a double line on every
   shared wall; this is the main trap of the feature.
-- Floor fill, shadow and wall use the same wobbled outline (no white slivers).
-- Doors stay on the straight segment; with ≤ 0.8 px of wobble the door symbol still covers the wall.
-- Off switch (constant `wobble = 0`) for tests and to compare.
+- Shadow, floor fill, grid and wall use the same wobbled outline through `<use>` (no white slivers);
+  points rounded to 0.1 px.
+- Doors, gaps and tags stay on the straight segment: the gap's half-width (2.5 px) and the door
+  rectangle (4 px) still cover a 1.5 px half-wall plus 0.8 px of wobble. Door ends are on whole
+  units, so the wall meets them unmoved.
+- Tuned on 1× PNGs of m-1 and l-1: a 0.25 step read saw-toothed, 0.5 px amplitude nearly straight;
+  0.5 step at 0.8 px reads hand-drawn. Smooth noise not needed.
+- Off switch: amplitude 0 gives the outline back (tests).
 
 ### Doors and gates
 
@@ -210,9 +222,10 @@ one-way direction come from the scene, as in the catalogue. Done (step 3,
 | ink | `#000000` | walls, hatching, doors, text |
 | paper | `#ffffff` | page, floors |
 | grid | `#a9bcc6` | floor grid, 0.5 px (blue-grey, tune by eye) |
-| shadow | `#c8c8c8` | wall shadow band |
+| shadow | `#c8c8c8` | wall shadow band, stroke 0.6 unit (14.4 px), ≈ 0.3 unit left outside the wall |
+| wobble | 0.8 px every 0.5 unit | floor outlines, across the edge |
 
-No other colour. Values tuned against PNG renders of m-1 and l-1; record the final ones here.
+No other colour. Values tuned against PNG renders of m-1 and l-1 (step 4).
 
 ## Measured (step 2)
 
@@ -241,14 +254,23 @@ l-8 43 ms (171 → 172 kB). The doors cost ~2 kB and no measurable time; the mac
 in step 2 for both branches. Catalogue dump (172 bench and generated maps, layout seeds 1–3,
 corridors on and off) byte-identical.
 
+## Measured (step 4)
+
+Wobble and shadow, layout seed 1, mean of 10 renders, against `dev` (step 3) in the same session:
+m-1 93 ms both (379 → 394 kB), l-1 95 → 99 ms (403 → 417 kB), l-8 42 ms both (171 → 178 kB). About
++15 kB per map from the extra polygon points (the 0.5 step halves the planned ×4), time within noise.
+Catalogue dump (172 bench and generated maps, layout seeds 1–3, corridors on and off)
+byte-identical.
+
 ## Testing
 
 - Refactor: catalogue snapshot unchanged; `tests/render.test.ts` passes without edits.
 - `hatch.ts`: no sample inside a floor cell or farther than `hatchDepth`; same seed same strokes,
   other seed other strokes; streams independent of the catalogue (adding hatching changes no
   layout).
-- Wobble: a shared edge gives the same points from both rooms (two touching rectangles); corners
-  fixed; `wobble = 0` gives the straight outline.
+- Wobble: a shared edge gives the same points from both rooms (two touching rectangles, one corner
+  on the other's edge); whole-unit points fixed; offsets ≤ amplitude, across the edge only;
+  amplitude 0 gives the straight outline; deterministic per layout seed.
 - Dyson render: standalone SVG; one floor polygon per room and corridor; every room number and
   label once, escaped (same hostile-input test as catalogue); no amber, no `#e5e5e5`; door symbol
   counts by kind on the fixture (3 lock, 1 state); one-way chevrons point a → b; snapshot of the
