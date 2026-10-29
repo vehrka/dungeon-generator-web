@@ -139,9 +139,10 @@ button.primary:disabled { background: var(--color-steel-gray); }
 /* Result and exports: a subsection band, the guide's lighter grey; exports with the result, as
    dungen's download next to its seed, so they stay in view on a short window. */
 .result { position: relative; overflow: hidden; margin: 0 0 10px; padding: 8px var(--spacing-15); background: var(--color-band); }
-/* Loading: a carbon hairline sweeping the band's foot while the worker runs; still without motion. */
-.result.busy::after { content: ""; position: absolute; bottom: 0; left: -30%; width: 30%; height: 2px; background: var(--color-carbon); animation: sweep 1.2s linear infinite; }
-@keyframes sweep { to { left: 100%; } }
+/* Loading: a carbon bar going back and forth along the band's foot while the worker runs, in view
+   from the first frame (most layouts take 0.1-0.2 s); still without motion. */
+.result.busy::after { content: ""; position: absolute; bottom: 0; left: 0; width: 30%; height: 3px; background: var(--color-carbon); animation: sweep 0.6s ease-in-out infinite alternate; }
+@keyframes sweep { to { transform: translateX(233.33%); } } /* 70% of the band, in the bar's 30% */
 @media (prefers-reduced-motion: reduce) { .result.busy::after { left: 0; width: 100%; animation: none; } }
 .result:has(.error) { background: var(--color-amber); }
 #result p { margin: 0; }

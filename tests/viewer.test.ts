@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { isSeed, maxSeed } from "../src/engine/rng";
 import { defaultConfig } from "../src/engine/config";
 import { LayoutError } from "../src/engine/layout";
-import { layoutCache, dungeonName, exportName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseStyle, parseTheme } from "../src/viewer/state";
+import { layoutCache, panelFor, dungeonName, exportName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseStyle, parseTheme } from "../src/viewer/state";
 
 const text = readFileSync(join(import.meta.dirname, "fixtures", "ruin.json"), "utf8");
 
@@ -33,6 +33,25 @@ describe("load", () => {
 
   it("names the file when the JSON is not an object", () => {
     for (const t of ["null", "[]", "3", '"x"']) expect(() => load(t, "ruin.json")).toThrow(/^ruin\.json is not a dungeon JSON object$/);
+  });
+});
+
+describe("panelFor", () => {
+  const json = JSON.parse(text);
+
+  it("fills the dungeon panel from the file", () => {
+    expect(panelFor({ ...json, seed: 444, size: "L", theme: "cyber" })).toEqual({ seed: 444, size: "L", theme: "cyber" });
+  });
+
+  it("reads size and theme in any case", () => {
+    expect(panelFor({ ...json, seed: 7, size: "m", theme: "Zelda" })).toEqual({ seed: 7, size: "M", theme: "zelda" });
+  });
+
+  it("leaves out what the generator does not take", () => {
+    expect(panelFor({ ...json, seed: -4, size: "XL", theme: "tor-barrow" })).toEqual({});
+    expect(panelFor({ ...json, seed: 1.5, size: 3, theme: "toString" })).toEqual({});
+    const { size, theme, ...bare } = json;
+    expect(panelFor({ ...bare, seed: 0 })).toEqual({ seed: 0 });
   });
 });
 

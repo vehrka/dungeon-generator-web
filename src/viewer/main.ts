@@ -3,7 +3,7 @@ import type { DungeonJson } from "../engine/types";
 import { styleFor, type MapStyle } from "../render/svg";
 import { dungeonKey } from "../render/key";
 import type { DrawRequest, DrawResult } from "./worker";
-import { dungeonName, exportName, jsonName, keyName, layoutFailed, load, parseSeed, parseSize, parseStyle, parseTheme, randomSeed } from "./state";
+import { dungeonName, exportName, jsonName, keyName, layoutFailed, load, panelFor, parseSeed, parseSize, parseStyle, parseTheme, randomSeed } from "./state";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const dungeonSeedField = $<HTMLInputElement>("dungeon-seed");
@@ -169,6 +169,10 @@ async function open(f: File) {
   }
   if (n !== opening) return;
   presetStyle(loaded.json.theme, true); // the select now holds a valid style
+  const panel = panelFor(loaded.json);
+  dungeonSeedField.value = panel.seed === undefined ? "" : String(panel.seed);
+  if (panel.size) sizeSelect.value = panel.size;
+  if (panel.theme) themeSelect.value = panel.theme;
   current = { source: { json: loaded.json }, name: loaded.name };
   if (loaded.seed === undefined) {
     fail(`${f.name} has no usable seed; enter a layout seed`);

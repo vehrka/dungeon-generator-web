@@ -77,6 +77,14 @@ lost and that layout starts over (rare; the old run is what the user changed awa
 not the engine (tree-shaken). After a load without a seed, a style change shows the seed parse
 error, as corridors does. The panel drops the engine's chain number, kept in its message for the CLI.
 
+After merge (`feature/viewer-fixes`): the bar started off the band (left −30%, 1.2 s sweep), so
+layouts of 0.1–0.2 s ended before it showed; now 3 px, in view from the first frame, back and forth
+0.6 s. A loaded file fills the dungeon panel (`panelFor`: seed, size, theme where the generator
+takes them, case ignored; no usable seed empties the field, an unknown size or theme leaves its
+select). Shown, not promised: Enter rebuilds the file's dungeon only for a file from this generator
+(Python files use another RNG). Review: bar moves by `transform`, not `left`; `isPreset` and
+`isTheme` shared with `parseSize`/`parseTheme`.
+
 ## Done when
 
 - `npm run typecheck`, `npm test`, `npm run build` clean.
