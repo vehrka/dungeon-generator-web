@@ -3,7 +3,7 @@
 **updated:** 2026-10-29
 
 Generator, layout, catalogue render, CLI and viewer done (`docs/design.md`; history in git and
-`docs/plans/`). Current work: a second map style after Dyson Logos, design in
+`docs/plans/`). Current work: a second map style, after Dyson Logos, design in
 [docs/dyson-style.md](docs/dyson-style.md). Next: a third style, neon, for the cyber theme, design
 in [docs/neon-style.md](docs/neon-style.md).
 
@@ -31,7 +31,9 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   0.5 unit (0.25 read saw-toothed); l-1 +14 kB, time within noise; catalogue dump byte-identical
   (`docs/plans/18-dyson-wobble.md`). Shadow redone inside the rooms, light from 330°, `#999999`
   (`feature/dyson-inner-shadow`), replacing the band outside the walls.
-- [ ] 5. **viewer**: style select preset from the theme, export name `-dyson` suffix.
+- [x] 5. **viewer** (`feature/dyson-viewer`): style select preset from the theme, export name
+  `-dyson` suffix. Done: a hand-picked style stays until the theme changes; a style change reuses
+  the worker's last layout; loading bar and a plain no-layout message (`docs/plans/19-dyson-viewer.md`).
 - [ ] 6. *(later, ask first)* **dressing**: stairs in the start room, rubble, columns; not in the
   JSON, so drawn from the layout seed.
 
@@ -64,6 +66,8 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 - Generator solvability assumes the player can walk back; a key behind a one-way edge with no
   return would pass. Not seen.
 - Viewer export name does not say whether corridors were on.
+- `normalize` does not check `theme` is a string: a loaded `"theme": 5` fails in the render with
+  `s.replace is not a function` instead of a schema error.
 - Render (catalogue, applies to Dyson too): key column width estimated from character counts; 4+
   glyphs spill out of a 3-unit room. Catalogue: gate tags and chevrons can touch on short walls with
   several doors. Dyson: tags beside the door, pushed apart from other tags unless the room is too

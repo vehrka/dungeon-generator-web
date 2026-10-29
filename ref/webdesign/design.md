@@ -85,7 +85,8 @@ outline inset 8px.
 
 **Result band.** First in the panel, band grey, full panel width. First line the dungeon name at
 15px, then rooms, seeds, ms, one per line. Then `EXPORT svg json key` as text actions. Error: the
-band turns amber and shows the message in sentence case.
+band turns amber and shows the message in sentence case. Busy: a 2px carbon bar sweeps the band's
+foot while a layout runs (static under reduced motion).
 
 **Section band.** `h2` full panel width, carbon background, steel-gray text, 19px, a circled
 number (22px circle, 1px border in the text colour) then the name: `① DUNGEON`, `② LAYOUT`,
