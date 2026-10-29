@@ -160,22 +160,37 @@ Lines a touch irregular, as if inked by hand.
 ### Doors and gates
 
 Door symbols sit on the wall at the door segment (`doorLength` units long). Grouping, tags and
-one-way direction come from the scene, as in the catalogue.
+one-way direction come from the scene, as in the catalogue. Done (step 3,
+`docs/plans/17-dyson-doors.md`); the geometry is in `scene.ts` so the neon painter reuses it.
 
 | door | catalogue | Dyson |
 |------|-----------|-------|
-| plain | gap + jambs | white rectangle across the wall, door length × ≈ 0.35 unit, 1.5 px black outline |
-| corridor end | gap, corridor half grey | open gap in the wall (archway), no rectangle; the door rectangle sits at the room-a end |
-| secret | dashed gap | wall unbroken, a serif **S** across it |
-| lock | amber tag | door rectangle + a short bar across its middle; boxed letter tag |
-| state, on, off | amber tag | portcullis: row of 3–4 dots across the gap, no rectangle; boxed letter tag |
-| one-way | chevron | the same chevron in black, past the tag |
+| plain | gap + jambs | white rectangle across the wall, segment − wall long (as the gap, clears corners), 8 px across, 1.5 px black outline |
+| corridor end | gap, corridor half grey | the door symbol at room a's end; archway (open gap, filled and gridded like the floor) at room b's end |
+| secret | dashed gap | wall unbroken, a bold serif **S** across it, at both ends of a corridor so it does not give the door away |
+| lock | amber tag | door rectangle + a bar across its middle along the normal, 12 px; boxed letter tag |
+| state, on, off | amber tag | portcullis: gap + 3 dots (r 1.5 px) on the wall line, no rectangle; boxed letter tag |
+| one-way | chevron | the same chevron in black, 0.6 unit to room b's side (in the corridor through one) |
 
-- Gate tag: black-outlined white square, black letter, serif, beside the door on room a's side
-  (offset ≈ 0.6 unit) so it does not cover the symbol. Check collisions on short walls with
-  several doors (catalogue open point).
-- Legend lists the door symbols the map uses: door, secret door, locked door, portcullis,
-  one-way, gate tag.
+- `SceneDoor.symbol`: secret first (every door of the group secret); else any `lock` gate → lock;
+  else any other gate (state, on, off, an unknown kind from the JSON) → portcullis; else door. A
+  group with lock and state draws as lock; the key column still lists both kinds. A group of a
+  secret and a plain or gated door draws as the latter (secret only when all are, as in step 1), so
+  the shared passage shows.
+- Gate tag (`SceneDoor.tagAt`): black-outlined white square, black serif letter, 0.6 unit from the
+  door's middle into room a. `side()` tests the grid cell next to the door, which is in a by
+  definition, and 0.6 < 1, so the tag box (0.31–0.89 unit in) is always inside a: the design's
+  fallback to b's side is dropped (pinned by a test). Tag and chevron sit on opposite sides.
+- Tag collisions: two doors either side of a corner put their tags 0.1 unit apart (4 pairs on
+  286 bench and generated maps, layout seeds 1–5, corridors on and off). The later tag moves another
+  0.6 unit into a while it overlaps an earlier one, as long as its whole box stays in a and off a's
+  number anchor: 0 overlaps after. Too shallow a room keeps the overlap (cosmetic, no error). A tag
+  can still touch the other door's rectangle at such a corner. Tags are not checked against other
+  doors' chevrons (0 such overlaps on the same maps).
+- Paint order: gaps (archways, portcullis), then every door symbol, then every tag and chevron, so
+  a tag is never under a neighbouring door's rectangle.
+- Legend lists only what is drawn, in this order: door, locked door, portcullis, secret door,
+  one-way, gate.
 
 ### Type, glyphs, key column
 
@@ -218,6 +233,14 @@ the door as in the catalogue, and a secret door is the wall unbroken with a bold
 halo), so no default map loses information while the symbols are pending. On this machine the serif stack falls back to DejaVu Serif
 (no Palatino); the 7.5 px/char key column estimate fits it.
 
+## Measured (step 3)
+
+Door symbols on the same three maps, layout seed 1, mean of 10 renders, against `dev` (step 2) on
+the same machine in the same session: m-1 90–95 ms (377 → 379 kB), l-1 97–101 ms (401 → 403 kB),
+l-8 43 ms (171 → 172 kB). The doors cost ~2 kB and no measurable time; the machine was slower than
+in step 2 for both branches. Catalogue dump (172 bench and generated maps, layout seeds 1–3,
+corridors on and off) byte-identical.
+
 ## Testing
 
 - Refactor: catalogue snapshot unchanged; `tests/render.test.ts` passes without edits.
@@ -252,9 +275,8 @@ hatching, numbers, key column, `--style`) → doors and gates → wobble and sha
 - Shared walls doubled by wobble: avoided by the point hash; tested.
 - Hatching density vs size: 300 kB per L map is fine for files, maybe heavy for viewer reroll
   speed; measure in the core step.
-- Door symbols on L/T arms and short walls: the door rectangle is wider than the gap and may touch
-  a corner (`cornerDistance = 0`); check on the bench maps.
-- Gate tags beside doors can land in a neighbouring room through a thin wall; prefer room a's side,
-  fall back to the other side if a's side is outside a's outline.
+- Door symbols on L/T arms and short walls: the door rectangle is half a wall short at each end, so
+  it clears the corner (`cornerDistance = 0`); checked on m-1, l-1 and a generated zelda L.
+- Gate tags beside doors: always inside room a (0.6 < 1 unit); see doors and gates.
 - Fonts: the serif stack looks different per machine; the key column width estimate (7.5 px/char)
   must be checked for the serif.

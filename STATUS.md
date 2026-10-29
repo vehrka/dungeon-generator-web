@@ -1,6 +1,6 @@
 # Status
 
-**updated:** 2026-10-28
+**updated:** 2026-10-29
 
 Generator, layout, catalogue render, CLI and viewer done (`docs/design.md`; history in git and
 `docs/plans/`). Current work: a second map style after Dyson Logos, design in
@@ -21,10 +21,11 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   serif numbers, black glyphs, key column and title in the serif. Doors as plain gaps for now.
   Done: l-1 78–102 ms (noisy), 390 kB; gate tags, S and chevrons on the doors meanwhile; catalogue dump byte-identical (`docs/plans/16-dyson-core.md`). The
   viewer draws Dyson for non-cyber themes already, with no style select until step 5.
-- [ ] 3. **doors and gates**: door rectangle, archway at corridor ends, secret S, locked bar,
-  portcullis dots, boxed gate tags beside the door, black one-way chevron, legend. Door and gate
-  geometry (symbol rectangles, archways, bars, tag positions) goes in `scene.ts`, not `dyson.ts`,
-  so the neon painter reuses it.
+- [x] 3. **doors and gates** (`feature/dyson-doors`): door rectangle, archway at corridor ends,
+  secret S, locked bar, portcullis dots, boxed gate tags beside the door in room a, black one-way
+  chevron on room b's side, legend. Symbol and tag/chevron positions in `scene.ts`, so the neon
+  painter reuses them. Done: corner tag overlaps pushed apart (4 → 0 on 286 maps), l-1 Dyson
+  +2 kB, no measurable time, catalogue dump byte-identical (`docs/plans/17-dyson-doors.md`).
 - [ ] 4. **wobble and shadow**: point-hashed wobble on all floor outlines (shared walls stay one
   line), grey wall-shadow band. Tune tokens on PNGs of m-1 and l-1, record them in the design.
 - [ ] 5. **viewer**: style select preset from the theme, export name `-dyson` suffix.
@@ -60,6 +61,8 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 - Generator solvability assumes the player can walk back; a key behind a one-way edge with no
   return would pass. Not seen.
 - Viewer export name does not say whether corridors were on.
-- Render (catalogue, applies to Dyson too): key column width estimated from character counts; gate
-  tags and chevrons can touch on short walls with several doors; 4+ glyphs spill out of a 3-unit
-  room.
+- Render (catalogue, applies to Dyson too): key column width estimated from character counts; 4+
+  glyphs spill out of a 3-unit room. Catalogue: gate tags and chevrons can touch on short walls with
+  several doors. Dyson: tags beside the door, pushed apart from other tags unless the room is too
+  shallow; not checked against other doors' chevrons (0 overlaps on 286 maps); a tag can touch the
+  other door's rectangle at an L/T corner.
