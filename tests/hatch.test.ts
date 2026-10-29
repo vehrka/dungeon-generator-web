@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rectangle, translate } from "../src/engine/geometry";
-import { distance, floorCells, hatch, hatchDepth, hatchReach, isFloor, wobble, wobbleAmp, wobbleStep } from "../src/render/hatch";
+import { distance, floorCells, hatch, hatchDepth, hatchReach, isFloor, wobble, wobbleStep } from "../src/render/hatch";
 
 // Two rooms joined by a one-cell corridor, an L-shaped gap between them.
 const floors = [rectangle(4, 3), translate(rectangle(1, 2), { x: 4, y: 1 }), translate(rectangle(3, 5), { x: 5, y: 0 })];
@@ -73,9 +73,10 @@ describe("hatch", () => {
 });
 
 describe("wobble", () => {
+  const wobbleAmp = 0.8 / 24;
   const a = rectangle(4, 3);
   const b = translate(rectangle(3, 2), { x: 4, y: 1 }); // touches a along x = 4, y 1–3; its corner (4, 1) on a's edge
-  const [wa, wb] = [wobble(a, 7), wobble(b, 7)];
+  const [wa, wb] = [wobble(a, 7, wobbleAmp), wobble(b, 7, wobbleAmp)];
   const on = (w: readonly { x: number; y: number }[], x: number, y0: number, y1: number) =>
     w.filter((p) => Math.abs(p.x - x) <= wobbleAmp && p.y >= y0 && p.y <= y1).map((p) => `${p.x},${p.y}`).sort();
   const whole = (v: number) => Number.isInteger(v);
@@ -96,10 +97,15 @@ describe("wobble", () => {
       const [qx, qy] = [Math.round(p.x / wobbleStep) * wobbleStep, Math.round(p.y / wobbleStep) * wobbleStep];
       const horizontal = qy === 0 || qy === 3; // a's edges: y 0 and 3 horizontal, x 0 and 4 vertical
       if (whole(qx) && whole(qy)) expect(p).toEqual({ x: qx, y: qy });
-      else if (horizontal) expect(p.x === qx && Math.abs(p.y - qy) <= wobbleAmp && p.y !== qy).toBe(true);
-      else expect(p.y === qy && Math.abs(p.x - qx) <= wobbleAmp && p.x !== qx).toBe(true);
+      else if (horizontal) expect(p.x === qx && Math.abs(p.y - qy) <= wobbleAmp).toBe(true);
+      else expect(p.y === qy && Math.abs(p.x - qx) <= wobbleAmp).toBe(true);
     }
     expect(wa.length).toBe(14 / wobbleStep);
+  });
+
+  it("refuses an edge off the axes or off its grid", () => {
+    expect(() => wobble([{ x: 0, y: 0 }, { x: 2, y: 2 }, { x: 0, y: 2 }], 7, wobbleAmp)).toThrow(/not axis-parallel/);
+    expect(() => wobble(translate(rectangle(2, 2), { x: 0.3, y: 0 }), 7, wobbleAmp)).toThrow(/not axis-parallel/);
   });
 
   it("gives the outline back at amplitude 0", () => {
@@ -108,7 +114,7 @@ describe("wobble", () => {
   });
 
   it("is deterministic per layout seed", () => {
-    expect(wobble(a, 7)).toEqual(wa);
-    expect(wobble(a, 8)).not.toEqual(wa);
+    expect(wobble(a, 7, wobbleAmp)).toEqual(wa);
+    expect(wobble(a, 8, wobbleAmp)).not.toEqual(wa);
   });
 });

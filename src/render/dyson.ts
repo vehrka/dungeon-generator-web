@@ -11,7 +11,8 @@ const paper = "#ffffff";
 const grid = "#a9bcc6";
 const shadow = "#c8c8c8";
 const wall = 3; // px
-const shadowWidth = 0.6 * unit; // px, the floors paint over its inner half
+const shadowWidth = (6 * unit) / 10; // px, 0.6 unit; the floors paint over its inner half
+const wobbleAmp = 0.8 / unit; // grid units, 0.8 px: a gap or door still covers half a wall plus this
 const serif = `'Palatino Linotype','Book Antiqua',Palatino,Georgia,'DejaVu Serif','Noto Serif',serif`; // resvg maps generic serif to Times
 
 const css = `<style>
@@ -55,7 +56,7 @@ export const dyson: Painter = {
   pad: Math.ceil(hatchReach),
   paint(s, px, layoutSeed) {
     const floors: Polygon[] = [...s.rooms.map((r) => r.outline), ...s.corridors];
-    const points = (outline: Polygon) => wobble(outline, layoutSeed).map((q) => px(q)).map((q) => `${round(q.x)},${round(q.y)}`).join(" ");
+    const points = (outline: Polygon) => wobble(outline, layoutSeed, wobbleAmp).map((q) => px(q)).map((q) => `${round(q.x)},${round(q.y)}`).join(" ");
     const strokes = hatch(floors, layoutSeed).flatMap((c) => c.strokes);
     const d = strokes
       .map(({ from, to }) => {

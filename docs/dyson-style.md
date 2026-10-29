@@ -102,8 +102,8 @@ Split `svg.ts` before adding the second style:
 - `render/marks.ts`: `unit`, `esc`, glyph, gate tag and room-number marks shared by both
   painters; own module so `svg.ts` and `dyson.ts` do not import each other.
 - `render/dyson.ts`: Dyson painter (floors, grid, walls, hatching, doors, numbers) and its
-  stylesheet. The floors are one `<g id="floors">` in `defs`, drawn three times through `<use>`
-  (paper, grid, wall), so fill, grid and wall share every point.
+  stylesheet. The floors are one `<g id="floors">` in `defs`, drawn four times through `<use>`
+  (shadow, paper, grid, wall), so fill, grid and wall share every point.
 - `render/hatch.ts`: hatching and wobble, pure functions on grid geometry, unit-tested alone.
 
 ### Paint order (Dyson)

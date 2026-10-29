@@ -5,7 +5,7 @@ exports[`dyson > is deterministic, the layout seed driving the hatching 1`] = `
 <style>
 text{font-family:'Palatino Linotype','Book Antiqua',Palatino,Georgia,'DejaVu Serif','Noto Serif',serif;font-size:13px;fill:#000000}
 .hatch{fill:none;stroke:#000000;stroke-width:0.9;stroke-linecap:round}
-.shadow{fill:none;stroke:#c8c8c8;stroke-width:14.399999999999999;stroke-linejoin:miter}
+.shadow{fill:none;stroke:#c8c8c8;stroke-width:14.4;stroke-linejoin:miter}
 .paper{fill:#ffffff;stroke:none}
 .grid{fill:url(#grid);stroke:none}
 .grid-line{fill:none;stroke:#a9bcc6;stroke-width:0.5}

@@ -1,6 +1,5 @@
 import { partition, type Point, type Polygon, type Segment } from "../engine/geometry";
 import { randInt, rng, type Rng } from "../engine/rng";
-import { unit } from "./marks";
 
 // Dyson rock hatching (docs/dyson-style.md, hatching): clusters of short parallel strokes in a
 // ragged band outside the floors. Grid units throughout.
@@ -129,20 +128,20 @@ export function hatch(floors: Polygon[], layoutSeed: number): Cluster[] {
 }
 
 // Hand-inked walls (docs/dyson-style.md, wobble): every edge cut every wobbleStep in absolute grid
-// coordinates, each cut moved across its edge by a hash of the point and the layout seed, signed in
+// coordinates, each cut moved up to amplitude across its edge by a hash of the point and the layout seed, signed in
 // absolute axes, so two rooms walking a shared wall either way draw it once. Whole-unit points stay:
 // corners, and a neighbour's corner in the middle of an edge (T-junction).
-export const wobbleAmp = 0.8 / unit; // grid units, 0.8 px
 // Grid units between cuts; 0.25 read saw-toothed at 1×. Its inverse must be an integer: keys are
 // whole cut counts, so no float formatting in the hash.
 export const wobbleStep = 0.5;
 const cuts = 1 / wobbleStep;
 
-export function wobble(outline: Polygon, layoutSeed: number, amplitude = wobbleAmp): Polygon {
+export function wobble(outline: Polygon, layoutSeed: number, amplitude: number): Polygon {
   if (amplitude === 0) return outline;
   return outline.flatMap((a, i) => {
     const b = outline[(i + 1) % outline.length]!;
-    const [ax, ay, bx, by] = [a.x, a.y, b.x, b.y].map((v) => Math.round(v * cuts)) as [number, number, number, number];
+    const [ax, ay, bx, by] = [a.x, a.y, b.x, b.y].map((v) => v * cuts) as [number, number, number, number];
+    if (![ax, ay, bx, by].every(Number.isInteger) || (ax !== bx && ay !== by)) throw new Error(`wobble: edge (${a.x},${a.y})–(${b.x},${b.y}) not axis-parallel on the ${wobbleStep} grid`);
     const n = Math.abs(bx - ax) + Math.abs(by - ay); // axis-parallel: one of them is 0
     const [dx, dy] = [Math.sign(bx - ax), Math.sign(by - ay)];
     return Array.from({ length: n }, (_, k): Point => {
