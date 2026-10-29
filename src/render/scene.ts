@@ -12,8 +12,14 @@ export type SceneDoor = {
   secret: boolean;
   oneway?: 1 | -1; // room a's side of the door: +1 above or left, so pointing down or right
   corridor?: { segment: Segment; sideA: 1 | -1; sideB: 1 | -1 }; // the door on room b; +1 corridor below or right of a door
+  symbol: "door" | "lock" | "portcullis" | "secret"; // what a door symbol style draws at room a's end
+  tagAt?: Point; // gate tag, inside room a beside the door
+  onewayAt?: Point; // one-way chevron, on room b's side (in the corridor through one)
 };
 export type Scene = { rooms: SceneRoom[]; corridors: Polygon[]; doors: SceneDoor[]; bbox: Rect };
+
+const markOffset = 0.6; // grid units from the door's middle to its tag or chevron; < 1, so a tag stays in the cell next to the door, in room a
+const tagSize = 14 / 24; // grid units, the painters' 14 px tag box
 
 // A, B, … Z, AA, AB, …
 const letter = (i: number): string => (i < 26 ? "" : letter(Math.floor(i / 26) - 1)) + String.fromCharCode(65 + (i % 26));
@@ -37,10 +43,8 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
   const cells = new Map([...outlines].map(([id, o]) => [id, partition(o)]));
   // +1 when room a lies before the door (above or left): the grid cell below or right of the
   // door's start is not in a. A bounding-box centre can sit on the wrong side of an L.
-  const side = (a: RoomId, s: Segment): 1 | -1 => {
-    const q = { x: s.from.x + 0.5, y: s.from.y + 0.5 };
-    return cells.get(a)!.some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1) ? -1 : 1;
-  };
+  const inside = (a: RoomId, q: Point) => cells.get(a)!.some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1);
+  const side = (a: RoomId, s: Segment): 1 | -1 => (inside(a, { x: s.from.x + 0.5, y: s.from.y + 0.5 }) ? -1 : 1);
 
   const rooms = [...outlines].map(([id, outline]): SceneRoom => {
     // Number and glyphs in the middle of the largest rectangle of both slab cuts, so an L, T or
@@ -58,18 +62,37 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
     else groups.set(k, [d]);
   }
   let tags = 0;
+  const tagged: Point[] = [];
+  const overlaps = (q: Point) => tagged.some((p) => Math.abs(p.x - q.x) < tagSize && Math.abs(p.y - q.y) < tagSize);
   const doors = [...groups.values()].map((group): SceneDoor => {
     const [first] = group as [PlacedDoor];
     const gates = group.flatMap((d) => (d.door.gate && d.door.gate.kind !== "secret" ? [d.door.gate] : []));
     const oneway = group.every((d) => d.door.oneway && d.door.a === first.door.a);
     const sideA = side(first.door.a, first.segment);
+    const secret = group.every((d) => d.door.gate?.kind === "secret");
+    // Secret, else lock, else any other gate (state, on, off, unknown kinds) is a portcullis.
+    const symbol = secret ? "secret" : gates.some((g) => g.kind === "lock") ? "lock" : gates.length ? "portcullis" : "door";
+    // Off the door's middle along its normal, d +1 to the side below or right.
+    const { from, to } = first.segment;
+    const off = (d: number): Point => ({ x: (from.x + to.x) / 2 + (from.y === to.y ? 0 : d * markOffset), y: (from.y + to.y) / 2 + (from.y === to.y ? d * markOffset : 0) });
+    // Doors either side of a corner put their tags 0.1 unit apart: push the later one further into
+    // room a while it overlaps, unless that leaves a.
+    let tagAt: Point | undefined;
+    if (gates.length) {
+      tagAt = off(-sideA);
+      for (let k = 2; overlaps(tagAt) && inside(first.door.a, off(-sideA * k)); k++) tagAt = off(-sideA * k);
+      tagged.push(tagAt);
+    }
     return {
       segment: first.segment,
       gates,
       ...(gates.length ? { tag: letter(tags++) } : {}),
-      secret: group.every((d) => d.door.gate?.kind === "secret"),
+      secret,
       ...(oneway ? { oneway: sideA } : {}),
       ...(first.corridor ? { corridor: { segment: first.corridor.segment, sideA, sideB: side(first.door.b, first.corridor.segment) } } : {}),
+      symbol,
+      ...(tagAt ? { tagAt } : {}),
+      ...(oneway ? { onewayAt: off(sideA) } : {}),
     };
   });
 
