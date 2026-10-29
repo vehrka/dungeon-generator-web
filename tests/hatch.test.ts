@@ -154,6 +154,15 @@ describe("wallShadow", () => {
     expect(shaded(rects, { x: 0.5, y: 0.1 })).toBe(false);
   });
 
+  it("ignores other floors' doors, so a solid wall shared with a neighbour keeps its shadow", () => {
+    const below = translate(rectangle(4, 3), { x: 0, y: 3 }); // under a room (0,0)–(4,3) whose door is on its left wall, y 2–3
+    expect(wallShadow(below, offset, [{ from: { x: 0, y: 2 }, to: { x: 0, y: 3 } }])).toEqual(wallShadow(below, offset, []));
+  });
+
+  it("refuses a door off whole units", () => {
+    expect(() => wallShadow(ell, offset, [{ from: { x: 0.5, y: 0 }, to: { x: 1.5, y: 0 } }])).toThrow(/door/);
+  });
+
   it("refuses a light from anywhere but the upper left within a unit", () => {
     expect(() => wallShadow(ell, { x: -0.2, y: 0.3 }, [])).toThrow(/offset/);
     expect(() => wallShadow(ell, { x: 0.2, y: 1 }, [])).toThrow(/offset/);

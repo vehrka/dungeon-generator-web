@@ -2,7 +2,7 @@ import { bbox, partition, type Point, type Polygon, type Rect, type Segment } fr
 import { randInt, rng, type Rng } from "../engine/rng";
 
 // Dyson rock hatching (docs/dyson-style.md, hatching): clusters of short parallel strokes in a
-// ragged band outside the floors. Grid units throughout.
+// ragged band outside the floors; wall wobble and wall shadow below. Grid units throughout.
 export const hatchDepth = 1.5;
 const radius = 0.3; // Poisson-disc spacing of the clusters
 const ragged = 0.6; // past this share of the depth clusters thin out, linearly to none
@@ -155,54 +155,54 @@ export function wobble(outline: Polygon, layoutSeed: number, amplitude: number):
 
 // Wall shadow (docs/dyson-style.md, wall shadow): the part of a floor its own walls hide from a light
 // at the upper left, the floor minus itself moved by offset (0 < x, y < 1). Exact on unit cells:
-// a cell's strip at its top (b = offset.y high) is shaded where the cell above, or above-left for
-// its first offset.x, is not floor; its strip at the left likewise from the cell to the left.
-// Strips merged into runs; a corner goes in the left strip when the cell has one. Across an open door
+// a cell's top strip (offset.y high) is shaded where the cell above, or above-left for its first
+// offset.x, is not floor; its left strip likewise from the cell to the left. Strips merged into
+// runs; a corner goes in the left strip when the cell has one. Across one of its own open doors
 // the floor goes on, so a doorway casts none. Grid units.
 export function wallShadow(floor: Polygon, offset: Point, open: Segment[]): Rect[] {
   const { x: a, y: b } = offset;
   if (!(a > 0 && a < 1 && b > 0 && b < 1)) throw new Error(`wallShadow: offset (${a},${b}) not within (0, 1)`);
-  const key = (x: number, y: number) => `${x},${y}`;
-  const cells = new Set<string>();
-  for (const r of partition(floor)) for (let y = r.y0; y < r.y1; y++) for (let x = r.x0; x < r.x1; x++) cells.add(key(x, y));
-  const lit = new Set(cells); // floor, plus the cells across an open door
-  for (const { from, to } of open) {
-    const [x0, x1, y0, y1] = [Math.min(from.x, to.x), Math.max(from.x, to.x), Math.min(from.y, to.y), Math.max(from.y, to.y)];
-    if (y0 === y1) for (let x = x0; x < x1; x++) lit.add(key(x, y0 - 1)).add(key(x, y0));
-    else for (let y = y0; y < y1; y++) lit.add(key(x0 - 1, y)).add(key(x0, y));
-  }
-  const has = (x: number, y: number) => lit.has(key(x, y));
   const box = bbox(floor);
+  const [x0, y0, w] = [box.x0 - 1, box.y0 - 1, box.x1 - box.x0 + 2]; // one cell of margin all round
+  const lit = new Uint8Array(w * (box.y1 - box.y0 + 2)); // 1 floor, 2 across an open door
+  const at = (x: number, y: number) => (x < x0 || y < y0 || x >= x0 + w || y > box.y1 ? -1 : (y - y0) * w + x - x0);
+  const isFloor = (x: number, y: number) => lit[at(x, y)] === 1;
+  const has = (x: number, y: number) => (lit[at(x, y)] ?? 0) > 0;
+  for (const r of partition(floor)) for (let y = r.y0; y < r.y1; y++) lit.fill(1, at(r.x0, y), at(r.x0, y) + r.x1 - r.x0);
+  for (const { from, to } of open) {
+    if (![from.x, from.y, to.x, to.y].every(Number.isInteger) || (from.x !== to.x && from.y !== to.y)) throw new Error(`wallShadow: door (${from.x},${from.y})–(${to.x},${to.y}) not axis-parallel on whole units`);
+    const horizontal = from.y === to.y;
+    const [t0, t1] = horizontal ? [Math.min(from.x, to.x), Math.max(from.x, to.x)] : [Math.min(from.y, to.y), Math.max(from.y, to.y)];
+    for (let t = t0; t < t1; t++) {
+      const sides: [number, number][] = horizontal ? [[t, from.y - 1], [t, from.y]] : [[from.x - 1, t], [from.x, t]];
+      const [p, q] = sides.map(([x, y]) => isFloor(x, y));
+      if (p !== q) lit[at(...sides[p ? 1 : 0]!)] = 2; // one of this floor's own doors: open the cell outside
+    }
+  }
   const out: Rect[] = [];
-  // Extends the run in progress when piece [p0, p1] starts where it ends, else starts a new one.
-  const runs = (make: (p0: number, p1: number) => Rect, along: "x" | "y") => {
-    let run: Rect | undefined;
-    return (p0?: number, p1?: number) => {
-      const [k0, k1] = along === "x" ? (["x0", "x1"] as const) : (["y0", "y1"] as const);
-      if (p0 !== undefined && run && run[k1] === p0) run[k1] = p1!;
-      else {
-        if (run) out.push(run);
-        run = p0 === undefined ? undefined : make(p0, p1!);
-      }
-    };
-  };
   for (let y = box.y0; y < box.y1; y++) {
-    const piece = runs((p0, p1) => ({ x0: p0, y0: y, x1: p1, y1: y + b }), "x");
+    let run: Rect | undefined;
+    const piece = (p0: number, p1: number) => {
+      if (run?.x1 === p0) run.x1 = p1;
+      else out.push((run = { x0: p0, y0: y, x1: p1, y1: y + b }));
+    };
     for (let x = box.x0; x < box.x1; x++) {
-      if (!cells.has(key(x, y))) continue;
+      if (!isFloor(x, y)) continue;
       if (!has(x - 1, y - 1) && has(x - 1, y)) piece(x, x + a); // else the left strip has it
       if (!has(x, y - 1)) piece(x + a, x + 1);
     }
-    piece();
   }
   for (let x = box.x0; x < box.x1; x++) {
-    const piece = runs((p0, p1) => ({ x0: x, y0: p0, x1: x + a, y1: p1 }), "y");
+    let run: Rect | undefined;
+    const piece = (p0: number, p1: number) => {
+      if (run?.y1 === p0) run.y1 = p1;
+      else out.push((run = { x0: x, y0: p0, x1: x + a, y1: p1 }));
+    };
     for (let y = box.y0; y < box.y1; y++) {
-      if (!cells.has(key(x, y)) || has(x - 1, y)) continue;
+      if (!isFloor(x, y) || has(x - 1, y)) continue;
       if (!has(x - 1, y - 1)) piece(y, y + b);
       piece(y + b, y + 1);
     }
-    piece();
   }
   return out;
 }

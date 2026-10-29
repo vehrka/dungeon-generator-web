@@ -102,9 +102,9 @@ Split `svg.ts` before adding the second style:
 - `render/marks.ts`: `unit`, `esc`, glyph, gate tag and room-number marks shared by both
   painters; own module so `svg.ts` and `dyson.ts` do not import each other.
 - `render/dyson.ts`: Dyson painter (floors, grid, walls, hatching, doors, numbers) and its
-  stylesheet. The floors are one `<g id="floors">` in `defs`, drawn four times through `<use>`
+  stylesheet. The floors are one `<g id="floors">` in `defs`, drawn three times through `<use>`
   (paper, grid, wall), so fill, grid and wall share every point.
-- `render/hatch.ts`: hatching and wobble, pure functions on grid geometry, unit-tested alone.
+- `render/hatch.ts`: hatching, wobble and wall shadow, pure functions on grid geometry, unit-tested alone.
 
 ### Paint order (Dyson)
 
@@ -183,7 +183,9 @@ bottom and right. Decided 2026-10-29, replacing step 4's grey stroke on the rock
   offset.x) is not floor, its left strip likewise; strips merged into runs, ~4 rectangles per
   room. Offset must be in (0, 1) on both axes (light from the upper left), else an error.
 - Open doors (every symbol but secret, both ends of a corridor) count as floor across, so a
-  doorway casts no shadow; a secret door is a wall and does.
+  doorway casts no shadow; a secret door is a wall and does. Each floor opens only its own doors
+  (one side of the segment its cell, the other not), so a neighbour's door next to a shared solid
+  wall leaves that wall's shadow alone. A door off whole units is an error.
 - Straight edges, painted before the wobbled wall, which covers the 0.8 px of difference.
 - Measured, layout seed 1: m-1 397 kB, l-1 421 kB, l-8 179 kB (+3–4 kB over the outside band),
   time within noise (l-1 95–103 ms).
