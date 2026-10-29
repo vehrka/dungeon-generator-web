@@ -2,6 +2,7 @@ import { bbox, partition, translate, type Point, type Polygon, type Rect, type S
 import type { Layout, PlacedDoor } from "../engine/layout";
 import type { Gate, RoomGraph, RoomId } from "../engine/types";
 import { glyphs } from "./icons";
+import { tagBox, unit } from "./marks";
 
 // Style-free geometry of a map in grid units: every painter (catalogue, Dyson) draws from this.
 export type SceneRoom = { id: RoomId; number: number; outline: Polygon; anchor: Point; glyphs: string[] };
@@ -19,7 +20,7 @@ export type SceneDoor = {
 export type Scene = { rooms: SceneRoom[]; corridors: Polygon[]; doors: SceneDoor[]; bbox: Rect };
 
 const markOffset = 0.6; // grid units from the door's middle to its tag or chevron; < 1, so a tag stays in the cell next to the door, in room a
-const tagSize = 14 / 24; // grid units, the painters' 14 px tag box
+const tagSize = tagBox / unit; // grid units
 
 // A, B, … Z, AA, AB, …
 const letter = (i: number): string => (i < 26 ? "" : letter(Math.floor(i / 26) - 1)) + String.fromCharCode(65 + (i % 26));
@@ -43,7 +44,7 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
   const cells = new Map([...outlines].map(([id, o]) => [id, partition(o)]));
   // +1 when room a lies before the door (above or left): the grid cell below or right of the
   // door's start is not in a. A bounding-box centre can sit on the wrong side of an L.
-  const inside = (a: RoomId, q: Point) => cells.get(a)!.some((r) => r.x0 <= q.x && q.x <= r.x1 && r.y0 <= q.y && q.y <= r.y1);
+  const inside = (a: RoomId, q: Point) => cells.get(a)!.some((r) => r.x0 < q.x && q.x < r.x1 && r.y0 < q.y && q.y < r.y1);
   const side = (a: RoomId, s: Segment): 1 | -1 => (inside(a, { x: s.from.x + 0.5, y: s.from.y + 0.5 }) ? -1 : 1);
 
   const rooms = [...outlines].map(([id, outline]): SceneRoom => {
@@ -63,7 +64,9 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
   }
   let tags = 0;
   const tagged: Point[] = [];
-  const overlaps = (q: Point) => tagged.some((p) => Math.abs(p.x - q.x) < tagSize && Math.abs(p.y - q.y) < tagSize);
+  const anchors = new Map(rooms.map((r) => [r.id, r.anchor]));
+  const near = (p: Point, q: Point) => Math.abs(p.x - q.x) < tagSize && Math.abs(p.y - q.y) < tagSize;
+  const fits = (a: RoomId, q: Point) => [-1, 1].every((dx) => [-1, 1].every((dy) => inside(a, { x: q.x + (dx * tagSize) / 2, y: q.y + (dy * tagSize) / 2 })));
   const doors = [...groups.values()].map((group): SceneDoor => {
     const [first] = group as [PlacedDoor];
     const gates = group.flatMap((d) => (d.door.gate && d.door.gate.kind !== "secret" ? [d.door.gate] : []));
@@ -72,15 +75,21 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
     const secret = group.every((d) => d.door.gate?.kind === "secret");
     // Secret, else lock, else any other gate (state, on, off, unknown kinds) is a portcullis.
     const symbol = secret ? "secret" : gates.some((g) => g.kind === "lock") ? "lock" : gates.length ? "portcullis" : "door";
-    // Off the door's middle along its normal, d +1 to the side below or right.
+    // Off the door's middle along its normal, d units to the side below or right when positive.
     const { from, to } = first.segment;
-    const off = (d: number): Point => ({ x: (from.x + to.x) / 2 + (from.y === to.y ? 0 : d * markOffset), y: (from.y + to.y) / 2 + (from.y === to.y ? d * markOffset : 0) });
+    const off = (d: number): Point => ({ x: (from.x + to.x) / 2 + (from.y === to.y ? 0 : d), y: (from.y + to.y) / 2 + (from.y === to.y ? d : 0) });
     // Doors either side of a corner put their tags 0.1 unit apart: push the later one further into
-    // room a while it overlaps, unless that leaves a.
+    // room a while it overlaps, as long as its box stays in a and off a's number. Too shallow a
+    // room keeps the overlap: a cosmetic clash, not worth an error.
     let tagAt: Point | undefined;
     if (gates.length) {
-      tagAt = off(-sideA);
-      for (let k = 2; overlaps(tagAt) && inside(first.door.a, off(-sideA * k)); k++) tagAt = off(-sideA * k);
+      const a = first.door.a;
+      tagAt = off(-sideA * markOffset);
+      for (let k = 2; tagged.some((p) => near(p, tagAt!)); k++) {
+        const q = off(-sideA * markOffset * k);
+        if (!fits(a, q) || near(q, anchors.get(a)!)) break;
+        tagAt = q;
+      }
       tagged.push(tagAt);
     }
     return {
@@ -92,7 +101,7 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
       ...(first.corridor ? { corridor: { segment: first.corridor.segment, sideA, sideB: side(first.door.b, first.corridor.segment) } } : {}),
       symbol,
       ...(tagAt ? { tagAt } : {}),
-      ...(oneway ? { onewayAt: off(sideA) } : {}),
+      ...(oneway ? { onewayAt: off(sideA * markOffset) } : {}),
     };
   });
 

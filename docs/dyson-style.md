@@ -174,15 +174,19 @@ one-way direction come from the scene, as in the catalogue. Done (step 3,
 
 - `SceneDoor.symbol`: secret first (every door of the group secret); else any `lock` gate → lock;
   else any other gate (state, on, off, an unknown kind from the JSON) → portcullis; else door. A
-  group with lock and state draws as lock; the key column still lists both kinds.
+  group with lock and state draws as lock; the key column still lists both kinds. A group of a
+  secret and a plain or gated door draws as the latter (secret only when all are, as in step 1), so
+  the shared passage shows.
 - Gate tag (`SceneDoor.tagAt`): black-outlined white square, black serif letter, 0.6 unit from the
   door's middle into room a. `side()` tests the grid cell next to the door, which is in a by
   definition, and 0.6 < 1, so the tag box (0.31–0.89 unit in) is always inside a: the design's
   fallback to b's side is dropped (pinned by a test). Tag and chevron sit on opposite sides.
 - Tag collisions: two doors either side of a corner put their tags 0.1 unit apart (4 pairs on
   286 bench and generated maps, layout seeds 1–5, corridors on and off). The later tag moves another
-  0.6 unit into a while it overlaps an earlier one, unless that leaves a: 0 overlaps after. A tag
-  can still touch the other door's rectangle at such a corner.
+  0.6 unit into a while it overlaps an earlier one, as long as its whole box stays in a and off a's
+  number anchor: 0 overlaps after. Too shallow a room keeps the overlap (cosmetic, no error). A tag
+  can still touch the other door's rectangle at such a corner. Tags are not checked against other
+  doors' chevrons (0 such overlaps on the same maps).
 - Paint order: gaps (archways, portcullis), then every door symbol, then every tag and chevron, so
   a tag is never under a neighbouring door's rectangle.
 - Legend lists only what is drawn, in this order: door, locked door, portcullis, secret door,

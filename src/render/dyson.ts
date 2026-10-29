@@ -37,11 +37,13 @@ text{font-family:${serif};font-size:13px;fill:${ink}}
 const doorAcross = 8; // px, the door rectangle across the wall
 const barLength = 12; // px, a lock's bar along the door's normal, past the rectangle
 const dots = 3; // a portcullis's dots along the gap
+const dotRadius = 1.5; // px
 
 const round = (v: number) => Math.round(v * 10) / 10;
 
-// Paint order: hatching, floors white, floor grid, walls, door gaps (white, gridded), door marks,
-// numbers and glyphs. Floors and gaps are groups drawn more than once, so fill, grid and wall share
+// Paint order: hatching, floors white, floor grid, walls, gaps (white, gridded: archways and
+// portcullis), door symbols, then tags and chevrons (a tag beside one door can reach another's
+// rectangle at a corner, so symbols first), numbers and glyphs. Floors and gaps are groups drawn more than once, so fill, grid and wall share
 // every point.
 export const dyson: Painter = {
   css,
@@ -91,6 +93,9 @@ export const dyson: Painter = {
       ];
     });
     const drawn = (symbol: string) => s.doors.some((door) => door.symbol === symbol);
+    // Legend symbols through the map's own marks, on a 14 px door half a wall past each end.
+    const sample: Segment = { from: { x: -wall / 2, y: -4 }, to: { x: 14 + wall / 2, y: -4 } };
+    const same = (p: Point) => p;
     return {
       defs: defs + (gaps.length ? `<g id="gaps">${gaps.join("")}</g>` : ""),
       map: [
@@ -104,11 +109,9 @@ export const dyson: Painter = {
         ...s.rooms.flatMap((room) => roomMarks(room, px(room.anchor), 6)),
       ],
       legend: [
-        ...(drawn("door") ? [{ mark: `<rect class="door" x="0" y="-8" width="14" height="8"/>`, text: "door" }] : []),
-        ...(drawn("lock") ? [{ mark: `<rect class="door" x="0" y="-8" width="14" height="8"/><line class="bar" x1="7" y1="-10" x2="7" y2="2"/>`, text: "locked door" }] : []),
-        ...(drawn("portcullis")
-          ? [{ mark: `<path class="wall" d="M0 -4H2M12 -4H14"/>${[4, 7, 10].map((x) => `<circle class="dot" cx="${x}" cy="-4" r="1.5"/>`).join("")}`, text: "portcullis" }]
-          : []),
+        ...(drawn("door") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door"), text: "door" }] : []),
+        ...(drawn("lock") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door") + barMark(sample, same), text: "locked door" }] : []),
+        ...(drawn("portcullis") ? [{ mark: `<path class="wall" d="M0 -4H2M12 -4H14"/>${dotMarks({ from: { x: 0, y: -4 }, to: { x: 14, y: -4 } }, same).join("")}`, text: "portcullis" }] : []),
         ...(drawn("secret") ? [{ mark: `<text class="secret" x="7" y="0">S</text>`, text: "secret door" }] : []),
         ...(s.doors.some((door) => door.onewayAt) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
         ...(s.doors.some((door) => door.tagAt) ? [{ mark: tagMark(7, -4, ""), text: "gate" }] : []),
@@ -128,15 +131,16 @@ function secretMark(s: Segment, px: (p: Point) => Point): string {
 // wall) or a door.
 function wallRect(s: Segment, px: (p: Point) => Point, h: number, cls: string): string {
   const [a, b] = [px(s.from), px(s.to)];
-  return a.y === b.y
-    ? `<rect class="${cls}" x="${Math.min(a.x, b.x) + wall / 2}" y="${a.y - h}" width="${Math.abs(b.x - a.x) - wall}" height="${2 * h}"/>`
-    : `<rect class="${cls}" x="${a.x - h}" y="${Math.min(a.y, b.y) + wall / 2}" width="${2 * h}" height="${Math.abs(b.y - a.y) - wall}"/>`;
+  const r = a.y === b.y
+    ? { x: Math.min(a.x, b.x) + wall / 2, y: a.y - h, w: Math.abs(b.x - a.x) - wall, h: 2 * h }
+    : { x: a.x - h, y: Math.min(a.y, b.y) + wall / 2, w: 2 * h, h: Math.abs(b.y - a.y) - wall };
+  return `<rect class="${cls}" x="${round(r.x)}" y="${round(r.y)}" width="${round(r.w)}" height="${round(r.h)}"/>`;
 }
 
 // A lock: a bar across the door rectangle's middle, along the normal.
 function barMark(s: Segment, px: (p: Point) => Point): string {
   const [a, b] = [px(s.from), px(s.to)];
-  const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const m = { x: round((a.x + b.x) / 2), y: round((a.y + b.y) / 2) };
   const h = barLength / 2;
   return a.y === b.y
     ? `<line class="bar" x1="${m.x}" y1="${m.y - h}" x2="${m.x}" y2="${m.y + h}"/>`
@@ -148,6 +152,6 @@ function dotMarks(s: Segment, px: (p: Point) => Point): string[] {
   const [a, b] = [px(s.from), px(s.to)];
   return Array.from({ length: dots }, (_, i) => {
     const f = (i + 1) / (dots + 1);
-    return `<circle class="dot" cx="${round(a.x + (b.x - a.x) * f)}" cy="${round(a.y + (b.y - a.y) * f)}" r="1.5"/>`;
+    return `<circle class="dot" cx="${round(a.x + (b.x - a.x) * f)}" cy="${round(a.y + (b.y - a.y) * f)}" r="${dotRadius}"/>`;
   });
 }

@@ -153,25 +153,26 @@ describe("scene", () => {
     expect(at([{ a: 0, b: 1, oneway: false }])).not.toHaveProperty("onewayAt");
   });
 
-  it("pushes a tag that overlaps an earlier one further into room a, while it stays inside", () => {
-    // Room 0's doors either side of its bottom-right corner: right wall y 2–3, bottom wall x 2–3.
+  it("pushes a tag that overlaps an earlier one further into room a, while its box stays inside and off the number", () => {
+    // Room 0 w × h, its doors either side of its bottom-right corner: right wall, bottom wall.
     const lock = { kind: "lock" as const, requires: [] };
-    const corner = (h: number) => {
+    const corner = (w: number, h: number) => {
       const rooms = new Map([0, 1, 2].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }]));
       const doors = [1, 2].map((b) => ({ a: 0, b, oneway: false, gate: lock }));
       return scene(
         { rooms, doors, start: 0, goal: 1 },
         {
-          placements: [{ room: 0, shape: { id: "r", outline: rectangle(3, h) }, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 3, y: h - 2 } }, { room: 2, shape, at: { x: 1, y: h } }],
+          placements: [{ room: 0, shape: { id: "r", outline: rectangle(w, h) }, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: w, y: h - 2 } }, { room: 2, shape, at: { x: w - 3, y: h } }],
           doors: [
-            { door: doors[0]!, segment: { from: { x: 3, y: h - 1 }, to: { x: 3, y: h } } },
-            { door: doors[1]!, segment: { from: { x: 2, y: h }, to: { x: 3, y: h } } },
+            { door: doors[0]!, segment: { from: { x: w, y: h - 1 }, to: { x: w, y: h } } },
+            { door: doors[1]!, segment: { from: { x: w - 1, y: h }, to: { x: w, y: h } } },
           ],
         },
       ).doors.map((d) => d.tagAt);
     };
-    expect(corner(3)).toEqual([{ x: 2.4, y: 2.5 }, { x: 2.5, y: 1.8 }]);
-    expect(corner(1)).toEqual([{ x: 2.4, y: 0.5 }, { x: 2.5, y: 0.4 }]); // a 1-unit room has no room to push
+    expect(corner(3, 3)).toEqual([{ x: 2.4, y: 2.5 }, { x: 2.5, y: 1.8 }]);
+    expect(corner(3, 1)).toEqual([{ x: 2.4, y: 0.5 }, { x: 2.5, y: 0.4 }]); // the pushed box would cross the far wall
+    expect(corner(2, 2)).toEqual([{ x: 1.4, y: 1.5 }, { x: 1.5, y: 1.4 }]); // the pushed box would cover the number at 1, 1
   });
 
   it("keeps every gate tag inside room a, with corridors and without", () => {
@@ -184,7 +185,8 @@ describe("scene", () => {
         const mid = { x: (d.segment.from.x + d.segment.to.x) / 2, y: (d.segment.from.y + d.segment.to.y) / 2 };
         expect(Math.hypot(d.tagAt!.x - mid.x, d.tagAt!.y - mid.y)).toBeCloseTo(0.6);
         const pl = g.layout.placements.find((x) => x.room === a)!;
-        expect(inside(d.tagAt!, translate(pl.shape.outline, pl.at))).toBe(true);
+        const h = 7 / 24; // half the tag box
+        for (const dx of [-h, h]) for (const dy of [-h, h]) expect(inside({ x: d.tagAt!.x + dx, y: d.tagAt!.y + dy }, translate(pl.shape.outline, pl.at))).toBe(true);
       }
     }
   });

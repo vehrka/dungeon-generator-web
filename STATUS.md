@@ -63,5 +63,6 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 - Viewer export name does not say whether corridors were on.
 - Render (catalogue, applies to Dyson too): key column width estimated from character counts; 4+
   glyphs spill out of a 3-unit room. Catalogue: gate tags and chevrons can touch on short walls with
-  several doors. Dyson: tags beside the door, never on another tag (pushed apart) or on a chevron
-  (0 on 286 maps), but a tag can touch the other door's rectangle at an L/T corner.
+  several doors. Dyson: tags beside the door, pushed apart from other tags unless the room is too
+  shallow; not checked against other doors' chevrons (0 overlaps on 286 maps); a tag can touch the
+  other door's rectangle at an L/T corner.

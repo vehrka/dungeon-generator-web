@@ -11,6 +11,7 @@ export type Painted = { defs: string; map: string[]; legend: LegendEntry[] };
 export type Painter = { css: string; page: string; pad: number; paint: (s: Scene, px: (p: Point) => Point, layoutSeed: number) => Painted };
 
 export const unit = 24; // px per grid unit, both styles
+export const tagBox = 14; // px, a gate tag's square; scene.ts keeps tags this far apart
 
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -18,7 +19,7 @@ export const useGlyph = (id: string, x: number, y: number) =>
   `<use href="#glyph-${id}" class="glyph" x="${x}" y="${y}" width="${glyphSize}" height="${glyphSize}"/>`;
 
 export const tagMark = (x: number, y: number, tag: string, gate?: string) =>
-  `<rect class="tag"${gate ? ` data-gate="${esc(gate)}"` : ""} x="${x - 7}" y="${y - 7}" width="14" height="14"/><text class="tag-letter" x="${x}" y="${y + 4}">${tag}</text>`;
+  `<rect class="tag"${gate ? ` data-gate="${esc(gate)}"` : ""} x="${x - tagBox / 2}" y="${y - tagBox / 2}" width="${tagBox}" height="${tagBox}"/><text class="tag-letter" x="${x}" y="${y + 4}">${tag}</text>`;
 
 // One-way chevron at a door's middle m, pointing away from room a (d +1: down or right), past the
 // gate tag when there is one.
