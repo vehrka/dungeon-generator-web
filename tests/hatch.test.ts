@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rectangle, translate } from "../src/engine/geometry";
-import { distance, floorCells, hatch, hatchDepth, hatchReach, isFloor, wobble, wobbleStep } from "../src/render/hatch";
+import { distance, floorCells, hatch, hatchDepth, hatchReach, isFloor, wallShadow, wobble, wobbleStep } from "../src/render/hatch";
 
 // Two rooms joined by a one-cell corridor, an L-shaped gap between them.
 const floors = [rectangle(4, 3), translate(rectangle(1, 2), { x: 4, y: 1 }), translate(rectangle(3, 5), { x: 5, y: 0 })];
@@ -116,5 +116,55 @@ describe("wobble", () => {
   it("is deterministic per layout seed", () => {
     expect(wobble(a, 7, wobbleAmp)).toEqual(wa);
     expect(wobble(a, 8, wobbleAmp)).not.toEqual(wa);
+  });
+});
+
+describe("wallShadow", () => {
+  const offset = { x: 0.2, y: 0.35 }; // light from the upper left
+  const ell = [{ x: 0, y: 0 }, { x: 2, y: 0 }, { x: 2, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 4 }, { x: 0, y: 4 }]; // L, inner corner at (2, 2)
+  const inside = (p: { x: number; y: number }, open: { x: number; y: number }[] = []) =>
+    (p.x >= 0 && p.y >= 0 && p.x < 2 && p.y < 4) || (p.x >= 2 && p.y >= 2 && p.x < 4 && p.y < 4) || open.some((c) => p.x >= c.x && p.y >= c.y && p.x < c.x + 1 && p.y < c.y + 1);
+  const shaded = (rects: ReturnType<typeof wallShadow>, p: { x: number; y: number }) => rects.some((r) => p.x > r.x0 && p.x < r.x1 && p.y > r.y0 && p.y < r.y1);
+  // samples off the cut lines (x.0, x.2, y.0, y.35), so strict and loose tests agree
+  const samples = Array.from({ length: 40 * 40 }, (_, i) => ({ x: (i % 40) / 10 + 0.05, y: Math.floor(i / 40) / 10 + 0.07 }));
+
+  it("shades the floor its own walls hide from the light: the floor minus itself moved by the offset", () => {
+    const rects = wallShadow(ell, offset, []);
+    for (const p of samples) if (inside(p)) expect(shaded(rects, p)).toBe(!inside({ x: p.x - offset.x, y: p.y - offset.y }));
+    for (const r of rects) expect(inside({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 })).toBe(true);
+  });
+
+  it("shades the top and left walls only, the inner corner's walls too", () => {
+    const rects = wallShadow(ell, offset, []);
+    expect(shaded(rects, { x: 1, y: 0.1 }) && shaded(rects, { x: 0.1, y: 3 })).toBe(true);
+    expect(shaded(rects, { x: 3, y: 2.1 })).toBe(true); // below the inner corner's top wall
+    expect(shaded(rects, { x: 1, y: 3.9 }) || shaded(rects, { x: 3.9, y: 3 }) || shaded(rects, { x: 1.9, y: 1 })).toBe(false);
+    expect(shaded(rects, { x: 2.1, y: 2.5 })).toBe(false); // the step's vertical wall faces away from the light
+  });
+
+  it("merges runs: a rectangle's shadow is its top and left strips", () => {
+    expect(wallShadow(rectangle(5, 3), offset, [])).toEqual([{ x0: 0.2, y0: 0, x1: 5, y1: 0.35 }, { x0: 0, y0: 0, x1: 0.2, y1: 3 }]);
+  });
+
+  it("leaves an open door unshaded, as if the floor went on", () => {
+    const door = { from: { x: 0, y: 0 }, to: { x: 1, y: 0 } }; // top wall, x 0–1
+    const rects = wallShadow(ell, offset, [door]);
+    const above = [{ x: 0, y: -1 }];
+    for (const p of samples) if (inside(p)) expect(shaded(rects, p)).toBe(!inside({ x: p.x - offset.x, y: p.y - offset.y }, above));
+    expect(shaded(rects, { x: 0.5, y: 0.1 })).toBe(false);
+  });
+
+  it("ignores other floors' doors, so a solid wall shared with a neighbour keeps its shadow", () => {
+    const below = translate(rectangle(4, 3), { x: 0, y: 3 }); // under a room (0,0)–(4,3) whose door is on its left wall, y 2–3
+    expect(wallShadow(below, offset, [{ from: { x: 0, y: 2 }, to: { x: 0, y: 3 } }])).toEqual(wallShadow(below, offset, []));
+  });
+
+  it("refuses a door off whole units", () => {
+    expect(() => wallShadow(ell, offset, [{ from: { x: 0.5, y: 0 }, to: { x: 1.5, y: 0 } }])).toThrow(/door/);
+  });
+
+  it("refuses a light from anywhere but the upper left within a unit", () => {
+    expect(() => wallShadow(ell, { x: -0.2, y: 0.3 }, [])).toThrow(/offset/);
+    expect(() => wallShadow(ell, { x: 0.2, y: 1 }, [])).toThrow(/offset/);
   });
 });

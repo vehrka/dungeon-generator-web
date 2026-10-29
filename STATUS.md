@@ -27,9 +27,10 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
   painter reuses them. Done: corner tag overlaps pushed apart (4 → 0 on 286 maps), l-1 Dyson
   +2 kB, no measurable time, catalogue dump byte-identical (`docs/plans/17-dyson-doors.md`).
 - [x] 4. **wobble and shadow** (`feature/dyson-wobble`): point-hashed wobble on all floor outlines
-  (shared walls stay one line, whole-unit points fixed), grey wall-shadow band. Done: 0.8 px every
-  0.5 unit (0.25 read saw-toothed), shadow `#c8c8c8` 0.6 unit; l-1 +14 kB, time within noise;
-  catalogue dump byte-identical (`docs/plans/18-dyson-wobble.md`).
+  (shared walls stay one line, whole-unit points fixed), grey wall shadow. Done: 0.8 px every
+  0.5 unit (0.25 read saw-toothed); l-1 +14 kB, time within noise; catalogue dump byte-identical
+  (`docs/plans/18-dyson-wobble.md`). Shadow redone inside the rooms, light from 330°, `#999999`
+  (`feature/dyson-inner-shadow`), replacing the band outside the walls.
 - [ ] 5. **viewer**: style select preset from the theme, export name `-dyson` suffix.
 - [ ] 6. *(later, ask first)* **dressing**: stairs in the start room, rubble, columns; not in the
   JSON, so drawn from the layout seed.

@@ -65,6 +65,10 @@ Step 0.25 read saw-toothed at 1×; 0.5 step at 0.8 px kept (`wobbleStep`), so ha
 half units, not quarters. Shadow `#c8c8c8`, 0.6 unit, unchanged. l-1 403 → 417 kB, 95 → 99 ms
 (noise); catalogue dump of 172 maps byte-identical.
 
+Shadow wrong side: Dyson shades inside the rooms, from one light direction, not outside every wall.
+Redone on `feature/dyson-inner-shadow`: `wallShadow` in `hatch.ts`, light 330°, `#999999`; see
+`docs/dyson-style.md`, wall shadow.
+
 ## Done when
 
 - `npm run typecheck`, `npm test`, `npm run build` clean; dump diff empty.

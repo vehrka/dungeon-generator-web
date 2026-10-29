@@ -245,18 +245,19 @@ describe("dyson", () => {
     expect(dyson).toMatch(/<rect width="\d+" height="\d+" fill="#ffffff"\/>/);
   });
 
-  it("draws one floor per room and corridor, shadowed, filled, gridded and walled from the same polygons", () => {
+  it("draws one floor per room and corridor, filled, gridded and walled from the same polygons, shaded between", () => {
     expect(n(/<polygon class="floor"/g)).toBe(graph.rooms.size + corridors.size);
-    expect(n(/<use href="#floors"/g)).toBe(4);
-    expect([...dyson.matchAll(/<use href="#floors" class="(\w+)"/g)].map((m) => m[1])).toEqual(["shadow", "paper", "grid", "wall"]);
+    expect(n(/<use href="#floors"/g)).toBe(3);
+    expect([...dyson.matchAll(/<use href="#floors" class="(\w+)"|<path class="(shadow)"/g)].map((m) => m[1] ?? m[2])).toEqual(["paper", "grid", "shadow", "wall"]);
     expect(dyson).toContain('<pattern id="grid"');
     expect(dyson).not.toContain('class="room"');
     expect(dyson).not.toContain('class="corridor"');
   });
 
-  it("hatches the rock in one path, under the shadow and the floors", () => {
+  it("hatches the rock in one path, under the floors; shades the floors in one path, under the walls", () => {
     expect(n(/<path class="hatch"/g)).toBe(1);
-    expect(dyson).toContain(".shadow{fill:none;stroke:#c8c8c8;");
+    expect(n(/<path class="shadow" d="M/g)).toBe(1);
+    expect(dyson).toContain(".shadow{fill:#999999;stroke:none}");
     expect(dyson.indexOf('class="hatch"')).toBeLessThan(dyson.indexOf('<use href="#floors"'));
   });
 
@@ -326,6 +327,13 @@ describe("dyson", () => {
     expect(legend(oneway)).toEqual(["start", "goal", "door", "one-way"]);
   });
 
+  // Room 1's top wall y 3 (219 px), x 0–3 (81–153 px); shadow 4.2 px wide at the left, 7.3 px high.
+  it("leaves a doorway unshaded, a secret door shaded as wall", () => {
+    const shadow = (out: string) => out.match(/<path class="shadow" d="([^"]*)"/)![1]!;
+    expect(shadow(two([{ a: 0, b: 1, oneway: false }]))).toContain("M85.2 219H109.2V226.3H85.2ZM133.2 219H153V226.3H133.2Z"); // jamb shaded, door not
+    expect(shadow(two([{ a: 0, b: 1, oneway: false, gate: { kind: "secret", requires: [] } }]))).toContain("M85.2 219H153V226.3H85.2Z");
+  });
+
   it("puts a corridor's door symbol and tag at room a's end, an archway and the chevron at room b's", () => {
     const g: RoomGraph = { rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])), doors: [{ a: 0, b: 1, oneway: true, gate: { kind: "lock", requires: [] } }], start: 0, goal: 1 };
     const l: Layout = {
@@ -337,6 +345,7 @@ describe("dyson", () => {
     expect(out.match(/<rect class="gap" x="106.5" y="240.5"/g)).toHaveLength(1); // room b's end, y 4
     expect(out).toContain('<rect class="tag" data-gate="lock" x="110" y="197.6"');
     expect(out).toContain('<polyline class="oneway" points="113,231.4 117,235.4 121,231.4"/>'); // in the corridor
+    expect(out.match(/<path class="shadow" d="([^"]*)"/)![1]).toContain("M85.2 243H109.2V250.3H85.2ZM133.2 243H153V250.3H133.2Z"); // room b's end open too
   });
 
   it("numbers every room and lists every label once, escaped", () => {
