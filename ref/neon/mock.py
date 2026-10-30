@@ -97,6 +97,8 @@ def main(json_path: str, svg_in: str, svg_out: str) -> None:
     svg = re.sub(r'(<rect width="\d+" height="\d+" fill=")#[0-9a-f]{6}', rf"\g<1>{page}", svg, count=1)
 
     rooms = re.findall(r'<polygon class="room" points="([^"]+)"/>\n<text class="number" data-room="(\d+)"', svg)
+    if len(rooms) != len(by_number):  # an unmatched room would keep no fill rule: black, no wall
+        sys.exit(f"matched {len(rooms)} of {len(by_number)} rooms; catalogue SVG layout changed?")
     glows = [f'<polygon class="glow w{i} r-{by_number[int(n)]}" points="{p}"/>' for i in range(len(glow)) for p, n in rooms]
     first = svg.index('<polygon class="room"')
     svg = svg[:first] + "\n".join(glows) + "\n" + svg[first:]
@@ -106,4 +108,7 @@ def main(json_path: str, svg_in: str, svg_out: str) -> None:
     print(f"{len(rooms)} rooms, {len(glows)} glow outlines, {len(svg)} bytes")
 
 
-main(*sys.argv[1:])
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        sys.exit("usage: mock.py <dungeon.json> <catalogue.svg> <out.svg>")
+    main(*sys.argv[1:])

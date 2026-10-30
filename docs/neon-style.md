@@ -17,7 +17,7 @@ This file is the source of truth for the neon style. `docs/design.md` covers the
   after.
 - Screen only: built for the viewer and VTT (FoundryVTT), not for print. A black page and
   saturated colour are fine. PNG export at Foundry's grid scale: not in scope, add later if needed.
-- Glow from stacked strokes (2–3 wider copies of the outline at falling opacity), no SVG filters:
+- Glow from stacked strokes (3 wider copies of the outline at falling opacity), no SVG filters:
   cheaper to render, no differences between engines (resvg), plain SVG to test. Measure size on
   l-1 as for Dyson.
 - Colour by room role: a pure function of the room, no randomness, simple snapshots. Read from
@@ -45,7 +45,7 @@ style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
   `MapStyle` gains `"neon"`, `painters` gains `neon`.
 - Reuse `scene.ts` for everything geometric: outlines, corridors, door groups, door symbol
   geometry (Dyson step 3 puts it there, not in `dyson.ts`), number anchors, glyphs.
-- Role per room: `scene.ts` or a small helper in `neon.ts`, from the room's type and objects.
+- Role per room: `scene.ts` or a small helper in `neon.ts`, from the room's type (§ Role colours).
 
 ## Design
 
@@ -65,8 +65,10 @@ style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
 ### Role colours
 
 A pure function of the room node (`id`, `type`, `number`); no randomness. Gate nodes
-(`kind: gate`) are not rooms and get none. Node `objects` is empty in generated and Python files
-(objects point at rooms by `found_in`), so pickups are read from the room type, not from objects.
+(`kind: gate`) are not rooms and get none. Pickups are read from the room type, not from node
+`objects`: pickup rooms carry both (m-1 cyber room 8 `item` holds `item-1`), but the type also
+covers a `switch` or `lever`, and one rule from one field keeps the role a function of the type.
+`exit` (an extra entrance) counts as start.
 Colour marks the rooms that matter to the run; everything else recedes in three dim tones.
 
 | role | from schema 2 | colour |
@@ -111,8 +113,10 @@ share (`mix(page, colour, share)`); contrast is the number ink on that fill (WCA
 | other 1 | `#3d7bff` | 0.18 | `#141d3e` | 14.7 |
 | other 2 | `#5b8aa6` | 0.18 | `#191f2e` | 14.7 |
 
-Shared walls: two rooms that touch both stroke the shared segment; the later room's colour wins.
-Accepted on the mock-up (12 and 9, 6 and 13): the glow on both sides still shows both colours.
+Shared walls: two rooms that touch both stroke the shared segment; the later room's colour wins,
+and neither glow shows there, since each room's fill covers the other's outer glow (all glows go
+under all fills). On the mock-up (12 and 9, 6 and 13) the seam reads as one wall in one colour;
+accepted for now, open point.
 
 ### Doors and gates
 
@@ -149,9 +153,11 @@ room detail → viewer. Each step its own branch off `dev`, test first, `/code-r
 
 ## Open points
 
-- Glow cost on L maps: 3 copies per room outline. l-1 has 28 rooms, catalogue SVG 31 kB; the mock
-  adds ~1.5 kB on 16 rooms, so l-1 should land near 35 kB before room detail. Measure in the core
+- Glow cost on L maps: 3 copies per room outline, ~280 B per room on the mock (4.4 kB on 16
+  rooms). l-1 has 28 rooms, catalogue SVG 31 kB, so ~40 kB before room detail. Measure in the core
   step.
+- Shared walls lose the glow and show one room's colour (§ Tokens). If it reads badly on L maps:
+  stroke each room's wall clipped to its own inside, so a shared seam shows both colours.
 - Detail density vs room shapes and numbers: room detail step.
 - Catalogue keeps no default theme once cyber moves to neon: reachable by `--style` and the
   viewer select only. Decided 2026-10-30.

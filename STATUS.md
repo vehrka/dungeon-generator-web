@@ -46,7 +46,7 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 - [x] 1. **design and mock-up** (`feature/neon-design`): `docs/neon-style.md` complete (tokens,
   role colours, type, legend). Done: mock-up on generated cyber M seed 1 (`ref/neon/`, a script
   restyling the catalogue SVG); boss red and pickups amber, not the draft's dim magenta and coral;
-  role from room type, not objects; catalogue loses its default theme (`docs/plans/20-neon-design.md`).
+  role from room type; catalogue loses its default theme (`docs/plans/20-neon-design.md`).
 - [ ] 2. **neon core** (`feature/neon-core`): `MapStyle` `neon`, `render/neon.ts`, black page,
   dark corridors, role fills, stacked-stroke glow, walls, type, `--style neon`;
   `styleFor("cyber")` → neon. Measure time and size on l-1.
