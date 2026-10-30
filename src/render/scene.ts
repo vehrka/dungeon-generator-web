@@ -26,7 +26,7 @@ const tagSize = tagBox / unit; // grid units
 const letter = (i: number): string => (i < 26 ? "" : letter(Math.floor(i / 26) - 1)) + String.fromCharCode(65 + (i % 26));
 
 // Room glyphs: start/goal, then the objects found there, then treasure for bonus goals.
-function roomGlyphs(graph: RoomGraph, id: RoomId): string[] {
+export function roomGlyphs(graph: RoomGraph, id: RoomId): string[] {
   const room = graph.rooms.get(id)!;
   return [
     ...(id === graph.start ? ["start"] : []),

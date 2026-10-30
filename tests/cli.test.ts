@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main, parseCli } from "../src/cli/main";
+import { drawGraph } from "../src/render/graph";
 
 const fixture = join(import.meta.dirname, "fixtures", "ruin.json");
 const tmp = () => mkdtempSync(join(tmpdir(), "dlh-"));
@@ -153,6 +154,29 @@ describe("main", () => {
     expect(parseCli(["a.json"]).style).toBeUndefined();
     expect(parseCli(["a.json", "--style", "NEON"]).style).toBe("neon");
     expect(() => parseCli(["a.json", "--style", "ink"])).toThrow("Unknown style ink, expected one of plain dyson neon");
+  });
+
+  it("takes a graph output, rejects one that is not .svg", () => {
+    expect(parseCli(["a.json", "--graph", "g.svg"]).graph).toBe("g.svg");
+    expect(parseCli(["--dungeon-seed", "1", "--graph", "G.SVG"]).graph).toBe("G.SVG");
+    expect(parseCli(["a.json"]).graph).toBeUndefined();
+    expect(() => parseCli(["a.json", "--graph", "g.png"])).toThrow("--graph must end in .svg: g.png");
+  });
+
+  it("writes the graph, also when the dungeon does not lay out", async () => {
+    const dir = tmp();
+    const graph = join(dir, "ruin-graph.svg");
+    expect(await main([fixture, "-o", join(dir, "m.svg"), "--graph", graph], quiet)).toBe(0);
+    expect(readFileSync(graph, "utf8")).toBe(drawGraph(JSON.parse(readFileSync(fixture, "utf8"))).svg);
+    // K5 of rooms: not planar, so no map.
+    const json = JSON.parse(readFileSync(fixture, "utf8"));
+    const ids = json.nodes.filter((n: { kind: string }) => n.kind === "room").slice(0, 5).map((n: { id: number }) => n.id);
+    for (const a of ids) for (const b of ids) if (a < b) json.edges.push({ source: a, target: b, oneway: false });
+    const [bad, badGraph, badMap] = [join(dir, "k5.json"), join(dir, "k5-graph.svg"), join(dir, "k5.svg")];
+    writeFileSync(bad, JSON.stringify(json));
+    expect(await main([bad, "-o", badMap, "--graph", badGraph], quiet)).toBe(1);
+    expect(readFileSync(badGraph, "utf8")).toMatch(/^<svg /);
+    expect(existsSync(badMap)).toBe(false);
   });
 
   it("takes the theme in any case", () => {
