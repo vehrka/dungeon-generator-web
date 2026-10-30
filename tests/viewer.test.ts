@@ -152,7 +152,6 @@ describe("layoutFailed", () => {
   });
 });
 
-
 describe("layoutConfig", () => {
   it("is the default config with corridors on or off", () => {
     expect(layoutConfig(true)).toEqual(defaultConfig);

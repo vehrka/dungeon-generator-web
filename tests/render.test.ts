@@ -226,7 +226,6 @@ describe("draw", () => {
   it("throws the engine's error", () => {
     expect(() => draw({ ...json, schema_version: 3 }, 1, defaultConfig)).toThrow("Unsupported schema_version 3, expected 2");
   });
-
 });
 
 describe("styleFor", () => {

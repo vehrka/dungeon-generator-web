@@ -11,7 +11,6 @@ export const DEFAULT_THEME: ThemeName = "zelda";
 
 export const THEMES: Record<ThemeName, Theme> = {
   zelda: { rooms: {}, objects: {}, rewards: REWARDS },
-  plain: { rooms: {}, objects: {}, rewards: REWARDS }, // TS only: zelda's text, drawn in the plain style (theme picks the look)
   cyber: {
     rooms: {
       st: "jack-in point (START)",
@@ -34,6 +33,7 @@ export const THEMES: Record<ThemeName, Theme> = {
       ["crypto wallet", 17, 20],
     ],
   },
+  plain: { rooms: {}, objects: {}, rewards: REWARDS }, // TS only: zelda's text, drawn in the plain style (theme picks the look)
 };
 
 // Default room descriptions (Python utils/dungeon_render.py ROOM_STYLE, utils/dungeon_json.py).

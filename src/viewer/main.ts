@@ -139,8 +139,17 @@ function reselect(keepLayout: boolean) {
     generate(seed);
   } catch (e) {
     if (current?.options) ({ size: sizeSelect.value, theme: themeSelect.value } = current.options);
+    else if (current && "json" in current.source) showSelects(current.source.json);
     say([(e as Error).message], true);
   }
+}
+
+// A loaded file's size and theme; a theme the generator does not take is drawn plain, so the select
+// says plain.
+function showSelects(json: DungeonJson) {
+  const panel = panelFor(json);
+  if (panel.size) sizeSelect.value = panel.size;
+  themeSelect.value = panel.theme ?? "plain";
 }
 
 async function open(f: File) {
@@ -155,8 +164,7 @@ async function open(f: File) {
   if (n !== opening) return;
   const panel = panelFor(loaded.json);
   dungeonSeedField.value = panel.seed === undefined ? "" : String(panel.seed);
-  if (panel.size) sizeSelect.value = panel.size;
-  if (panel.theme) themeSelect.value = panel.theme;
+  showSelects(loaded.json);
   current = { source: { json: loaded.json }, name: loaded.name };
   if (loaded.seed === undefined) {
     fail(`${f.name} has no usable seed; enter a layout seed`);
