@@ -325,7 +325,8 @@ Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 `docs/plans/09-render-cli.md`.
 A second style after Dyson Logos (ink, hatching) is designed in `docs/dyson-style.md`, a third,
 neon, for the cyber theme in `docs/neon-style.md` (planned); this section
-describes the catalogue style, the default for the cyber theme (every other theme gets Dyson).
+describes the catalogue style, the default for the cyber theme (every other theme gets Dyson) until
+neon is ready; then no theme defaults to it, `--style catalogue` and the viewer select only.
 
 - Map on the left, key column on the right (rooms, gates, legend), title on top: theme, size,
   dungeon seed, layout seed, grammar. Grid unit 24 px.

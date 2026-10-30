@@ -4,8 +4,8 @@ A third map style for the cyber theme, after the Dyson style is done: a black pa
 blocks with a glow, dark corridors between them like streets seen from above. Mood reference: an
 AI-generated cyberpunk city texture
 (https://pics.craiyon.com/2023-10-03/b1f155b993cd4201be657a2ba09ff80f.webp), used for palette and
-feel only; it is not a map. Decided 2026-10-28; this design is a first draft, to be completed
-before the core step.
+feel only; it is not a map. Decided 2026-10-28; tokens, roles and type settled 2026-10-30 on the
+mock-up (`ref/neon/`, `docs/plans/20-neon-design.md`).
 
 This file is the source of truth for the neon style. `docs/design.md` covers the rest,
 `docs/dyson-style.md` the Dyson style. Progress: `STATUS.md`.
@@ -17,7 +17,7 @@ This file is the source of truth for the neon style. `docs/design.md` covers the
   after.
 - Screen only: built for the viewer and VTT (FoundryVTT), not for print. A black page and
   saturated colour are fine. PNG export at Foundry's grid scale: not in scope, add later if needed.
-- Glow from stacked strokes (2–3 wider copies of the outline at falling opacity), no SVG filters:
+- Glow from stacked strokes (3 wider copies of the outline at falling opacity), no SVG filters:
   cheaper to render, no differences between engines (resvg), plain SVG to test. Measure size on
   l-1 as for Dyson.
 - Colour by room role: a pure function of the room, no randomness, simple snapshots. Read from
@@ -45,16 +45,17 @@ style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
   `MapStyle` gains `"neon"`, `painters` gains `neon`.
 - Reuse `scene.ts` for everything geometric: outlines, corridors, door groups, door symbol
   geometry (Dyson step 3 puts it there, not in `dyson.ts`), number anchors, glyphs.
-- Role per room: `scene.ts` or a small helper in `neon.ts`, from the room's type and objects.
+- Role per room: `scene.ts` or a small helper in `neon.ts`, from the room's type (§ Role colours).
 
-## Design (draft)
+## Design
 
 ### Paint order
 
-1. Page near-black. Title and key column in light text.
+1. Page indigo-black. Title and key column in light text.
 2. Corridors: dark fill, a thin dim outline (streets between blocks).
-3. Glow: each room outline stroked 2–3 times, widest and faintest first, in the room's colour.
-4. Room fills: the role colour, dark enough that numbers stay readable.
+3. Glow: each room outline stroked 3 times, widest and faintest first, in the room's colour, all
+   rooms before any fill: the fill covers the inner half, so the glow shows outside only.
+4. Room fills: the role colour mixed into the page, dark enough that numbers stay readable.
 5. Room detail (own step): small panels, vents, stripes inside each room, seeded, kept away from
    the number anchor and glyphs.
 6. Walls: thin bright outline in the role colour.
@@ -63,28 +64,79 @@ style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
 
 ### Role colours
 
+A pure function of the room node (`id`, `type`, `number`); no randomness. Gate nodes
+(`kind: gate`) are not rooms and get none. Pickups are read from the room type, not from node
+`objects`: pickup rooms carry both (m-1 cyber room 8 `item` holds `item-1`), but the type also
+covers a `switch` or `lever`, and one rule from one field keeps the role a function of the type.
+`exit` (an extra entrance) counts as start.
+Colour marks the rooms that matter to the run; everything else recedes in three dim tones.
+
 | role | from schema 2 | colour |
 |------|---------------|--------|
-| start | `id === start` (type `st`) | cyan |
-| goal | `id === goal` (type `gl`) | magenta |
-| boss, mini-boss | type `eb`, `em` | magenta, dimmer |
-| item or key | room has objects | coral |
-| treasure | type `gb:*` | violet |
-| other | everything else | 2–3 dim teal/blue tones, cycled by room number |
+| start | `id === start`, type `st` or `exit` | cyan |
+| goal | `id === goal`, type `gl` | magenta, brightest fill |
+| boss | type `eb`, `em` | red |
+| pickup | type `key`, `bosskey`, `item`, `switch`, `lever` | amber |
+| treasure | type starting `gb:` (`gb: bombs`) | violet |
+| other | everything else (`n`, `p`, `c`, `e`, `t`, unknown) | teal, blue, steel by `number % 3` |
 
-Exact values, fill vs wall vs glow tints, and contrast for numbers: tuned on the mock-up, recorded
-here as tokens.
+Changed from the draft on the mock-up: boss in a dimmer magenta read as a second goal (m-1 cyber
+rooms 5, 11 against 14), so red; coral pickups sat too close to the red, so amber, kin to the gate
+yellow (a pickup opens a gate). Enemies (`e`) and traps (`t`) stay "other": a colour each would
+light up most of the map.
+
+### Tokens
+
+Constants at the top of `render/neon.ts`. Fill = role colour mixed into the page by the fill
+share (`mix(page, colour, share)`); contrast is the number ink on that fill (WCAG, ≥ 4.5).
+
+| token | value | note |
+|-------|-------|------|
+| page | `#0b0814` | the reference's indigo-black, darker |
+| corridor fill | `#141a2a` | |
+| corridor outline | `#2b3550` | 1 px |
+| ink | `#eef2ff` | numbers, glyphs, jambs, key text |
+| muted | `#7d86a8` | key numbers, meta line |
+| rule | `#232a40` | key column rules |
+| gate | `#ffd23f` | tag outline and letter, on the page colour |
+| wall | 2 px | role colour |
+| glow | 16 px @ 0.10, 9 px @ 0.22, 4 px @ 0.45 | stroke width @ opacity, role colour, miter joins |
+
+| role | colour | fill share | fill | contrast |
+|------|--------|------------|------|----------|
+| start | `#19e3ff` | 0.30 | `#0f4a5a` | 8.7 |
+| goal | `#ff2bd6` | 0.40 | `#6d1662` | 9.7 |
+| boss | `#ff3b4f` | 0.30 | `#541726` | 12.3 |
+| pickup | `#ffa53a` | 0.28 | `#4f341f` | 10.2 |
+| treasure | `#a66bff` | 0.30 | `#3a265a` | 11.7 |
+| other 0 | `#1fbfa5` | 0.18 | `#0f292e` | 13.6 |
+| other 1 | `#3d7bff` | 0.18 | `#141d3e` | 14.7 |
+| other 2 | `#5b8aa6` | 0.18 | `#191f2e` | 14.7 |
+
+Shared walls: two rooms that touch both stroke the shared segment; the later room's colour wins,
+and neither glow shows there, since each room's fill covers the other's outer glow (all glows go
+under all fills). On the mock-up (12 and 9, 6 and 13) the seam reads as one wall in one colour;
+accepted for now, open point.
 
 ### Doors and gates
 
 Same symbol set as Dyson (door, archway, secret, lock bar, portcullis, gate tag, one-way chevron),
-drawn in neon: bright strokes on the dark page, tags as outlined boxes. Details after Dyson step 3
-fixes the shared geometry.
+geometry from `scene.ts`, drawn in neon: ink strokes, gaps in the corridor fill, gate tags as
+gate-yellow outlined boxes with a yellow letter on the page colour. The mock-up only restyles the
+catalogue's gaps and jambs; symbol sizes are the doors step's.
 
 ### Type
 
-Monospace or condensed sans stack, no web font (resvg needs named fonts first, see Dyson § Type).
-Choose on the mock-up.
+Monospace, no web font: `'DejaVu Sans Mono','Noto Sans Mono','Liberation Mono',Menlo,Consolas,
+monospace` (resvg needs named fonts first, see Dyson § Type). Text 12 px, numbers 17 px bold,
+title 18 px bold, tag letters 10 px bold. Checked in resvg 2.6.2 (DejaVu Sans Mono); the mono key
+column is wider per character than the catalogue's 7.5 px estimate allows for 13 px text, so the
+painter sets 12 px.
+
+### Legend
+
+Gate, corridor, secret and one-way as in Dyson, plus one swatch per role used on the map (start,
+goal, boss, pickup, treasure), so the colours read without the key. Not in the mock-up.
 
 ## Testing
 
@@ -96,11 +148,16 @@ PNG of m-1 and l-1 and a generated cyber L; time and SVG size of l-1 noted here 
 
 ## Steps
 
-See `STATUS.md`. Order: design doc and hand-made m-1 mock-up → core painter → doors and gates →
+See `STATUS.md`. Order: design doc and mock-up (generated cyber M, `ref/neon/`) → core painter → doors and gates →
 room detail → viewer. Each step its own branch off `dev`, test first, `/code-review` before merge.
 
 ## Open points
 
-- Glow cost on L maps: stacked strokes multiply outline count by 3–4; measure in the core step.
-- Readability: role fills vs number contrast; detail density vs room shapes. Settle on the mock-up.
-- Whether `catalogue` keeps any default theme once cyber moves to neon (only `--style` then).
+- Glow cost on L maps: 3 copies per room outline, ~280 B per room on the mock (4.4 kB on 16
+  rooms). l-1 has 28 rooms, catalogue SVG 31 kB, so ~40 kB before room detail. Measure in the core
+  step.
+- Shared walls lose the glow and show one room's colour (§ Tokens). If it reads badly on L maps:
+  stroke each room's wall clipped to its own inside, so a shared seam shows both colours.
+- Detail density vs room shapes and numbers: room detail step.
+- Catalogue keeps no default theme once cyber moves to neon: reachable by `--style` and the
+  viewer select only. Decided 2026-10-30.

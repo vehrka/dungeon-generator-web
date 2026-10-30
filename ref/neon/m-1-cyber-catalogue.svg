@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1012" height="1572" viewBox="0 0 1012 1572">
+<style>
+text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-serif;font-size:13px;font-weight:100;fill:#000}
+.room{fill:#fff;stroke:#000;stroke-width:1}
+.corridor{fill:#e5e5e5;stroke:#000;stroke-width:1}
+.number{font-size:19px;font-weight:300;text-anchor:middle}
+.gap{fill:#fff}
+.gap-corridor{fill:#e5e5e5}
+.jamb,.dash{stroke:#000;stroke-width:1}
+.dash{stroke-dasharray:2 2}
+.oneway{fill:none;stroke:#000;stroke-width:1.5}
+.tag{fill:#f0a000}
+.tag-letter{font-size:10px;font-weight:300;text-anchor:middle}
+.glyph{fill:none;stroke:#000;stroke-width:1}
+.title{font-size:19px;font-weight:300}
+.muted{fill:#b2b2b2}
+.heading{font-weight:300}
+.rule{stroke:#e5e5e5;stroke-width:1}
+</style>
+<defs><symbol id="glyph-start" viewBox="0 0 14 14"><path d="M3 2 L12 7 L3 12 Z"/></symbol><symbol id="glyph-goal" viewBox="0 0 14 14"><path d="M3 13 V1 M3 2 H12 L9 5 L12 8 H3"/></symbol><symbol id="glyph-key" viewBox="0 0 14 14"><circle cx="4" cy="7" r="3"/><path d="M7 7 H13 M11 7 V10 M13 7 V10"/></symbol><symbol id="glyph-bosskey" viewBox="0 0 14 14"><circle cx="4" cy="7" r="3"/><circle cx="4" cy="7" r="1"/><path d="M7 7 H13 M9 7 V10 M11 7 V10 M13 7 V10"/></symbol><symbol id="glyph-item" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z"/></symbol><symbol id="glyph-switch" viewBox="0 0 14 14"><rect x="1" y="4" width="12" height="6"/><circle cx="9.5" cy="7" r="1.5"/></symbol><symbol id="glyph-lever" viewBox="0 0 14 14"><path d="M1 12 H13 M7 12 L11 3"/><circle cx="11" cy="3" r="1.5"/></symbol><symbol id="glyph-treasure" viewBox="0 0 14 14"><rect x="1" y="5" width="12" height="7"/><path d="M1 8 H13 M6 7 H8 V10 H6 Z"/></symbol></defs>
+<rect width="1012" height="1572" fill="#f6f8f7"/>
+<text class="title" x="33" y="52">cyber</text>
+<text class="muted" x="33" y="73">size M · seed 1 · layout 1 · Combined</text>
+<polygon class="corridor" points="153,1083 177,1083 177,1107 153,1107"/>
+<polygon class="corridor" points="609,339 633,339 633,363 609,363"/>
+<polygon class="corridor" points="345,555 369,555 369,675 345,675"/>
+<polygon class="corridor" points="201,1083 225,1083 225,1155 201,1155"/>
+<polygon class="corridor" points="225,435 297,435 297,459 225,459"/>
+<polygon class="corridor" points="417,1323 441,1323 441,1395 417,1395"/>
+<polygon class="corridor" points="153,771 177,771 177,795 153,795"/>
+<polygon class="corridor" points="465,963 537,963 537,987 465,987"/>
+<polygon class="corridor" points="561,1011 585,1011 585,1131 561,1131"/>
+<polygon class="corridor" points="249,555 273,555 273,675 249,675"/>
+<polygon class="corridor" points="345,1251 417,1251 417,1275 345,1275"/>
+<polygon class="corridor" points="417,1131 441,1131 441,1251 417,1251"/>
+<polygon class="corridor" points="369,459 393,459 393,483 369,483"/>
+<polygon class="corridor" points="225,483 249,483 249,507 225,507"/>
+<polygon class="corridor" points="369,843 393,843 393,963 369,963"/>
+<polygon class="room" points="369,1395 465,1395 465,1443 513,1443 513,1539 369,1539"/>
+<text class="number" data-room="1" x="417" y="1466">1</text>
+<use href="#glyph-start" class="glyph" x="410" y="1470" width="14" height="14"/>
+<polygon class="room" points="417,99 633,99 633,339 465,339 465,147 417,147"/>
+<text class="number" data-room="14" x="549" y="218">14</text>
+<use href="#glyph-goal" class="glyph" x="542" y="222" width="14" height="14"/>
+<polygon class="room" points="33,939 225,939 225,1083 33,1083"/>
+<text class="number" data-room="5" x="129" y="1018">5</text>
+<polygon class="room" points="105,1107 201,1107 201,1179 105,1179"/>
+<text class="number" data-room="8" x="153" y="1142">8</text>
+<use href="#glyph-item" class="glyph" x="146" y="1146" width="14" height="14"/>
+<polygon class="room" points="249,459 369,459 369,555 249,555"/>
+<text class="number" data-room="9" x="309" y="514">9</text>
+<polygon class="room" points="225,339 345,339 345,459 297,459 297,411 225,411"/>
+<text class="number" data-room="15" x="285" y="374">15</text>
+<use href="#glyph-bosskey" class="glyph" x="278" y="378" width="14" height="14"/>
+<polygon class="room" points="561,363 633,363 633,555 561,555 561,483 393,483 393,411 561,411"/>
+<text class="number" data-room="11" x="513" y="454">11</text>
+<polygon class="room" points="129,795 225,795 225,843 177,843 177,891 129,891"/>
+<text class="number" data-room="16" x="153" y="842">16</text>
+<use href="#glyph-key" class="glyph" x="146" y="846" width="14" height="14"/>
+<polygon class="room" points="537,1131 633,1131 633,1251 585,1251 585,1203 537,1203"/>
+<text class="number" data-room="10" x="585" y="1166">10</text>
+<use href="#glyph-switch" class="glyph" x="578" y="1170" width="14" height="14"/>
+<polygon class="room" points="297,675 393,675 393,843 225,843 225,795 297,795"/>
+<text class="number" data-room="6" x="345" y="766">6</text>
+<polygon class="room" points="201,1155 345,1155 345,1323 201,1323"/>
+<text class="number" data-room="3" x="273" y="1246">3</text>
+<polygon class="room" points="57,411 225,411 225,507 129,507 129,555 57,555"/>
+<text class="number" data-room="12" x="141" y="466">12</text>
+<polygon class="room" points="465,1203 513,1203 513,1323 417,1323 417,1251 465,1251"/>
+<text class="number" data-room="2" x="465" y="1294">2</text>
+<polygon class="room" points="369,963 465,963 465,1131 369,1131 369,1059 297,1059 297,1011 369,1011"/>
+<text class="number" data-room="4" x="417" y="1054">4</text>
+<polygon class="room" points="153,603 201,603 201,675 297,675 297,723 201,723 201,771 153,771"/>
+<text class="number" data-room="13" x="177" y="694">13</text>
+<polygon class="room" points="537,843 705,843 705,1011 537,1011"/>
+<text class="number" data-room="7" x="621" y="934">7</text>
+<g class="door"><rect class="gap" x="154" y="1081" width="22" height="4"/><line class="jamb" x1="153" y1="1080" x2="153" y2="1086"/><line class="jamb" x1="177" y1="1080" x2="177" y2="1086"/><rect class="gap-corridor" x="154" y="1083.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="154" y="1105" width="22" height="4"/><line class="jamb" x1="153" y1="1104" x2="153" y2="1110"/><line class="jamb" x1="177" y1="1104" x2="177" y2="1110"/><rect class="gap-corridor" x="154" y="1105" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="610" y="361" width="22" height="4"/><line class="jamb" x1="609" y1="360" x2="609" y2="366"/><line class="jamb" x1="633" y1="360" x2="633" y2="366"/><rect class="gap-corridor" x="610" y="361" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="610" y="337" width="22" height="4"/><line class="jamb" x1="609" y1="336" x2="609" y2="342"/><line class="jamb" x1="633" y1="336" x2="633" y2="342"/><rect class="gap-corridor" x="610" y="339.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="346" y="673" width="22" height="4"/><line class="jamb" x1="345" y1="672" x2="345" y2="678"/><line class="jamb" x1="369" y1="672" x2="369" y2="678"/><rect class="gap-corridor" x="346" y="673" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="346" y="553" width="22" height="4"/><line class="jamb" x1="345" y1="552" x2="345" y2="558"/><line class="jamb" x1="369" y1="552" x2="369" y2="558"/><rect class="gap-corridor" x="346" y="555.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="202" y="1153" width="22" height="4"/><line class="jamb" x1="201" y1="1152" x2="201" y2="1158"/><line class="jamb" x1="225" y1="1152" x2="225" y2="1158"/><rect class="gap-corridor" x="202" y="1153" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="202" y="1081" width="22" height="4"/><line class="jamb" x1="201" y1="1080" x2="201" y2="1086"/><line class="jamb" x1="225" y1="1080" x2="225" y2="1086"/><rect class="gap-corridor" x="202" y="1083.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="223" y="436" width="4" height="22"/><line class="jamb" x1="222" y1="435" x2="228" y2="435"/><line class="jamb" x1="222" y1="459" x2="228" y2="459"/><rect class="gap-corridor" x="225.5" y="436" width="1.5" height="22"/></g>
+<g class="door"><rect class="gap" x="295" y="436" width="4" height="22"/><line class="jamb" x1="294" y1="435" x2="300" y2="435"/><line class="jamb" x1="294" y1="459" x2="300" y2="459"/><rect class="gap-corridor" x="295" y="436" width="1.5" height="22"/></g>
+<g class="door"><rect class="gap" x="418" y="1393" width="22" height="4"/><line class="jamb" x1="417" y1="1392" x2="417" y2="1398"/><line class="jamb" x1="441" y1="1392" x2="441" y2="1398"/><rect class="gap-corridor" x="418" y="1393" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="418" y="1321" width="22" height="4"/><line class="jamb" x1="417" y1="1320" x2="417" y2="1326"/><line class="jamb" x1="441" y1="1320" x2="441" y2="1326"/><rect class="gap-corridor" x="418" y="1323.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="154" y="769" width="22" height="4"/><line class="jamb" x1="153" y1="768" x2="153" y2="774"/><line class="jamb" x1="177" y1="768" x2="177" y2="774"/><rect class="gap-corridor" x="154" y="771.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="154" y="793" width="22" height="4"/><line class="jamb" x1="153" y1="792" x2="153" y2="798"/><line class="jamb" x1="177" y1="792" x2="177" y2="798"/><rect class="gap-corridor" x="154" y="793" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="463" y="964" width="4" height="22"/><line class="jamb" x1="462" y1="963" x2="468" y2="963"/><line class="jamb" x1="462" y1="987" x2="468" y2="987"/><rect class="gap-corridor" x="465.5" y="964" width="1.5" height="22"/></g>
+<g class="door"><rect class="gap" x="535" y="964" width="4" height="22"/><line class="jamb" x1="534" y1="963" x2="540" y2="963"/><line class="jamb" x1="534" y1="987" x2="540" y2="987"/><rect class="gap-corridor" x="535" y="964" width="1.5" height="22"/></g>
+<g class="door"><rect class="gap" x="562" y="1009" width="22" height="4"/><line class="jamb" x1="561" y1="1008" x2="561" y2="1014"/><line class="jamb" x1="585" y1="1008" x2="585" y2="1014"/><rect class="gap-corridor" x="562" y="1011.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="562" y="1129" width="22" height="4"/><line class="jamb" x1="561" y1="1128" x2="561" y2="1134"/><line class="jamb" x1="585" y1="1128" x2="585" y2="1134"/><rect class="gap-corridor" x="562" y="1129" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="250" y="553" width="22" height="4"/><line class="jamb" x1="249" y1="552" x2="249" y2="558"/><line class="jamb" x1="273" y1="552" x2="273" y2="558"/><rect class="gap-corridor" x="250" y="555.5" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="250" y="673" width="22" height="4"/><line class="jamb" x1="249" y1="672" x2="249" y2="678"/><line class="jamb" x1="273" y1="672" x2="273" y2="678"/><rect class="gap-corridor" x="250" y="673" width="22" height="1.5"/></g>
+<g class="door"><rect class="gap" x="415" y="1252" width="4" height="22"/><line class="jamb" x1="414" y1="1251" x2="420" y2="1251"/><line class="jamb" x1="414" y1="1275" x2="420" y2="1275"/><rect class="gap-corridor" x="415" y="1252" width="1.5" height="22"/></g>
+<g class="door"><rect class="gap" x="343" y="1252" width="4" height="22"/><line class="jamb" x1="342" y1="1251" x2="348" y2="1251"/><line class="jamb" x1="342" y1="1275" x2="348" y2="1275"/><rect class="gap-corridor" x="345.5" y="1252" width="1.5" height="22"/></g>
+<g class="door gated"><rect class="gap" x="418" y="1129" width="22" height="4"/><line class="jamb" x1="417" y1="1128" x2="417" y2="1134"/><line class="jamb" x1="441" y1="1128" x2="441" y2="1134"/><rect class="gap-corridor" x="418" y="1131.5" width="22" height="1.5"/><rect class="tag" data-gate="lock" x="422" y="1124" width="14" height="14"/><text class="tag-letter" x="429" y="1135">A</text></g>
+<g class="door"><rect class="gap" x="418" y="1249" width="22" height="4"/><line class="jamb" x1="417" y1="1248" x2="417" y2="1254"/><line class="jamb" x1="441" y1="1248" x2="441" y2="1254"/><rect class="gap-corridor" x="418" y="1249" width="22" height="1.5"/></g>
+<g class="door gated"><rect class="gap" x="367" y="460" width="4" height="22"/><line class="jamb" x1="366" y1="459" x2="372" y2="459"/><line class="jamb" x1="366" y1="483" x2="372" y2="483"/><rect class="gap-corridor" x="369.5" y="460" width="1.5" height="22"/><rect class="tag" data-gate="lock" x="362" y="464" width="14" height="14"/><text class="tag-letter" x="369" y="475">B</text></g>
+<g class="door"><rect class="gap" x="391" y="460" width="4" height="22"/><line class="jamb" x1="390" y1="459" x2="396" y2="459"/><line class="jamb" x1="390" y1="483" x2="396" y2="483"/><rect class="gap-corridor" x="391" y="460" width="1.5" height="22"/></g>
+<g class="door gated"><rect class="gap" x="223" y="484" width="4" height="22"/><line class="jamb" x1="222" y1="483" x2="228" y2="483"/><line class="jamb" x1="222" y1="507" x2="228" y2="507"/><rect class="gap-corridor" x="225.5" y="484" width="1.5" height="22"/><rect class="tag" data-gate="lock" x="218" y="488" width="14" height="14"/><text class="tag-letter" x="225" y="499">C</text></g>
+<g class="door"><rect class="gap" x="247" y="484" width="4" height="22"/><line class="jamb" x1="246" y1="483" x2="252" y2="483"/><line class="jamb" x1="246" y1="507" x2="252" y2="507"/><rect class="gap-corridor" x="247" y="484" width="1.5" height="22"/></g>
+<g class="door gated"><rect class="gap" x="370" y="841" width="22" height="4"/><line class="jamb" x1="369" y1="840" x2="369" y2="846"/><line class="jamb" x1="393" y1="840" x2="393" y2="846"/><rect class="gap-corridor" x="370" y="843.5" width="22" height="1.5"/><rect class="tag" data-gate="state" x="374" y="836" width="14" height="14"/><text class="tag-letter" x="381" y="847">D</text></g>
+<g class="door"><rect class="gap" x="370" y="961" width="22" height="4"/><line class="jamb" x1="369" y1="960" x2="369" y2="966"/><line class="jamb" x1="393" y1="960" x2="393" y2="966"/><rect class="gap-corridor" x="370" y="961" width="22" height="1.5"/></g>
+<text class="heading" x="771" y="112">rooms</text>
+<line class="rule" x1="771" y1="119" x2="979" y2="119"/>
+<text class="muted" x="771" y="141">1</text>
+<text data-key="1" x="799" y="141">Jack-in point (START)</text>
+<text class="muted" x="771" y="161">2</text>
+<text data-key="2" x="799" y="161">Empty node / scan</text>
+<text class="muted" x="771" y="181">3</text>
+<text data-key="3" x="799" y="181">Trace trap</text>
+<text class="muted" x="771" y="201">4</text>
+<text data-key="4" x="799" y="201">Encrypted lock (puzzle)</text>
+<text class="muted" x="771" y="221">5</text>
+<text data-key="5" x="799" y="221">Black ICE sentinel</text>
+<text class="muted" x="771" y="241">6</text>
+<text data-key="6" x="799" y="241">ICE</text>
+<text class="muted" x="771" y="261">7</text>
+<text data-key="7" x="799" y="261">Empty node / scan</text>
+<text class="muted" x="771" y="281">8</text>
+<text data-key="8" x="799" y="281">Pickup: icebreaker 1</text>
+<text class="muted" x="771" y="301">9</text>
+<text data-key="9" x="799" y="301">Empty node / scan</text>
+<text class="muted" x="771" y="321">10</text>
+<text data-key="10" x="799" y="321">Switch: relay 1</text>
+<text class="muted" x="771" y="341">11</text>
+<text data-key="11" x="799" y="341">Core AI</text>
+<text class="muted" x="771" y="361">12</text>
+<text data-key="12" x="799" y="361">Trace trap</text>
+<text class="muted" x="771" y="381">13</text>
+<text data-key="13" x="799" y="381">Firewall (hacking check)</text>
+<text class="muted" x="771" y="401">14</text>
+<text data-key="14" x="799" y="401">Data core (GOAL)</text>
+<text class="muted" x="771" y="421">15</text>
+<text data-key="15" x="799" y="421">Pickup: root key 1</text>
+<text class="muted" x="771" y="441">16</text>
+<text data-key="16" x="799" y="441">Pickup: access code 1</text>
+<text class="heading" x="771" y="494">gates</text>
+<line class="rule" x1="771" y1="501" x2="979" y2="501"/>
+<rect class="tag" x="771" y="512" width="14" height="14"/><text class="tag-letter" x="778" y="523">A</text>
+<text x="799" y="523">lock  icebreaker 1</text>
+<rect class="tag" x="771" y="532" width="14" height="14"/><text class="tag-letter" x="778" y="543">B</text>
+<text x="799" y="543">lock  root key 1</text>
+<rect class="tag" x="771" y="552" width="14" height="14"/><text class="tag-letter" x="778" y="563">C</text>
+<text x="799" y="563">lock  access code 1</text>
+<rect class="tag" x="771" y="572" width="14" height="14"/><text class="tag-letter" x="778" y="583">D</text>
+<text x="799" y="583">state  relay 1</text>
+<text class="heading" x="771" y="636">legend</text>
+<line class="rule" x1="771" y1="643" x2="979" y2="643"/>
+<g transform="translate(771,665)"><use href="#glyph-start" class="glyph" x="0" y="-11" width="14" height="14"/></g>
+<text x="799" y="665">start</text>
+<g transform="translate(771,685)"><use href="#glyph-goal" class="glyph" x="0" y="-11" width="14" height="14"/></g>
+<text x="799" y="685">goal</text>
+<g transform="translate(771,705)"><use href="#glyph-key" class="glyph" x="0" y="-11" width="14" height="14"/></g>
+<text x="799" y="705">key</text>
+<g transform="translate(771,725)"><use href="#glyph-bosskey" class="glyph" x="0" y="-11" width="14" height="14"/></g>
+<text x="799" y="725">boss key</text>
+<g transform="translate(771,745)"><use href="#glyph-item" class="glyph" x="0" y="-11" width="14" height="14"/></g>
+<text x="799" y="745">item</text>
+<g transform="translate(771,765)"><use href="#glyph-switch" class="glyph" x="0" y="-11" width="14" height="14"/></g>
+<text x="799" y="765">switch</text>
+<g transform="translate(771,785)"><rect class="corridor" x="0" y="-8" width="14" height="8"/></g>
+<text x="799" y="785">corridor</text>
+<g transform="translate(771,805)"><rect class="tag" x="0" y="-11" width="14" height="14"/></g>
+<text x="799" y="805">gate</text>
+</svg>
