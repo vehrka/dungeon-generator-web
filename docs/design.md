@@ -438,6 +438,13 @@ field does not stop the switch to the graph. The toggle follows the view drawn, 
 the switch to the map leaves it on the graph. Reroll and corridors stay enabled (they change the
 map; in the graph they redraw the same sheet). Export svg saves what is shown:
   `<name>-graph.svg` (`graphName`). The result band of the graph has no layout seed.
+- Help page (step 26, plan `docs/plans/26-help-page.md`): `help.html` beside `index.html`, both
+  build inputs (`build.rolldownOptions.input`); a `help` / `map` text action in each header. Static
+  HTML, same stylesheet: what it is, how it works, the grammar sheet, the story, references; prose
+  in sentence case. The sheet is `docs/grammar.svg` itself, not a copy (its staleness test guards
+  the page too), via a module `import "../../docs/grammar.svg?url"`: outside the Vite root, dev does
+  not rewrite an HTML `src` and the build never rewrites an `a href`. Links to the docs go to GitHub;
+  the built site has no `docs/`.
 
 ### 9. Generator (`engine/generator/`)
 
@@ -525,6 +532,7 @@ src/cli/       main.ts     ruin.json | --dungeon-seed [--size] [--theme] → map
                            [-o] [--json] [--key] [--layout-seed] [--no-corridors] [--style]
                            | --grammar sheet.svg
 src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   generate or load JSON, seeds, reroll, corridors, export
+               help.html   help page
 tests/         one test file per engine module, fixture ruin.json; tests/generator/ likewise
 ```
 

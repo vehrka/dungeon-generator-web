@@ -44,8 +44,8 @@ error. Never decorative, never a second accent.
 - `text-transform: uppercase` on `body`, `letter-spacing: 0.02em`. TechnoType's glyphs are
   capitals; Jura gets there by transform, so the markup stays lower case.
 - Weight 300 everywhere. Hierarchy comes from size and bands, never from weight.
-- Error messages are the exception: sentence case (`text-transform: none`), they are read, not
-  scanned.
+- Error messages and help-page prose are the exception: sentence case (`text-transform: none`),
+  they are read, not scanned.
 
 | Role | Size | Line height | Notes |
 |------|------|-------------|-------|
@@ -73,7 +73,8 @@ error. Never decorative, never a second accent.
 
 ## Components (viewer)
 
-**Header.** Title left, two-line tagline right (11px), 1px steel-gray rule below. Narrow: stacked,
+**Header.** Title left, two-line tagline right (11px), then the page link (`help` on the map page,
+`map` on the help page) as a text action at 13px; 1px steel-gray rule below. Narrow: stacked,
 left-aligned.
 
 **Page.** Two columns: map left (`minmax(0, 1fr)`), settings panel right (300px, 1px steel-gray
@@ -106,6 +107,15 @@ no box; hover fills band grey (canvas mist inside the result band). Disabled: gr
 underline.
 
 **Checkbox.** Native, `accent-color` black, label to its right.
+
+**Help page** (`help.html`, `body.doc`). One column, 33px gutter (15px narrow), numbered carbon
+bands full width as in the panel (`① WHAT IT IS` … `⑤ REFERENCES`). Prose 13px Jura 300 in
+sentence case, capped at 70ch, left-aligned; bold terms stay capitals at weight 300. Subheadings
+and pipeline steps as subsection bands (band grey, 13px, capitals, 70ch), steps numbered by a CSS
+counter. Story as a date column (11px, muted) beside the text. The grammar sheet at its own size
+on white with a steel-gray hairline, scrolling sideways in its frame, never the page; caption 11px
+muted with an `open full size` link. Links in prose underlined (offset 3px), band grey on hover.
+Footer 11px muted over a steel-gray hairline.
 
 ## Components (map)
 

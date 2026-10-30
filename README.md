@@ -100,7 +100,8 @@ the map. Export saves the SVG, the JSON (generated only) and the GM key. The the
 map look: zelda Dyson, cyber neon, plain plain (a loaded file's other or missing theme plain). A
 theme change keeps the layout seed (same graph, other labels and look); a size change resets it.
 View switches between the map and the room graph of the same dungeon; the graph shows even when
-no layout is found.
+no layout is found. `help` in the header opens the help page: what it is, how it works, the grammar
+sheet, how it was built.
 
 ## How we built it
 
