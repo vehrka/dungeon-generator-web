@@ -1,6 +1,5 @@
 import type { GenerateOptions } from "../engine/generator/index";
 import type { DungeonJson } from "../engine/types";
-import type { MapStyle } from "../render/svg";
 import { dungeonKey } from "../render/key";
 import type { DrawRequest, DrawResult, View } from "./worker";
 import { dungeonName, exportName, graphName, jsonName, keyName, layoutFailed, load, panelFor, parseSeed, parseSize, parseTheme, randomSeed, styleOf } from "./state";
@@ -29,7 +28,7 @@ let current: { source: DrawRequest["source"]; name: string; options?: Options } 
 // From the worker's replies, so exports always match what was drawn: the dungeon (JSON and key, also
 // when its layout failed) and the map.
 let dungeon: { json: DungeonJson; name: string; options?: Options } | undefined;
-let drawn: { svg: string; seed: number; style: MapStyle; view: View } | undefined;
+let drawn: { svg: string; file: string } | undefined;
 // Kept across generate, load and reroll; not in the URL or storage.
 let view: View = "map";
 let worker: Worker | undefined;
@@ -71,17 +70,20 @@ function fail(message: string) {
   say([message], true);
 }
 
-// The dungeon's theme picks the look.
-function run(seed: number) {
+// The dungeon's theme picks the look. The graph needs no layout seed: undefined leaves the field
+// as it is.
+function run(seed: number | undefined, v = view) {
   const c = current;
   if (!c) return; // never after the first generate: a failed load keeps the dungeon before it
+  if (v === "map" && seed === undefined) throw new Error("Enter a layout seed");
   const style = styleOf("json" in c.source ? c.source.json.theme : c.source.generate.theme);
+  const file = v === "map" && seed !== undefined ? exportName(c.name, seed, style) : graphName(c.name);
+  showView(v);
   stop();
   const w = (worker ??= new Worker(new URL("./worker.ts", import.meta.url), { type: "module" }));
   busy = true;
-  seedField.value = String(seed);
+  if (seed !== undefined) seedField.value = String(seed);
   svgButton.disabled = jsonButton.disabled = keyButton.disabled = true;
-  const v = view;
   say([v === "graph" ? `${"generate" in c.source ? "generating and drawing" : "drawing"} the graph of ${c.name}…` : `${"generate" in c.source ? "generating and laying out" : "laying out"} ${c.name}, layout seed ${seed}…`]);
   w.onmessage = (e: MessageEvent<DrawResult>) => {
     busy = false;
@@ -96,7 +98,7 @@ function run(seed: number) {
       return say(e.data.stuck ? layoutFailed(e.data.stuck, c.options !== undefined) : [e.data.error], true);
     }
     map.innerHTML = e.data.svg; // render() escapes everything taken from the JSON
-    drawn = { svg: e.data.svg, seed, style, view: v };
+    drawn = { svg: e.data.svg, file };
     svgButton.disabled = false;
     say([c.name, `${e.data.rooms} rooms`, ...(c.options ? [`dungeon seed ${c.options.seed}`] : []), ...(v === "map" ? [`layout seed ${seed}`] : []), `${e.data.ms} ms`]);
   };
@@ -170,12 +172,9 @@ async function open(f: File) {
   dungeonSeedField.value = panel.seed === undefined ? "" : String(panel.seed);
   showSelects(loaded.json);
   current = { source: { json: loaded.json }, name: loaded.name };
-  if (loaded.seed === undefined) {
-    fail(`${f.name} has no usable seed; enter a layout seed`);
-    seedField.value = "";
-  } else {
-    run(loaded.seed);
-  }
+  if (loaded.seed === undefined) seedField.value = "";
+  if (loaded.seed === undefined && view === "map") fail(`${f.name} has no usable seed; enter a layout seed`);
+  else run(loaded.seed);
 }
 
 function download(content: string, type: string, name: string) {
@@ -205,14 +204,24 @@ seedField.addEventListener("keydown", (e) => {
 rerollButton.addEventListener("click", () => attempt(() => run(randomSeed())));
 corridorsBox.addEventListener("change", () => attempt(() => run(layoutSeed())));
 
-// Map or graph of the same dungeon, at the layout seed shown; reroll and corridors stay on in the
-// graph (they change the map, the graph shows the same).
+// The toggle follows the view run draws, so a field error leaves it on the view shown.
+function showView(v: View) {
+  view = v;
+  for (const w of ["map", "graph"] as const) viewButtons[w].setAttribute("aria-pressed", String(w === v));
+}
+
+// Map or graph of the same dungeon, at the layout seed shown (the graph needs none); reroll and
+// corridors stay on in the graph (they change the map, the graph shows the same).
+const typedSeed = () => {
+  try {
+    return layoutSeed();
+  } catch {
+    return undefined;
+  }
+};
 for (const v of ["map", "graph"] as const)
   viewButtons[v].addEventListener("click", () => {
-    if (v === view) return;
-    view = v;
-    for (const w of ["map", "graph"] as const) viewButtons[w].setAttribute("aria-pressed", String(w === view));
-    attempt(() => run(layoutSeed()));
+    if (v !== view) attempt(() => run(v === "graph" ? typedSeed() : layoutSeed(), v));
   });
 
 file.addEventListener("change", () => {
@@ -221,7 +230,7 @@ file.addEventListener("change", () => {
 });
 
 svgButton.addEventListener("click", () => {
-  if (drawn && dungeon) download(drawn.svg, "image/svg+xml", drawn.view === "graph" ? graphName(dungeon.name) : exportName(dungeon.name, drawn.seed, drawn.style));
+  if (drawn) download(drawn.svg, "image/svg+xml", drawn.file);
 });
 jsonButton.addEventListener("click", () => {
   if (dungeon?.options) download(JSON.stringify(dungeon.json, null, 2) + "\n", "application/json", jsonName(dungeon.name));

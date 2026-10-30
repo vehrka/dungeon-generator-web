@@ -3,7 +3,7 @@ import { normalize } from "../engine/normalize";
 import { isSeed } from "../engine/rng";
 import type { Door, DungeonJson, Gate, RoomGraph, RoomId } from "../engine/types";
 import { esc, round } from "./marks";
-import { gap, keyColumn, margin, plain, titleBlock, titleHeight, type RenderMeta } from "./svg";
+import { gap, keyColumn, margin, plain, titleBlock, titleHeight, type TitleMeta } from "./svg";
 
 // The dungeon's room graph as a layered drawing (docs/design.md § Graph view): no planarity, no
 // layout, no seed, so it also draws a dungeon that fails to lay out. Sugiyama-lite, deterministic.
@@ -26,7 +26,6 @@ export type GraphEdge = {
   towards?: RoomId; // one-way: the room it leads to
 };
 export type GraphLayout = { layers: RoomId[][]; boxes: Map<RoomId, GraphBox>; edges: GraphEdge[]; bbox: Rect };
-export type GraphMeta = Omit<RenderMeta, "layoutSeed" | "style">;
 
 const sweeps = 8; // barycenter sweeps, each down then up
 const boxHeight = 26;
@@ -109,11 +108,12 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
   }
   const deepest = Math.max(...layer.values());
   if (layer.has(graph.goal) && graph.goal !== graph.start) layer.set(graph.goal, deepest);
-  const layers: RoomId[][] = Array.from({ length: deepest + 1 }, () => []);
-  for (const id of [...graph.rooms.keys()].sort(byNumber)) {
-    if (!layer.has(id)) layer.set(id, deepest + 1);
-    (layers[layer.get(id)!] ??= []).push(id);
-  }
+  for (const id of graph.rooms.keys()) if (!layer.has(id)) layer.set(id, deepest + 1);
+  // A layer GOAL alone leaves is dropped, and the ones below move up.
+  const used = [...new Set(layer.values())].sort((a, b) => a - b);
+  for (const [id, l] of layer) layer.set(id, used.indexOf(l));
+  const layers: RoomId[][] = used.map(() => []);
+  for (const id of [...graph.rooms.keys()].sort(byNumber)) layers[layer.get(id)!]!.push(id);
 
   // Order: barycenter of the neighbours in the layer before (down) or after (up); a room without
   // any keeps its place. Ties by room number.
@@ -176,9 +176,8 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
   // dipping into the gap below. Skipping layers (GOAL's edges): bottom to top, straight if clear,
   // else bowed sideways, further each try, until no point of it is near a box between.
   // y grows along such a curve, so only the rows between can be in its way, never its own ends.
-  const clear = (p: Point, c: Point, q: Point, ends: RoomId[]) => {
-    const others = [...boxes.values()].filter((o) => !ends.includes(o.id));
-    const n = Math.ceil(Math.hypot(q.x - p.x, q.y - p.y) + Math.abs(c.x - (p.x + q.x) / 2)) / 2;
+  const clear = (p: Point, c: Point, q: Point, others: GraphBox[]) => {
+    const n = Math.ceil((Math.hypot(q.x - p.x, q.y - p.y) + Math.abs(c.x - (p.x + q.x) / 2)) / 2);
     for (let i = 1; i < n; i++) {
       const s = quad(p, c, q, i / n);
       if (others.some((o) => o.x - clearance < s.x && s.x < o.x + o.w + clearance && o.y - clearance < s.y && s.y < o.y + o.h + clearance)) return false;
@@ -197,12 +196,16 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
     if (same) ctrl = { x: (from.x + to.x) / 2, y: from.y + Math.min(maxBow, 24 + Math.abs(to.x - from.x) / 4) };
     else if (bb.layer - ba.layer > 1) {
       const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+      const between = [...boxes.values()].filter((o) => o.layer > ba.layer && o.layer < bb.layer);
+      // Ends: the bow grows without bound, so it always gets past the rows between; the cap only
+      // guards against a bug.
       for (let k = 0; ; k++) {
         const c = { x: mid.x + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * step, y: mid.y };
-        if (clear(from, c, to, [a, b]) || k > 400) {
+        if (clear(from, c, to, between)) {
           ctrl = k ? c : undefined;
           break;
         }
+        if (k > 10000) throw new Error(`No way past the rooms between ${graph.rooms.get(a)!.number} and ${graph.rooms.get(b)!.number}`);
       }
     }
     return {
@@ -283,7 +286,7 @@ function arrow(p: Point, d: Point, kind: EdgeKind): string {
 }
 
 // Graph → standalone SVG: graph on the left, key column on the right (rooms by number, legend).
-export function renderGraph(graph: RoomGraph, meta: GraphMeta): string {
+export function renderGraph(graph: RoomGraph, meta: TitleMeta): string {
   const l = graphLayout(graph);
   const top = margin + titleHeight;
   const px = (p: Point) => ({ x: round(margin + p.x - l.bbox.x0), y: round(top + p.y - l.bbox.y0) });
@@ -311,8 +314,9 @@ export function renderGraph(graph: RoomGraph, meta: GraphMeta): string {
   }
   for (const e of l.edges) {
     if (!e.label) continue;
-    const m = px(labelAt(e));
-    const anchor = labelAt(e).end ? ` text-anchor="end"` : "";
+    const at = labelAt(e);
+    const m = px(at);
+    const anchor = at.end ? ` text-anchor="end"` : "";
     marks.push(`<text class="g-label"${anchor} x="${m.x}" y="${m.y}" fill="${e.kind === "secret" ? "#666" : edgeColour[e.kind]}">${esc(e.label)}</text>`);
   }
 
@@ -333,7 +337,8 @@ export function renderGraph(graph: RoomGraph, meta: GraphMeta): string {
     ...(oneway ? [{ mark: line("one") + arrow({ x: 14, y: -4 }, { x: 1, y: 0 }, "one"), text: "one-way path (drop, ledge)" }] : []),
     ...(kinds.has("lock") ? [{ mark: line("lock"), text: "[key]  locked: needs that object" }] : []),
     ...(kinds.has("state") ? [{ mark: line("state"), text: "[switch]  state gate: open when all switches hit" }] : []),
-    ...(kinds.has("on") || kinds.has("off") ? [{ mark: line("on"), text: "[lever ON]  toggle gate: open in that lever position" }] : []),
+    ...(kinds.has("on") ? [{ mark: line("on"), text: "[lever ON]  toggle gate: open in that lever position" }] : []),
+    ...(kinds.has("off") ? [{ mark: line("off"), text: "[lever OFF]  toggle gate: open in that lever position" }] : []),
     ...(kinds.has("secret") ? [{ mark: line("secret"), text: "secret  hidden path" }] : []),
   ];
   const k = keyColumn([...graph.rooms.values()], [], legend, round(margin + l.bbox.x1 - l.bbox.x0 + gap), top);

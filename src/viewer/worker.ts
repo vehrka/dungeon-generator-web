@@ -10,7 +10,7 @@ import { layoutConfig } from "./state";
 // (as the CLI writes it before layout); a loaded one the main thread already holds. The graph view
 // skips layout (docs/plans/24-graph-view.md).
 export type View = "map" | "graph";
-export type DrawRequest = { source: { json: DungeonJson } | { generate: Required<GenerateOptions> }; seed: number; corridors: boolean; style: MapStyle; view: View };
+export type DrawRequest = { source: { json: DungeonJson } | { generate: Required<GenerateOptions> }; seed: number | undefined; corridors: boolean; style: MapStyle; view: View }; // seed: map only
 export type DrawResult = { json?: DungeonJson } & ({ svg: string; rooms: number; ms: number } | { error: string; stuck?: number[] });
 
 self.onmessage = (e: MessageEvent<DrawRequest>) => {
@@ -21,7 +21,8 @@ self.onmessage = (e: MessageEvent<DrawRequest>) => {
   try {
     generated = "generate" in source ? generateDungeon(source.generate) : undefined;
     const json = generated ?? (source as { json: DungeonJson }).json;
-    result = { json: generated, ...(view === "graph" ? drawGraph(json) : draw(json, seed, layoutConfig(corridors), style)), ms: Math.round(performance.now() - t0) };
+    if (view === "map" && seed === undefined) throw new Error("No layout seed for the map");
+    result = { json: generated, ...(view === "graph" ? drawGraph(json) : draw(json, seed!, layoutConfig(corridors), style)), ms: Math.round(performance.now() - t0) };
   } catch (err) {
     const stuck = err instanceof LayoutError ? { stuck: err.rooms } : {}; // main words it (state.ts layoutFailed)
     result = { json: generated, error: err instanceof Error ? err.message : String(err), ...stuck };

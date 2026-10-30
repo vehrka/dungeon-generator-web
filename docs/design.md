@@ -368,12 +368,14 @@ out); deterministic, no randomness.
 - Edges: one per room pair, as the map's door groups (all the pair's gates on it; secret and
   one-way only when every door of the pair is).
 - Layers: BFS distance from START over the undirected graph, top to bottom; GOAL in the deepest
-  layer (Graphviz `rank=max` in the Python plot); unreachable rooms in a last layer of their own.
+  layer (Graphviz `rank=max` in the Python plot), a layer it leaves empty dropped; unreachable
+  rooms in a last layer of their own.
   BFS distances differ by at most 1 across an edge, so only GOAL's edges can skip layers. Adjacent
   layers: straight, bottom middle to top middle. Within a layer: a quadratic curve out of the
   bottoms, dipping into the gap below, never as far as the next row. Skipping layers: straight if
   clear, else a quadratic bowed sideways, 16 px further each try (alternating sides) until no
-  sample is within 4 px of a box between. One height per row, so straight edges stay in the gaps:
+  sample is within 4 px of a box between (the bow grows without bound, so it always ends; past
+  10 000 tries an explicit error, a bug guard). One height per row, so straight edges stay in the gaps:
   no edge runs through a box (tested on ruin, generated M and L 1–8, K5).
 - Order in a layer: by room number, then 8 barycenter sweeps (down, up), ties by room number; a
   room without neighbours in the other layer keeps its place.
@@ -390,8 +392,8 @@ out); deterministic, no randomness.
   paths), no gate list. Title as the map's with `graph` in place of the layout seed.
 - Edge labels can overlap edges or each other in dense graphs (Graphviz places them, we do not):
   cosmetic, accepted.
-- Cost: `drawGraph` on generated cyber L 7 (62 rooms) 13 ms (the sideways search of GOAL's edges),
-  ruin 5 ms (first call), M 1 ms.
+- Cost: `drawGraph` on generated cyber L 7 (62 rooms) 6.7 ms (most of it the sideways search of
+  GOAL's edges), ruin 4 ms (first call), M 1 ms.
 
 ### 8. Viewer (`src/viewer/`)
 
@@ -430,7 +432,10 @@ plan `docs/plans/10-viewer.md`.
   link: two joined boxes in the inputs' black border, the view shown filled black as the primary
   button (text links read as one row of actions with the exports). Kept across generate, load and reroll; not in the URL or storage. The
   worker's `DrawRequest` carries `view`; the graph skips layout, so it shows a dungeon whose layout
-  fails. Reroll and corridors stay enabled (they change the map). Export svg saves what is shown:
+  fails, and needs no layout seed: a loaded file without one draws its graph, an empty or bad seed
+field does not stop the switch to the graph. The toggle follows the view drawn, so a seed error on
+the switch to the map leaves it on the graph. Reroll and corridors stay enabled (they change the
+map; in the graph they redraw the same sheet). Export svg saves what is shown:
   `<name>-graph.svg` (`graphName`). The result band of the graph has no layout seed.
 
 ### 9. Generator (`engine/generator/`)

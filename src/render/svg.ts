@@ -13,6 +13,7 @@ import { scene } from "./scene";
 export type MapStyle = "plain" | "dyson" | "neon";
 export const mapStyles: MapStyle[] = ["plain", "dyson", "neon"];
 export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string; style?: MapStyle };
+export type TitleMeta = Omit<RenderMeta, "layoutSeed" | "style">; // the map's and the graph's title
 
 // Cyber is neon, zelda Dyson; any other theme, or none (a loaded JSON may lack one), plain
 // (docs/design.md §7).
@@ -154,7 +155,7 @@ export function keyColumn(rooms: Room[], gateLines: GateLine[], legend: LegendEn
 
 // Title and subtitle at the top left: theme, then size, dungeon seed, what drew the sheet (layout
 // seed, or graph) and grammar. Returns its marks and right edge.
-export function titleBlock(meta: Omit<RenderMeta, "layoutSeed" | "style">, drawnBy: string): { marks: string[]; x1: number } {
+export function titleBlock(meta: TitleMeta, drawnBy: string): { marks: string[]; x1: number } {
   const title = meta.theme ?? "dungeon";
   const subtitle = [meta.size && `size ${meta.size}`, meta.seed !== undefined && `seed ${meta.seed}`, drawnBy, meta.grammar].filter(Boolean).join(" · ");
   return {

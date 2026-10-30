@@ -86,6 +86,14 @@ describe("graphLayout", () => {
     expect(crossings(l)).toEqual([]);
   });
 
+  it("drops the layer GOAL leaves empty", () => {
+    // START 0 – 1 – 2 – GOAL 4 – 3: GOAL alone in layer 3 moves down beside 3.
+    const json = dungeon(5, [[0, 1], [1, 2], [2, 4], [4, 3]]);
+    const l = graphLayout(normalize(json));
+    expect(l.layers).toEqual([[0], [1], [2], [3, 4]]);
+    expect(l.edges.find((e) => e.b === 4 || e.a === 4)!.ctrl).toBeUndefined(); // 2 – GOAL stays straight
+  });
+
   it("draws one edge per room pair, the pair's gates on it, labelled with what they need", () => {
     const l = graphLayout(normalize(dungeon(3, [[0, 1], [1, 0], [1, 2]], [{ between: [1, 2], gate: "lock" }, { between: [1, 2], gate: "state" }])));
     expect(l.edges).toHaveLength(2);
@@ -172,6 +180,9 @@ describe("renderGraph", () => {
     expect(secret).toContain(">secret</text>");
     expect(secret).toContain(">secret  hidden path</text>");
     expect(secret).not.toContain('class="arrow"');
+    const off = renderGraph(normalize({ ...dungeon(2, []), nodes: [room(0), room(1), { id: 100, kind: "gate", type: "g", gate: "off", requires: [] }], edges: [{ source: 0, target: 100, oneway: false }, { source: 100, target: 1, oneway: false }] }), {});
+    expect(off).toContain('<path class="edge off" d="M0 -4H14"/></g>');
+    expect(off).not.toContain("[lever ON]");
     expect(svg).toContain(">eb  boss</text>");
     expect(svg).not.toContain(">m  monster</text>");
   });
