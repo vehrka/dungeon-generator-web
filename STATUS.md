@@ -66,7 +66,7 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 Not every dungeon is a place underground: show the graph itself, the grammar that grows it, and
 the story of the project. Decided 2026-10-30: own drawing code, no new dependency.
 
-- [ ] 1. **graph view** (`feature/graph-view`): `render/graph.ts` draws the dungeon graph as SVG,
+- [x] 1. **graph view** (`feature/graph-view`): `render/graph.ts` draws the dungeon graph as SVG,
   layered from START, plain look, rooms numbered with the map's glyphs, gates as tagged edges,
   one-way and secret marked as on the map. Viewer switch map | graph over the same dungeon (graph
   needs no layout, so it shows even when layout fails); CLI `--graph out.svg`. Plan

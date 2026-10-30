@@ -356,7 +356,31 @@ CLI (`cli/main.ts`, step 14a, plan `docs/plans/14a-generator-cli.md`): one comma
 JSON loads a file; `--dungeon-seed N [--size M] [--theme zelda]` generates one (both or neither is
 an error; the seed is required). `--json` (generating only) and `--key` write the JSON and key
 before layout, so a dungeon that fails to lay out can still be inspected. Generated output defaults
-to `<size>-<seed>-<theme>-map.svg`, size lower case.
+to `<size>-<seed>-<theme>-map.svg`, size lower case. `--graph <file.svg>` (step 24) writes the graph
+view, also before layout; SVG only.
+
+Graph view (`render/graph.ts`, step 24, plan `docs/plans/24-graph-view.md`, decided 2026-10-30):
+the room graph as a layered drawing, for dungeons that are not places underground and for a
+dungeon that fails to lay out or is not planar. `drawGraph(json) → { svg, rooms }` needs only
+`normalize`: no planarity, no layout, no seed. Own code, no dependency (dagre, elk, Graphviz ruled
+out); deterministic, no randomness.
+
+- Edges: one per room pair, as the map's door groups (all the pair's gates on it; secret and
+  one-way only when every door of the pair is).
+- Layers: BFS distance from START over the undirected graph, left to right; unreachable rooms in a
+  last layer of their own. BFS distances differ by at most 1 across an edge, so no edge skips a
+  layer: adjacent layers get a straight edge, right side to left side; within a layer a quadratic
+  curve out of the right sides, bowed right into the gap, never further than the next column.
+  One width per column, so straight edges stay in the gaps: no edge runs through a box (tested on
+  ruin and generated M and L 1–8).
+- Order in a layer: by room number, then 8 barycenter sweeps (down, up), ties by room number; a
+  room without neighbours in the other layer keeps its place.
+- Look: plain, whatever the theme. White boxes on `#f6f8f7`, number and the map's glyphs inside,
+  amber gate tags at the edge's middle, one-way chevrons along the edge past the tag, secret edges
+  dashed. Gate letters are the graph's own (A, B, … in edge order: layer, then position); the key
+  column (`keyColumn` in `svg.ts`, shared with the map) lists them. Title as the map's with `graph`
+  in place of the layout seed.
+- Cost: `drawGraph` on generated cyber L 7 (62 rooms) 2.8 ms, ruin 4 ms (first call), M 1 ms.
 
 ### 8. Viewer (`src/viewer/`)
 
@@ -391,6 +415,11 @@ plan `docs/plans/10-viewer.md`.
 - Logic in `state.ts` (no DOM, tested); `main.ts` only wires the DOM. A file that is not a JSON
   object is rejected by name; the rest is `normalize`'s schema check. The map goes in with
   `innerHTML`, safe because `render` escapes the JSON's values. No PNG export (resvg is Node-only).
+- View switch (step 24): `view map graph` text actions in the result band, above export, the one
+  shown not underlined. Kept across generate, load and reroll; not in the URL or storage. The
+  worker's `DrawRequest` carries `view`; the graph skips layout, so it shows a dungeon whose layout
+  fails. Reroll and corridors stay enabled (they change the map). Export svg saves what is shown:
+  `<name>-graph.svg` (`graphName`). The result band of the graph has no layout seed.
 
 ### 9. Generator (`engine/generator/`)
 
@@ -455,7 +484,7 @@ src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, 
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/engine/generator/   graph.ts, grammar.ts, themes.ts, types.ts, config.ts, expand.ts, reduce.ts,
                solve.ts, json.ts, index.ts
-src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts
+src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts, graph.ts
 src/cli/       main.ts     ruin.json | --dungeon-seed [--size] [--theme] → map.svg / .png
                            [-o] [--json] [--key] [--layout-seed] [--no-corridors] [--style]
 src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   generate or load JSON, seeds, reroll, corridors, export

@@ -68,17 +68,18 @@ Full design, constants and trade-offs: [docs/design.md](docs/design.md); map sty
 ```bash
 # generate
 $ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber|plain] \
-    [--json m-7-zelda.json] [--key m-7-zelda.md] [-o m-7-zelda-map.svg | .png] \
+    [--json m-7-zelda.json] [--key m-7-zelda.md] [--graph m-7-zelda-graph.svg] [-o m-7-zelda-map.svg | .png] \
     [--layout-seed N] [--no-corridors] [--style plain|dyson|neon]
 
 # or load a dungeon JSON
-$ npm run cli -- ruin.json [-o ruin-map.svg | .png] [--key ruin.md] [--layout-seed N] [--no-corridors] \
+$ npm run cli -- ruin.json [-o ruin-map.svg | .png] [--key ruin.md] [--graph ruin-graph.svg] [--layout-seed N] [--no-corridors] \
     [--style plain|dyson|neon]
 ```
 
 Defaults: size M, theme zelda, output `<size>-<seed>-<theme>-map.svg` (or `<input>-map.svg`), layout
 seed = dungeon seed (or the JSON's seed), style neon for cyber, Dyson for zelda, plain otherwise. No layout found → the error names the stuck rooms; try
-another `--layout-seed`.
+another `--layout-seed`. `--graph` draws the room graph, layered from START; it needs no layout, so
+it is written even when the map fails.
 
 ### Viewer
 
@@ -92,6 +93,8 @@ field; or type one and press Enter). Layout: seed, reroll, corridors. File: load
 the map. Export saves the SVG, the JSON (generated only) and the GM key. The theme also picks the
 map look: zelda Dyson, cyber neon, plain plain (a loaded file's other or missing theme plain). A
 theme change keeps the layout seed (same graph, other labels and look); a size change resets it.
+View switches between the map and the room graph of the same dungeon; the graph shows even when
+no layout is found.
 
 ## How we built it
 

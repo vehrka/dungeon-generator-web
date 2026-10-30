@@ -151,6 +151,8 @@ button.primary:disabled { background: var(--color-steel-gray); }
 .exports { gap: 10px; margin-top: 6px; font-size: 11px; }
 .exports button { font-size: 13px; }
 .exports button:hover:not(:disabled) { background: var(--color-canvas-mist); }
+/* The view shown reads as plain text, the other as a link. */
+.views button[aria-pressed="true"] { text-decoration: none; cursor: default; }
 
 @media (max-width: 800px) {
   .page { grid-template-columns: minmax(0, 1fr); }
