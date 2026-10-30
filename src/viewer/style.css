@@ -151,6 +151,14 @@ button.primary:disabled { background: var(--color-steel-gray); }
 .exports { gap: 10px; margin-top: 6px; font-size: 11px; }
 .exports button { font-size: 13px; }
 .exports button:hover:not(:disabled) { background: var(--color-canvas-mist); }
+/* View: a toggle, not an action, so not a link: two joined boxes in the inputs' black border, the
+   view shown filled as the primary button. */
+.views { gap: 0; margin-top: 6px; font-size: 11px; }
+.views span { margin-right: 10px; }
+.views button:not(.primary) { padding: 2px 12px; font-size: 13px; text-decoration: none; background: #fff; border: 1px solid var(--color-ink-black); }
+.views button + button { border-left: none; }
+.views button:hover:not([aria-pressed="true"]) { background: var(--color-canvas-mist); }
+.views button[aria-pressed="true"] { background: var(--color-ink-black); color: var(--color-canvas-mist); cursor: default; }
 
 @media (max-width: 800px) {
   .page { grid-template-columns: minmax(0, 1fr); }

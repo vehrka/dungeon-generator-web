@@ -356,7 +356,44 @@ CLI (`cli/main.ts`, step 14a, plan `docs/plans/14a-generator-cli.md`): one comma
 JSON loads a file; `--dungeon-seed N [--size M] [--theme zelda]` generates one (both or neither is
 an error; the seed is required). `--json` (generating only) and `--key` write the JSON and key
 before layout, so a dungeon that fails to lay out can still be inspected. Generated output defaults
-to `<size>-<seed>-<theme>-map.svg`, size lower case.
+to `<size>-<seed>-<theme>-map.svg`, size lower case. `--graph <file.svg>` (step 24) writes the graph
+view, also before layout; SVG only.
+
+Graph view (`render/graph.ts`, step 24, plan `docs/plans/24-graph-view.md`, decided 2026-10-30):
+the room graph as a layered drawing, for dungeons that are not places underground and for a
+dungeon that fails to lay out or is not planar. `drawGraph(json) → { svg, rooms }` needs only
+`normalize`: no planarity, no layout, no seed. Own code, no dependency (dagre, elk, Graphviz ruled
+out); deterministic, no randomness.
+
+- Edges: one per room pair, as the map's door groups (all the pair's gates on it; secret and
+  one-way only when every door of the pair is).
+- Layers: BFS distance from START over the undirected graph, top to bottom; GOAL in the deepest
+  layer (Graphviz `rank=max` in the Python plot), a layer it leaves empty dropped; unreachable
+  rooms in a last layer of their own.
+  BFS distances differ by at most 1 across an edge, so only GOAL's edges can skip layers. Adjacent
+  layers: straight, bottom middle to top middle. Within a layer: a quadratic curve out of the
+  bottoms, dipping into the gap below, never as far as the next row. Skipping layers: straight if
+  clear, else a quadratic bowed sideways, 16 px further each try (alternating sides) until no
+  sample is within 4 px of a box between (the bow grows without bound, so it always ends; past
+  10 000 tries an explicit error, a bug guard). One height per row, so straight edges stay in the gaps:
+  no edge runs through a box (tested on ruin, generated M and L 1–8, K5).
+- Order in a layer: by room number, then 8 barycenter sweeps (down, up), ties by room number; a
+  room without neighbours in the other layer keeps its place.
+- Look after the Python generator's Graphviz plot (`utils/dungeon_render.py`; changed 2026-10-30
+  from the plain TE look at the user's request): background `#eef0f3`; rooms rounded and coloured
+  by type with Python's `ROOM_STYLE` palette (n grey, e salmon, em, eb reds, t orange, p lavender,
+  c tan, gb green; unknown types white with a border), labelled number then type code; START and
+  GOAL yellow with a black border; pickups (item, key, boss key) blue ellipses `Get <objects>`;
+  switches and levers pink hexagons with their objects. Edges: two-way grey 1 px, one-way black
+  2 px with an arrowhead, lock orange, state, on, off magenta (off dashed), secret grey dashed; a
+  gated edge is labelled with what it needs (`[bronze key 1]`, `[a + b]`, `[breaker 1 ON]`) in its
+  colour, beside its middle on the side it leans to. The key column (`keyColumn` in `svg.ts`,
+  shared with the map) lists rooms by number and a legend of what is drawn (room types, nodes,
+  paths), no gate list. Title as the map's with `graph` in place of the layout seed.
+- Edge labels can overlap edges or each other in dense graphs (Graphviz places them, we do not):
+  cosmetic, accepted.
+- Cost: `drawGraph` on generated cyber L 7 (62 rooms) 6.7 ms (most of it the sideways search of
+  GOAL's edges), ruin 4 ms (first call), M 1 ms.
 
 ### 8. Viewer (`src/viewer/`)
 
@@ -391,6 +428,15 @@ plan `docs/plans/10-viewer.md`.
 - Logic in `state.ts` (no DOM, tested); `main.ts` only wires the DOM. A file that is not a JSON
   object is rejected by name; the rest is `normalize`'s schema check. The map goes in with
   `innerHTML`, safe because `render` escapes the JSON's values. No PNG export (resvg is Node-only).
+- View switch (step 24): `view map graph` in the result band, above export, as a toggle, not a
+  link: two joined boxes in the inputs' black border, the view shown filled black as the primary
+  button (text links read as one row of actions with the exports). Kept across generate, load and reroll; not in the URL or storage. The
+  worker's `DrawRequest` carries `view`; the graph skips layout, so it shows a dungeon whose layout
+  fails, and needs no layout seed: a loaded file without one draws its graph, an empty or bad seed
+field does not stop the switch to the graph. The toggle follows the view drawn, so a seed error on
+the switch to the map leaves it on the graph. Reroll and corridors stay enabled (they change the
+map; in the graph they redraw the same sheet). Export svg saves what is shown:
+  `<name>-graph.svg` (`graphName`). The result band of the graph has no layout seed.
 
 ### 9. Generator (`engine/generator/`)
 
@@ -455,7 +501,7 @@ src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, 
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/engine/generator/   graph.ts, grammar.ts, themes.ts, types.ts, config.ts, expand.ts, reduce.ts,
                solve.ts, json.ts, index.ts
-src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts
+src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts, graph.ts
 src/cli/       main.ts     ruin.json | --dungeon-seed [--size] [--theme] → map.svg / .png
                            [-o] [--json] [--key] [--layout-seed] [--no-corridors] [--style]
 src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   generate or load JSON, seeds, reroll, corridors, export

@@ -73,6 +73,8 @@ export const layoutFailed = (rooms: number[], generated: boolean): string[] => [
 export const dungeonName = ({ seed, size, theme }: Required<GenerateOptions>): string => `${size.toLowerCase()}-${seed}-${theme}`;
 // Plain keeps the name it had before styles (19).
 export const exportName = (name: string, seed: number, style: MapStyle): string => `${name}-map-${seed}${style === "plain" ? "" : `-${style}`}.svg`;
+// The graph needs no layout seed and has one look (24).
+export const graphName = (name: string): string => `${name}-graph.svg`;
 export const jsonName = (name: string): string => `${name}.json`;
 export const keyName = (name: string): string => `${name}-key.md`;
 

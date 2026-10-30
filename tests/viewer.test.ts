@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { isSeed, maxSeed } from "../src/engine/rng";
 import { defaultConfig } from "../src/engine/config";
-import { panelFor, dungeonName, exportName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseTheme, styleOf } from "../src/viewer/state";
+import { panelFor, dungeonName, exportName, graphName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseTheme, styleOf } from "../src/viewer/state";
 
 const text = readFileSync(join(import.meta.dirname, "fixtures", "ruin.json"), "utf8");
 
@@ -135,6 +135,13 @@ describe("exportName", () => {
   it("names any style but plain", () => {
     expect(exportName("m-7-zelda", 7, "dyson")).toBe("m-7-zelda-map-7-dyson.svg");
     expect(exportName("m-7-cyber", 7, "neon")).toBe("m-7-cyber-map-7-neon.svg");
+  });
+});
+
+describe("graphName", () => {
+  it("names the graph without a layout seed or style", () => {
+    expect(graphName("m-7-zelda")).toBe("m-7-zelda-graph.svg");
+    expect(graphName("ruin")).toBe("ruin-graph.svg");
   });
 });
 

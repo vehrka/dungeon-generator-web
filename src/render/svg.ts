@@ -3,16 +3,17 @@ import type { Point, Polygon } from "../engine/geometry";
 import { generate } from "../engine/index";
 import type { Layout } from "../engine/layout";
 import { isSeed } from "../engine/rng";
-import type { DungeonJson, Gate, RoomGraph } from "../engine/types";
+import type { DungeonJson, Gate, Room, RoomGraph } from "../engine/types";
 import { dyson } from "./dyson";
 import { defs, glyphs } from "./icons";
-import { doorMark, esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
+import { doorMark, esc, roomMarks, tagMark, unit, useGlyph, type LegendEntry, type Painter } from "./marks";
 import { neon } from "./neon";
 import { scene } from "./scene";
 
 export type MapStyle = "plain" | "dyson" | "neon";
 export const mapStyles: MapStyle[] = ["plain", "dyson", "neon"];
 export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string; style?: MapStyle };
+export type TitleMeta = Omit<RenderMeta, "layoutSeed" | "style">; // the map's and the graph's title
 
 // Cyber is neon, zelda Dyson; any other theme, or none (a loaded JSON may lack one), plain
 // (docs/design.md §7).
@@ -23,9 +24,9 @@ export const styleFor = (theme?: string): MapStyle => {
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no
 // radius or shadow. Amber is the one chromatic note, kept for gates (docs/plans/09-render-cli.md).
-const margin = 33;
-const gap = 66;
-const titleHeight = 66;
+export const margin = 33;
+export const gap = 66;
+export const titleHeight = 66;
 const line = 20;
 const charWidth = 7.5; // rough width of a 13 px character, sizes the key column and the title
 const titleCharWidth = 11; // the same at 19 px
@@ -53,7 +54,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 const gateText = (g: Gate) => [g.kind, g.requires.map((o) => o.name).join(", ")].filter(Boolean).join("  ");
 
 // The plain painter: rooms white, corridors grey, doors as gaps with jambs, amber gate tags.
-const plain: Painter = {
+export const plain: Painter = {
   css: style,
   page: "#f6f8f7",
   pad: 0,
@@ -92,34 +93,52 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
   const px = (p: Point) => ({ x: margin + pad + (p.x - bbox.x0) * unit, y: top + pad + (p.y - bbox.y0) * unit });
   const painted = painter.paint(s, px, meta.layoutSeed);
 
-  // Key column: rooms by number, gates by tag, legend of what the map uses.
-  const rooms = [...graph.rooms.values()].sort((a, b) => a.number - b.number);
-  const gateLines = s.doors.flatMap((d) => (d.tag ? [{ tag: d.tag, text: d.gates.map(gateText).join("; ") }] : []));
-  const usedGlyphs = new Set(s.rooms.flatMap((r) => r.glyphs));
-  const legend = [
-    ...Object.keys(glyphs).filter((g) => usedGlyphs.has(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name })),
-    ...painted.legend,
-  ];
-  const keyWidth = Math.max(200, 28 + charWidth * Math.max(...rooms.map((r) => r.label.length), ...gateLines.map((g) => g.text.length)));
+  const gateLines = s.doors.flatMap((d) => (d.tag ? [{ tag: d.tag, gates: d.gates }] : []));
+  const legend = [...glyphLegend(s.rooms.flatMap((r) => r.glyphs)), ...painted.legend];
+  const k = keyColumn([...graph.rooms.values()], gateLines, legend, margin + mapWidth + gap, top);
+  const t = titleBlock(meta, `layout ${meta.layoutSeed}`);
+  const width = Math.max(k.x1, t.x1) + margin;
+  const height = Math.max(top + mapHeight, k.y1) + margin;
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
+    painter.css,
+    `<defs>${defs()}${painted.defs}</defs>`,
+    `<rect width="${width}" height="${height}" fill="${painter.page}"/>`,
+    ...t.marks,
+    ...painted.map,
+    ...k.marks,
+    `</svg>`,
+  ].join("\n");
+}
 
-  const kx = margin + mapWidth + gap;
+export type GateLine = { tag: string; gates: Gate[] };
+
+// Legend entries for the glyphs drawn, in the glyph table's order.
+const glyphLegend = (used: string[]): LegendEntry[] =>
+  Object.keys(glyphs).filter((g) => used.includes(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name }));
+
+// Key column at (x, y), shared by the map and the graph: rooms by number, gates by tag, legend of
+// what the sheet draws. Returns its marks and right and bottom edges.
+export function keyColumn(rooms: Room[], gateLines: GateLine[], legend: LegendEntry[], x: number, y: number): { marks: string[]; x1: number; y1: number } {
+  rooms = [...rooms].sort((a, b) => a.number - b.number);
+  const gateTexts = gateLines.map((g) => ({ tag: g.tag, text: g.gates.map(gateText).join("; ") }));
+  const keyWidth = Math.max(200, 28 + charWidth * Math.max(...rooms.map((r) => r.label.length), ...gateTexts.map((g) => g.text.length), ...legend.map((l) => l.text.length)));
   const key: string[] = [];
-  let y = top;
   const heading = (text: string) => {
-    key.push(`<text class="heading" x="${kx}" y="${y + 13}">${text}</text>`, `<line class="rule" x1="${kx}" y1="${y + 20}" x2="${kx + keyWidth}" y2="${y + 20}"/>`);
+    key.push(`<text class="heading" x="${x}" y="${y + 13}">${text}</text>`, `<line class="rule" x1="${x}" y1="${y + 20}" x2="${x + keyWidth}" y2="${y + 20}"/>`);
     y += 22 + line;
   };
   heading("rooms");
   for (const r of rooms) {
     const n = esc(String(r.number)); // number and gate kind are untyped at runtime, like the labels
-    key.push(`<text class="muted" x="${kx}" y="${y}">${n}</text>`, `<text data-key="${n}" x="${kx + 28}" y="${y}">${esc(r.label)}</text>`);
+    key.push(`<text class="muted" x="${x}" y="${y}">${n}</text>`, `<text data-key="${n}" x="${x + 28}" y="${y}">${esc(r.label)}</text>`);
     y += line;
   }
-  if (gateLines.length) {
+  if (gateTexts.length) {
     y += line;
     heading("gates");
-    for (const g of gateLines) {
-      key.push(tagMark(kx + 7, y - 4, g.tag), `<text x="${kx + 28}" y="${y}">${esc(g.text)}</text>`);
+    for (const g of gateTexts) {
+      key.push(tagMark(x + 7, y - 4, g.tag), `<text x="${x + 28}" y="${y}">${esc(g.text)}</text>`);
       y += line;
     }
   }
@@ -127,28 +146,22 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
     y += line;
     heading("legend");
     for (const l of legend) {
-      key.push(`<g transform="translate(${kx},${y})">${l.mark}</g>`, `<text x="${kx + 28}" y="${y}">${l.text}</text>`);
+      key.push(`<g transform="translate(${x},${y})">${l.mark}</g>`, `<text x="${x + 28}" y="${y}">${l.text}</text>`);
       y += line;
     }
   }
+  return { marks: key, x1: x + keyWidth, y1: y };
+}
 
+// Title and subtitle at the top left: theme, then size, dungeon seed, what drew the sheet (layout
+// seed, or graph) and grammar. Returns its marks and right edge.
+export function titleBlock(meta: TitleMeta, drawnBy: string): { marks: string[]; x1: number } {
   const title = meta.theme ?? "dungeon";
-  const subtitle = [meta.size && `size ${meta.size}`, meta.seed !== undefined && `seed ${meta.seed}`, `layout ${meta.layoutSeed}`, meta.grammar]
-    .filter(Boolean)
-    .join(" · ");
-  const width = Math.max(kx + keyWidth, margin + Math.max(title.length * titleCharWidth, subtitle.length * charWidth)) + margin;
-  const height = Math.max(top + mapHeight, y) + margin;
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
-    painter.css,
-    `<defs>${defs()}${painted.defs}</defs>`,
-    `<rect width="${width}" height="${height}" fill="${painter.page}"/>`,
-    `<text class="title" x="${margin}" y="${margin + 19}">${esc(title)}</text>`,
-    `<text class="muted" x="${margin}" y="${margin + 40}">${esc(subtitle)}</text>`,
-    ...painted.map,
-    ...key,
-    `</svg>`,
-  ].join("\n");
+  const subtitle = [meta.size && `size ${meta.size}`, meta.seed !== undefined && `seed ${meta.seed}`, drawnBy, meta.grammar].filter(Boolean).join(" · ");
+  return {
+    marks: [`<text class="title" x="${margin}" y="${margin + 19}">${esc(title)}</text>`, `<text class="muted" x="${margin}" y="${margin + 40}">${esc(subtitle)}</text>`],
+    x1: margin + Math.max(title.length * titleCharWidth, subtitle.length * charWidth),
+  };
 }
 
 // JSON → SVG at a layout seed, titled from the JSON: the CLI and the viewer draw through this.

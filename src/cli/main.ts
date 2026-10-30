@@ -1,6 +1,6 @@
 // ruin.json → ruin-map.svg / .png, or a generated dungeon → m-7-zelda-map.svg
 //
-//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--style plain|dyson|neon] [--key ruin.md]
+//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--style plain|dyson|neon] [--key ruin.md] [--graph ruin-graph.svg]
 //   npm run cli -- --dungeon-seed 7 [--size M] [--theme zelda] [--json m-7-zelda.json] [--key m-7-zelda.md] [...]
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -12,6 +12,7 @@ import { DEFAULT_THEME, THEMES, type ThemeName } from "../engine/generator/theme
 import { normalize } from "../engine/normalize";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
+import { drawGraph } from "../render/graph";
 import { dungeonKey } from "../render/key";
 import { draw, mapStyles, type MapStyle } from "../render/svg";
 
@@ -20,6 +21,7 @@ export type CliArgs = {
   output: string;
   json?: string;
   key?: string;
+  graph?: string;
   layoutSeed: number | undefined;
   corridors: boolean;
   style?: MapStyle; // the theme's when absent
@@ -45,6 +47,7 @@ export function parseCli(argv: string[]): CliArgs {
       theme: { type: "string" },
       json: { type: "string" },
       key: { type: "string" },
+      graph: { type: "string" },
       style: { type: "string" },
     },
   });
@@ -68,10 +71,11 @@ export function parseCli(argv: string[]): CliArgs {
     output = values.output ?? `${size.toLowerCase()}-${dungeonSeed}-${theme}-map.svg`;
   }
   if (!/\.(svg|png)$/i.test(output)) throw new Error(`Output must end in .svg or .png: ${output}`);
+  if (values.graph !== undefined && !/\.svg$/i.test(values.graph)) throw new Error(`--graph must end in .svg: ${values.graph}`);
   const layoutSeed = parseSeed("layout-seed", values["layout-seed"]);
   const style = values.style?.toLowerCase() as MapStyle | undefined;
   if (style !== undefined && !mapStyles.includes(style)) throw new Error(`Unknown style ${values.style}, expected one of ${mapStyles.join(" ")}`);
-  return { source, output, json: values.json, key: values.key, layoutSeed, corridors: !values["no-corridors"], style };
+  return { source, output, json: values.json, key: values.key, graph: values.graph, layoutSeed, corridors: !values["no-corridors"], style };
 }
 
 type Out = { log: (m: string) => void; error: (m: string) => void };
@@ -86,6 +90,7 @@ export async function main(argv: string[], out: Out = console): Promise<number> 
     // Written before layout, so a dungeon that fails to lay out can still be inspected.
     if (args.json) writeFileSync(args.json, JSON.stringify(json, null, 2) + "\n");
     if (args.key) writeFileSync(args.key, dungeonKey(json));
+    if (args.graph) writeFileSync(args.graph, drawGraph(json).svg);
     const seed = isSeed(json.seed) ? json.seed : undefined;
     const layoutSeed = args.layoutSeed ?? seed;
     // Only a loaded file can lack one: a generated dungeon carries its dungeon seed.
