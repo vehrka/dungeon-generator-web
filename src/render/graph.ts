@@ -27,6 +27,7 @@ export type GraphEdge = {
   label?: string; // the objects the gates need, [bronze key 1]
   secret: boolean;
   towards?: RoomId; // one-way: the room it leads to
+  labelX?: number; // across: the label's x, the middle of the gap after a's layer
 };
 export type GraphLayout = { layers: RoomId[][]; boxes: Map<RoomId, GraphBox>; edges: GraphEdge[]; bbox: Rect; across: boolean };
 // across: layers left to right (the grammar sheet's variants, Python's rankdir=LR), else top to
@@ -41,7 +42,7 @@ const boxPad = 10; // px, text to box side
 const roundPad = 18; // px, text to an ellipse's or hexagon's side
 const colGap = 22; // px between boxes in a row
 const rowGap = 64; // px between rows
-const maxBow = 2 * (rowGap - 20); // a same-layer curve's dip (half its bow) stays clear of the next row
+const acrossGap = 36; // px between layers across, unless labels need more
 const step = 16; // px, the control point's sideways step while a curve that skips rows looks for a way past
 const clearance = 4; // px, a curve that skips rows stays this far off every box
 const labelGap = 8; // px, across: an edge label to the boxes either side
@@ -183,8 +184,8 @@ export function graphLayout(graph: RoomGraph, { across = false, look = (id) => n
   const widest = Math.max(...sized.map(rowWidth));
   const rowHeight = sized.map((row) => Math.max(...row.map((b) => b.h)));
   const gaps = layers.map((_, i) => {
-    const labels = across ? pairs.filter((p) => p.label && layer.get(p.a) === i && layer.get(p.b) === i + 1) : [];
-    return Math.max(rowGap, ...labels.map((p) => Math.ceil(p.label!.length * labelCharWidth) + 2 * labelGap));
+    const labels = across ? pairs.filter((p) => p.label && layer.get(p.a) === i && layer.get(p.b)! > i) : [];
+    return Math.max(across ? acrossGap : rowGap, ...labels.map((p) => Math.ceil(p.label!.length * labelCharWidth) + 2 * labelGap));
   });
   const rowY = rowHeight.map((_, i) => rowHeight.slice(0, i).reduce((s, h, j) => s + h + gaps[j]!, 0));
   sized.forEach((row, i) => {
@@ -214,7 +215,8 @@ export function graphLayout(graph: RoomGraph, { across = false, look = (id) => n
     const same = ba.layer === bb.layer;
     const to = { x: bb.x + bb.w / 2, y: same ? bb.y + bb.h : bb.y };
     let ctrl: Point | undefined;
-    if (same) ctrl = { x: (from.x + to.x) / 2, y: from.y + Math.min(maxBow, 24 + Math.abs(to.x - from.x) / 4) };
+    // A same-layer curve's dip (half its bow) stays clear of the next row.
+    if (same) ctrl = { x: (from.x + to.x) / 2, y: from.y + Math.min(2 * (gaps[ba.layer]! - 20), 24 + Math.abs(to.x - from.x) / 4) };
     else if (bb.layer - ba.layer > 1) {
       const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
       const between = [...boxes.values()].filter((o) => o.layer > ba.layer && o.layer < bb.layer);
@@ -240,6 +242,7 @@ export function graphLayout(graph: RoomGraph, { across = false, look = (id) => n
       ...(label ? { label } : {}),
       secret,
       ...(oneway ? { towards: first.b } : {}),
+      ...(across && !same ? { labelX: rowY[ba.layer]! + rowHeight[ba.layer]! + gaps[ba.layer]! / 2 } : {}),
     };
   });
 
@@ -273,15 +276,23 @@ type Anchor = "start" | "middle" | "end";
 
 // An edge label beside the edge's middle, on the side the edge leans to, so the labels of edges
 // fanning out of one room part ways: left or right of it top to bottom (anchored at its end on
-// the left). Across: centred above or below, as far off as the edge's slope under the text needs;
-// a curve within a layer (a vertical chord) on its right.
+// the left). Across: in the gap after the edge's first box (so a curve skipping layers keeps it
+// clear of the boxes between), centred above or below the edge as far off as its slope under the
+// text needs, on a flat edge over the line (the halo cuts it); a curve within a layer on its right.
 function labelAt(e: GraphEdge, across: boolean, length = e.label?.length ?? 0): Point & { anchor: Anchor } {
-  const m = quad(e.from, e.ctrl ?? e.from, e.to, 0.5);
-  if (across && e.from.x !== e.to.x) {
-    const lean = e.ctrl ? e.ctrl.y - (e.from.y + e.to.y) / 2 : e.to.y - e.from.y;
-    const off = 5 + (Math.abs(e.to.y - e.from.y) / Math.abs(e.to.x - e.from.x)) * (length * labelCharWidth) / 2;
-    return { x: m.x, y: lean > 0 ? m.y + off + 8 : m.y - off, anchor: "middle" };
+  if (across && e.labelX !== undefined) {
+    const c = e.ctrl ?? e.from;
+    let [lo, hi] = [0, 1]; // x grows along the edge: bisect for labelX
+    for (let i = 0; i < 30; i++) [lo, hi] = quad(e.from, c, e.to, (lo + hi) / 2).x < e.labelX ? [(lo + hi) / 2, hi] : [lo, (lo + hi) / 2];
+    const t = (lo + hi) / 2;
+    const m = quad(e.from, c, e.to, t);
+    const d = e.ctrl ? { x: (1 - t) * (c.x - e.from.x) + t * (e.to.x - c.x), y: (1 - t) * (c.y - e.from.y) + t * (e.to.y - c.y) } : { x: e.to.x - e.from.x, y: e.to.y - e.from.y };
+    const slope = Math.abs(d.y / d.x);
+    if (slope < 0.05) return { x: m.x, y: m.y + 3.5, anchor: "middle" };
+    const off = 5 + (slope * length * labelCharWidth) / 2;
+    return { x: m.x, y: d.y > 0 ? m.y + off + 8 : m.y - off, anchor: "middle" };
   }
+  const m = quad(e.from, e.ctrl ?? e.from, e.to, 0.5);
   if (across) return { x: m.x + 6, y: m.y + 3, anchor: "start" };
   const lean = e.ctrl && e.from.y !== e.to.y ? e.ctrl.x - (e.from.x + e.to.x) / 2 : e.to.x - e.from.x;
   const end = lean < 0;

@@ -38,6 +38,9 @@ layout seed ─▶ room shapes ─▶ configuration spaces ──┘
    merged, then a solver walks from START collecting keys to prove the GOAL is reachable. Size
    (XS, S, M, L) sets which variants each roll can pick, so how large it grows; the theme
    (`zelda`, `cyber`, `plain`) only changes names, so a seed gives the same graph with any theme.
+   The whole grammar on one sheet:
+
+   ![Combined dungeon grammar: rule cards with d20 ranges per size and variant diagrams](docs/grammar.svg)
 2. **The JSON is the seam.** The generator writes the dungeon as JSON
    ([format](docs/design.md#input-schema-2)); the CLI and viewer can also load one from a file.
    Everything after this point is the same code.
@@ -74,12 +77,15 @@ $ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber|plain] 
 # or load a dungeon JSON
 $ npm run cli -- ruin.json [-o ruin-map.svg | .png] [--key ruin.md] [--graph ruin-graph.svg] [--layout-seed N] [--no-corridors] \
     [--style plain|dyson|neon]
+
+# the grammar sheet
+$ npm run cli -- --grammar docs/grammar.svg
 ```
 
 Defaults: size M, theme zelda, output `<size>-<seed>-<theme>-map.svg` (or `<input>-map.svg`), layout
 seed = dungeon seed (or the JSON's seed), style neon for cyber, Dyson for zelda, plain otherwise. No layout found → the error names the stuck rooms; try
 another `--layout-seed`. `--graph` draws the room graph, layered from START; it needs no layout, so
-it is written even when the map fails.
+it is written even when the map fails. `--grammar` writes the grammar sheet and nothing else.
 
 ### Viewer
 

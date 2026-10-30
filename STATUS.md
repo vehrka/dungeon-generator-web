@@ -71,10 +71,12 @@ the story of the project. Decided 2026-10-30: own drawing code, no new dependenc
   pickups and switches shaped, gates as coloured edges labelled with their objects. Viewer switch
   map | graph over the same dungeon (graph needs no layout, so it shows even when layout fails);
   CLI `--graph out.svg`. Plan `docs/plans/24-graph-view.md`.
-- [ ] 2. **grammar sheet** (`feature/grammar-sheet`): `render/grammar.ts` draws the Combined grammar
+- [x] 2. **grammar sheet** (`feature/grammar-sheet`): `render/grammar.ts` draws the Combined grammar
   from `GRAMMAR` data as one SVG sheet (rule cards, d20 ranges per size, legend; after Python's
   `grammar/render.py` sheet). CLI writes `docs/grammar.svg`; a test fails when the committed sheet is
-  stale. Embedded in README.
+  stale. Embedded in README. Done: diagrams through the graph view's layout (`across`) and painter
+  (`graphBody`), graph SVGs byte-identical; R by pacing tier; size table rooms after merge, means
+  XS 6.5 … L 28.9 (the plan's 7.7 … 35.7 counted gate nodes too) (`docs/plans/25-grammar-sheet.md`).
 - [ ] 3. **help page** (`feature/help-page`): second viewer page `help.html`, linked from the header,
   TE guide look: the project's story, how it is built (pipeline), the grammar sheet, references.
   Hand-written HTML, no Markdown dependency.
