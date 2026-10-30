@@ -216,7 +216,7 @@ describe("draw", () => {
     const { graph, layout } = generate(json, 3, defaultConfig);
     expect(draw(json, 3, defaultConfig).svg).toBe(render(graph, layout, { ...meta, layoutSeed: 3, style: "plain" }));
     expect(draw({ ...json, theme: "cyber" }, 3, defaultConfig).svg).toContain('fill="#0b0814"');
-    expect(draw({ ...json, theme: "zelda" }, 3, defaultConfig).svg).toContain('class="hatch"');
+    expect(draw({ ...json, theme: "classic" }, 3, defaultConfig).svg).toContain('class="hatch"');
   });
 
   it("leaves an unusable dungeon seed out of the title", () => {
@@ -229,10 +229,14 @@ describe("draw", () => {
 });
 
 describe("styleFor", () => {
-  it("draws cyber neon, zelda Dyson, any other theme or none plain", () => {
+  it("draws cyber neon, classic Dyson, any other theme or none plain", () => {
     for (const theme of ["cyber", "Cyber"]) expect(styleFor(theme)).toBe("neon");
-    for (const theme of ["zelda", "Zelda"]) expect(styleFor(theme)).toBe("dyson");
+    for (const theme of ["classic", "Classic"]) expect(styleFor(theme)).toBe("dyson");
     for (const theme of ["tor-barrow", "", "constructor", "__proto__", undefined]) expect(styleFor(theme)).toBe("plain");
+  });
+
+  it("draws a file saved before classic was renamed from zelda in Dyson", () => {
+    for (const theme of ["zelda", "Zelda"]) expect(styleFor(theme)).toBe("dyson");
   });
 });
 

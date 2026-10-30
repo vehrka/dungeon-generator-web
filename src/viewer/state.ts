@@ -1,7 +1,7 @@
 import { defaultConfig, type LayoutConfig } from "../engine/config";
 import type { GenerateOptions } from "../engine/generator/index";
 import { PRESETS, type Preset } from "../engine/generator/grammar";
-import { THEMES, type ThemeName } from "../engine/generator/themes";
+import { savedTheme, THEMES, type ThemeName } from "../engine/generator/themes";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
 import { styleFor, type MapStyle } from "../render/svg";
@@ -27,12 +27,12 @@ const isPreset = (s: unknown): s is Preset => PRESETS.includes(s as Preset);
 const isTheme = (s: unknown): s is ThemeName => typeof s === "string" && Object.hasOwn(THEMES, s);
 
 // A loaded file shows its seed, size and theme in the dungeon panel, case as the generator writes
-// them. Shown, not promised: Enter rebuilds the file's dungeon only if this generator made it (a
+// them, a theme's name before 1.0.0 as today's. Shown, not promised: Enter rebuilds the file's dungeon only if this generator made it (a
 // Python or hand-made file differs). No usable seed → empty field; a size or theme the generator
 // does not take leaves its select as it was.
 export function panelFor(json: DungeonJson): { seed?: number; size?: Preset; theme?: ThemeName } {
   const size: unknown = typeof json.size === "string" ? json.size.toUpperCase() : undefined;
-  const theme: unknown = typeof json.theme === "string" ? json.theme.toLowerCase() : undefined;
+  const theme: unknown = typeof json.theme === "string" ? savedTheme(json.theme.toLowerCase()) : undefined;
   return { ...(isSeed(json.seed) && { seed: json.seed }), ...(isPreset(size) && { size }), ...(isTheme(theme) && { theme }) };
 }
 
@@ -69,7 +69,7 @@ export const layoutFailed = (rooms: number[], generated: boolean): string[] => [
   `Stuck on rooms ${rooms.join(", ")}.`,
 ];
 
-// As the CLI (14a): m-7-zelda.
+// As the CLI (14a): m-7-classic.
 export const dungeonName = ({ seed, size, theme }: Required<GenerateOptions>): string => `${size.toLowerCase()}-${seed}-${theme}`;
 // Plain keeps the name it had before styles (19).
 export const exportName = (name: string, seed: number, style: MapStyle): string => `${name}-map-${seed}${style === "plain" ? "" : `-${style}`}.svg`;

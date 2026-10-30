@@ -4,13 +4,13 @@ import { dungeonJson, label } from "../../src/engine/generator/json";
 import { THEMES } from "../../src/engine/generator/themes";
 import { build, GOAL, KEY, LOCK, PICKUP, room, START } from "./build";
 
-const meta = { seed: 42, size: "M" as const, theme: "zelda" as const };
+const meta = { seed: 42, size: "M" as const, theme: "classic" as const };
 
 describe("json", () => {
   it("exports gates, rooms, objects and numbers with dense ids", () => {
     const g = build([START, GOAL, room("n"), LOCK, PICKUP], [[0, 4], [0, 3], [3, 1]]);
     g.deleteVertex(2);
-    const data = dungeonJson(g, meta, THEMES.zelda);
+    const data = dungeonJson(g, meta, THEMES.classic);
     expect(data).toMatchObject({ schema_version: 2, grammar: "Combined", seed: 42, size: "M", start: 0, goal: 1, solvable: true, unsolvable_reasons: [] });
     expect(data.nodes[2]).toEqual({ id: 2, type: "lock", name: "Use spam key 1", kind: "gate", gate: "lock", requires: [KEY.id] });
     expect(data.nodes[3]).toEqual({ id: 3, type: "key", name: "Get spam key 1", kind: "room", objects: [KEY.id], number: 3, label: "Pickup: spam key 1" });
@@ -26,23 +26,23 @@ describe("json", () => {
   it("numbers breadth first from START, by id among siblings, through gates", () => {
     // 0 – 4, 0 – 2, 2 – gate 5 – 3, 4 – 1
     const g = build([START, GOAL, room("e"), room("t"), room("p"), LOCK, PICKUP], [[0, 4], [0, 2], [2, 5], [5, 3], [4, 1], [0, 6]]);
-    const rooms = dungeonJson(g, meta, THEMES.zelda).nodes.flatMap((n) => (n.kind === "room" ? [[n.id, n.number]] : []));
+    const rooms = dungeonJson(g, meta, THEMES.classic).nodes.flatMap((n) => (n.kind === "room" ? [[n.id, n.number]] : []));
     expect(rooms).toEqual([[0, 1], [1, 6], [2, 2], [3, 5], [4, 3], [6, 4]]);
   });
 
   it("reports an unsolvable graph", () => {
-    const data = dungeonJson(build([START, GOAL, LOCK], [[0, 2], [2, 1]]), meta, THEMES.zelda);
+    const data = dungeonJson(build([START, GOAL, LOCK], [[0, 2], [2, 1]]), meta, THEMES.classic);
     expect(data.solvable).toBe(false);
     expect(data.unsolvable_reasons).toEqual(["GOAL unreachable", "Use spam key 1 needs spam key 1"]);
     expect(data.objects[0]!.found_in).toEqual([]);
   });
 
   it("labels rooms per rule", () => {
-    const l = (type: string, name = type, theme = THEMES.zelda) => label(type, name, theme.rooms);
+    const l = (type: string, name = type, theme = THEMES.classic) => label(type, name, theme.rooms);
     expect(l("st", "START")).toBe("Entrance (START)");
     expect(l("st", "START", THEMES.cyber)).toBe("Jack-in point (START)");
     expect(l("exit", "EXIT")).toBe("Extra entrance (EXIT)");
-    expect(l("gb: rupees")).toBe("Bonus goal: rupees");
+    expect(l("gb: coins")).toBe("Bonus goal: coins");
     expect(l("gb: paydata", "gb: paydata", THEMES.cyber)).toBe("Data cache: paydata");
     expect(l("bosskey", "Get boss key 1")).toBe("Pickup: boss key 1");
     expect(l("switch", "switch 2")).toBe("Switch: switch 2");

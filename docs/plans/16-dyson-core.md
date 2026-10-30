@@ -30,7 +30,7 @@ layout or schema change, so no bench.
   rectangle cutting the wall at each door segment and corridor end; serif numbers 17 px; glyphs
   black 1.2 px. Tokens ink, paper, grid; font stack from the design.
 - CLI `--style catalogue|dyson`; unknown value → error listing the options. Output name unchanged.
-- Viewer: no code change. The worker calls `draw` without a style, so zelda maps turn Dyson now;
+- Viewer: no code change. The worker calls `draw` without a style, so classic maps turn Dyson now;
   the style select is step 5.
 - Legend open point: `anySecret` / `anyOneway` from the door groups, for both styles, so the legend
   lists only marks drawn. Own commit after the byte-identical check; the catalogue snapshot may
@@ -42,7 +42,7 @@ layout or schema change, so no bench.
   other strokes.
 - `tests/render.test.ts`, Dyson: standalone SVG, white page; one floor polygon per room and
   corridor; numbers and labels once, escaped (hostile input); no amber, no `#e5e5e5`; same input
-  same string; fixture snapshot. `styleFor`: cyber, zelda, other, undefined.
+  same string; fixture snapshot. `styleFor`: cyber, classic, other, undefined.
 - CLI: `--style dyson` writes SVG and PNG; default follows the theme; bad style exits 1.
 - Existing tests the default breaks (fixture theme `tor-barrow` → dyson): `draw` vs `render`
   passes `"catalogue"`; CLI corridor test adds `--style catalogue`.
@@ -54,7 +54,7 @@ After the frame split: `diff -r` empty. The legend commit is checked separately.
 
 ## By hand
 
-PNGs of m-1, l-1 and a generated zelda L. l-1 render time and SVG size noted in
+PNGs of m-1, l-1 and a generated classic L. l-1 render time and SVG size noted in
 `docs/dyson-style.md` (target < 100 ms, < 1 MB). Key column width estimate checked for the serif.
 
 ## Risk

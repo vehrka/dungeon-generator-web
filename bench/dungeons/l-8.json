@@ -3,7 +3,7 @@
   "grammar": "Combined",
   "seed": 8,
   "size": "L",
-  "theme": "zelda",
+  "theme": "classic",
   "start": 0,
   "goal": 1,
   "solvable": true,
@@ -117,12 +117,12 @@
     },
     {
       "id": 11,
-      "type": "gb: rupees",
-      "name": "gb: rupees",
+      "type": "gb: coins",
+      "name": "gb: coins",
       "kind": "room",
       "objects": [],
       "number": 5,
-      "label": "Bonus goal: rupees"
+      "label": "Bonus goal: coins"
     },
     {
       "id": 12,

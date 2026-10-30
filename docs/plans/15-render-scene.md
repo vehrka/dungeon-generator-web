@@ -48,7 +48,7 @@ reads the scene. Output byte-identical. Prerequisite for the Dyson painter (step
 ## Byte-identical guard
 
 The snapshot covers one fixture. Before the refactor, catalogue SVGs dumped from `dev` (throwaway
-script, not committed): `bench/dungeons/*` and generated M/L zelda and cyber dungeons × layout seeds
+script, not committed): `bench/dungeons/*` and generated M/L classic and cyber dungeons × layout seeds
 1–3 × corridors on and off, 240 files. After: dump again, `diff -r` must be empty.
 
 ## Done when

@@ -22,8 +22,8 @@ export const PRESETS: Preset[] = ["XS", "S", "M", "L"];
 export const GATE_KINDS: EdgeKind[] = ["lock", "state", "on", "off", "secret"];
 
 export const REWARDS: Reward[] = [
-  ["heart piece", 1, 4],
-  ["rupees", 5, 12],
+  ["healing potion", 1, 4],
+  ["coins", 5, 12],
   ["bombs", 13, 16],
   ["arrows", 17, 20],
 ];

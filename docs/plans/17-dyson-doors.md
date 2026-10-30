@@ -56,7 +56,7 @@ After: `diff -r` empty.
 
 ## By hand
 
-PNGs of m-1, l-1 and a generated zelda L: door rectangles at L/T corners and on short walls, tags in
+PNGs of m-1, l-1 and a generated classic L: door rectangles at L/T corners and on short walls, tags in
 3-unit rooms against numbers and glyphs. l-1 render time and SVG size noted in
 `docs/dyson-style.md`.
 

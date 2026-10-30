@@ -27,7 +27,7 @@ Port (Python file → lines):
 | `dungeon_fx11.py` `DCombined` | ~170 | expansion: `_dungeonstart`, `_expand_vertex`, `_next_red_vertex`, `_progress`, `_finish`, `_apply_variant`, `_add_grammar_vertex`, `_add_link` |
 | `utils/graph_utils.py` | ~250 used | `Dungeon` base (`generate`, `_process`, `_reduce_graph`, `_mergeable_edge`, `_merge_rooms`, `_new_object`), `unsolvable_reasons`, `steps`, `progress` |
 | `utils/dungeon_json.py` | 186 | schema 2 export: `_exits`, `_numbers` (BFS from START), `_label`, `SPECIAL_ROOMS` |
-| `grammar/themes.py` | 131 | themes `zelda` (default), `cyber`, `tor-barrow`, `tor-dwarf` (data) |
+| `grammar/themes.py` | 131 | themes `zelda` (default; `classic` here), `cyber`, `tor-barrow`, `tor-dwarf` (data) |
 | `utils/dungeon_render.py` | `ROOM_STYLE` only | default room descriptions for labels; colours not needed |
 | `utils/dungeon_key.py` | 106 | Markdown GM key from the JSON (step 14) |
 
@@ -76,7 +76,7 @@ weighted `distances` (Dijkstra, undirected). A small graph module covers it.
   `Switch: …`, `Lever: … (starts OFF)`, `ROOM_STYLE` description, else name. Keep schema 2 as the
   interchange format: loading a JSON file in the viewer and CLI keeps working.
 - **Theme**: text only. Same seed and size give the same graph with any theme. TS adds `plain`
-  (zelda's text) so the viewer's one theme select can pick the plain map style (2026-10-30).
+  (classic's text) so the viewer's one theme select can pick the plain map style (2026-10-30).
 
 ## Fixes (decision 5)
 

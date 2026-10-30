@@ -35,16 +35,16 @@ Preset rule and redraw are DOM, checked by hand.
 
 ## By hand
 
-`npm run dev`: zelda opens in dyson, cyber in catalogue; catalogue picked on zelda survives
+`npm run dev`: classic opens in dyson, cyber in catalogue; catalogue picked on classic survives
 reroll, size, corridors and generate; a theme change presets again; `tests/fixtures/ruin.json`
 loads in its theme's style; export names in both styles.
 
 ## Outcome
 
 Checked in Chrome on `npm run dev` (events dispatched by script, downloads intercepted): m-7
-zelda opens dyson; catalogue picked by hand survives reroll, size, corridors and generate with
-the same theme; cyber presets catalogue, dyson picked by hand survives reroll, zelda presets dyson
-again. Loads: tor-barrow → dyson, cyber → catalogue, no theme → dyson. Export names `m-7-zelda-map-7-dyson.svg`, `m-7-zelda-map-7.svg`,
+classic opens dyson; catalogue picked by hand survives reroll, size, corridors and generate with
+the same theme; cyber presets catalogue, dyson picked by hand survives reroll, classic presets dyson
+again. Loads: tor-barrow → dyson, cyber → catalogue, no theme → dyson. Export names `m-7-classic-map-7-dyson.svg`, `m-7-classic-map-7.svg`,
 `m-7-cyber-map-7.svg`, `m-7-cyber-map-7-dyson.svg`. A style value not in `mapStyles` (option
 added in devtools) → `Unknown style neon…`, map kept.
 

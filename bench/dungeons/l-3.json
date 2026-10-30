@@ -3,7 +3,7 @@
   "grammar": "Combined",
   "seed": 3,
   "size": "L",
-  "theme": "zelda",
+  "theme": "classic",
   "start": 0,
   "goal": 1,
   "solvable": true,
@@ -117,12 +117,12 @@
     },
     {
       "id": 11,
-      "type": "gb: heart piece",
-      "name": "gb: heart piece",
+      "type": "gb: healing potion",
+      "name": "gb: healing potion",
       "kind": "room",
       "objects": [],
       "number": 7,
-      "label": "Bonus goal: heart piece"
+      "label": "Bonus goal: healing potion"
     },
     {
       "id": 12,
@@ -173,12 +173,12 @@
     },
     {
       "id": 17,
-      "type": "gb: rupees",
-      "name": "gb: rupees",
+      "type": "gb: coins",
+      "name": "gb: coins",
       "kind": "room",
       "objects": [],
       "number": 18,
-      "label": "Bonus goal: rupees"
+      "label": "Bonus goal: coins"
     },
     {
       "id": 18,
@@ -190,12 +190,12 @@
     },
     {
       "id": 19,
-      "type": "gb: heart piece",
-      "name": "gb: heart piece",
+      "type": "gb: healing potion",
+      "name": "gb: healing potion",
       "kind": "room",
       "objects": [],
       "number": 27,
-      "label": "Bonus goal: heart piece"
+      "label": "Bonus goal: healing potion"
     },
     {
       "id": 20,

@@ -78,12 +78,12 @@ change, so no bench.
 ## Byte-identical guard
 
 Plain, Dyson and neon map SVGs dumped from `dev` before the refactor (throwaway script, as in steps
-15–23): bench and generated zelda and cyber M and L, layout seeds 1–5. After the refactor commit and
+15–23): bench and generated classic and cyber M and L, layout seeds 1–5. After the refactor commit and
 at the end: `diff -r` empty.
 
 ## By hand
 
-CLI graphs of ruin, generated zelda M 1, L 2, cyber L 7 (62 rooms, the largest): crossings, curve
+CLI graphs of ruin, generated classic M 1, L 2, cyber L 7 (62 rooms, the largest): crossings, curve
 bows, tags against chevrons, key column. Viewer in Chrome: switch both ways, generate and load in
 graph view, a failed layout still shows the graph, export name. Time of `drawGraph` on L 7 into
 `docs/design.md`.

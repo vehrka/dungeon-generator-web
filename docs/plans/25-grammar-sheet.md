@@ -25,7 +25,7 @@ in README, reused by the help page (step 3). No engine, layout or schema change,
   Start, E, R, S], [L, expected size, GB, H], [K, SW, TG, IG, BK]. Card heights from content, so
   columns lay out in one pass; text widths estimated as in `graph.ts` (`charWidth`).
 - **R and GB say what the generator does**, unlike Python's sheet: R rolls by progress (`PACING`
-  tiers early / middle / late, not the preset column), GB on the theme's `rewards` (the zelda
+  tiers early / middle / late, not the preset column), GB on the theme's `rewards` (the classic
   default shown). R's card gets the three tier columns; GB's subtitle names the theme table.
 - **Expected size from the TS generator**: `generateDungeon` seeds 1–1000 per preset, rooms after
   merge (what the map shows; Python counted before merge), mean, p10, median, p90, max, plus
