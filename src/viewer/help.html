@@ -17,9 +17,9 @@
         <h2><span class="n">1</span>what it is</h2>
         <p>Delve generator makes a dungeon from a number. Pick a seed, a size and a theme: it grows a
           dungeon (rooms, locked doors and their keys, switches, secret doors, one-way paths, a
-          boss), draws it as a map and writes a GM key that names every room and what it holds. The
-          same seed always gives the same dungeon and the same map, so a map can be shared as three
-          settings.</p>
+          boss), draws it as a map and writes a GM key that names every room and what it holds. Seed,
+          size and theme always give the same dungeon; its layout seed and corridors always give the
+          same map of it, so any map can be shared as those five settings.</p>
         <p>The theme names the rooms and picks the look: zelda is hand-inked in the manner of Dyson
           Logos' maps, cyber glows in neon on black, plain is a clean catalogue map. Not every
           dungeon is a place underground, so the graph view shows the dungeon as what it is, rooms
@@ -31,7 +31,8 @@
           <li><b>Layout seed</b> gives another map of the same dungeon; <b>reroll</b> picks a random
             one. <b>Corridors</b> off: rooms touch at every door.</li>
           <li><b>Load json</b>, or drop a file on the map, reopens a dungeon saved with export.</li>
-          <li><b>Export</b> saves the map (SVG), the dungeon (JSON) and the GM key (Markdown).</li>
+          <li><b>Export</b> saves the map (SVG), the dungeon (JSON, generated ones only: a
+            loaded one is already a file) and the GM key (Markdown).</li>
         </ul>
       </section>
       <section>
@@ -61,9 +62,10 @@
           </li>
           <li>
             <h3>draw</h3>
-            <p>The map is drawn as SVG: numbered rooms, a symbol for each kind of door (a bar for
-              locked, dots for a portcullis, an S for secret, a lettered tag for a gate and its key, a
-              chevron for one way), a key column and a title. The GM key lists the same numbers.</p>
+            <p>The map is drawn as SVG: numbered rooms, a mark for each kind of door, a key column and a
+              title. Every look tags a gate with a letter shared with its key and marks one-way doors
+              with a chevron; zelda and cyber also draw a bar for locked, dots for a portcullis and an
+              S for secret, plain a dashed line for secret. The GM key lists the same numbers.</p>
           </li>
         </ol>
       </section>
@@ -75,7 +77,7 @@
           <a href="https://forum.rpg.net/index.php?threads/necro-my-zelda-dungeon-generator.827119/">Zelda
           dungeon generator</a> on the RPG.net forum.</p>
         <figure class="sheet">
-          <div class="scroll"><img width="2225" height="1596" alt="Combined dungeon grammar: rule cards with d20 ranges per size and variant diagrams" /></div>
+          <div class="scroll"><img alt="Combined dungeon grammar: rule cards with d20 ranges per size and variant diagrams" /></div>
           <figcaption>scroll sideways · <a id="sheet-full">open full size</a></figcaption>
         </figure>
       </section>
@@ -112,7 +114,7 @@
       </section>
       <section>
         <h2><span class="n">5</span>references</h2>
-        <ul class="refs">
+        <ul>
           <li>Ondřej Nepožitek, <i>Procedural Level Generator with Unity Integration</i>, master thesis,
             Charles University, 2020: the layout algorithm.</li>
           <li><a href="https://github.com/OndrejNepozitek/Edgar-DotNet">Edgar-DotNet</a> (MIT), the

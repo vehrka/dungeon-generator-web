@@ -7,7 +7,7 @@ import config from "../vite.config";
 const viewer = join(import.meta.dirname, "..", "src", "viewer");
 const page = (name: string) => readFileSync(join(viewer, name), "utf8");
 const urls = (html: string) => [...html.matchAll(/\s(?:src|href)="([^"]+)"|\sfrom "([^"]+)"/g)].map((m) => (m[1] ?? m[2])!);
-const local = (url: string) => !/^([a-z]+:|#)/.test(url);
+const local = (url: string) => !/^([a-z]+:|#|\/\/)/.test(url);
 
 describe("help page", () => {
   it("links both ways with the map page", () => {

@@ -45,12 +45,9 @@ header {
   border-bottom: 1px solid var(--color-steel-gray);
 }
 
-h1 { margin: 0; font-size: 32px; font-weight: 300; line-height: 1.11; letter-spacing: -0.02em; }
+h1 { margin: 0 auto 0 0; font-size: 32px; font-weight: 300; line-height: 1.11; letter-spacing: -0.02em; }
 header p { margin: 0; font-size: 11px; text-align: right; }
 /* Page link (help, map): a text action, as the exports; title left, tagline and link right. */
-h1 { margin-right: auto; }
-a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-a:hover { background: var(--color-band); }
 header .nav { align-self: center; padding: 4px 0; font-size: 13px; }
 
 /* Map left, settings right, as the dungen result page (docs/plans/14b-generator-viewer.md). */
@@ -132,9 +129,10 @@ button {
   cursor: pointer;
 }
 /* Text actions read as the guide's links: underlined, the band colour on hover. */
-.file, button:not(.primary) { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+a { color: inherit; }
+.file, button:not(.primary), a { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .row button:not(.primary) { padding: 4px 0; }
-.file:hover, button:not(.primary):hover:not(:disabled) { background: var(--color-band); }
+.file:hover, a:hover, button:not(.primary):hover:not(:disabled) { background: var(--color-band); }
 .file input { display: none; }
 button.primary { width: 100%; background: var(--color-ink-black); color: var(--color-canvas-mist); font-size: 15px; }
 button.primary:hover { background: var(--color-carbon); }
@@ -171,7 +169,7 @@ button.primary:disabled { background: var(--color-steel-gray); }
 .doc main { min-height: 0; }
 .doc section { padding: 0 0 var(--spacing-22); }
 .doc h2 { margin: 0 0 var(--spacing-15); }
-.doc h3 { max-width: 70ch; margin: var(--spacing-15) 0 6px; padding: 2px 8px; background: var(--color-band); font-size: 13px; font-weight: 300; }
+.doc h3 { max-width: 70ch; margin: var(--spacing-15) 0 6px; padding: 2px 8px; background: var(--color-band); font-size: 13px; font-weight: 300; text-transform: uppercase; }
 .doc main p, .doc main li, .doc main dd { max-width: 70ch; text-transform: none; }
 .doc main p { margin: 0 0 10px; }
 .doc b { font-weight: 300; text-transform: uppercase; }
@@ -185,6 +183,7 @@ button.primary:disabled { background: var(--color-steel-gray); }
 /* The sheet is 2225 px wide: drawn at its own size so its 13 px text stays readable, scrolling
    sideways inside its frame, not the page. */
 .sheet { margin: 0 0 10px; }
+.sheet:has(img:not([src])) { display: none; } /* the module sets src: no JS, no empty frame */
 .sheet .scroll { overflow-x: auto; background: #fff; border: 1px solid var(--color-steel-gray); }
 .sheet img { display: block; max-width: none; height: auto; }
 .sheet figcaption { margin-top: 4px; color: var(--color-muted); font-size: 11px; }
@@ -196,7 +195,7 @@ footer { padding: var(--spacing-15) var(--spacing-33); border-top: 1px solid var
   header p { text-align: left; }
   h1 { margin-right: 0; }
   header .nav { align-self: start; }
-  .doc main, footer { padding: var(--spacing-15); }
+  footer { padding: var(--spacing-15); }
   h1 { font-size: 26px; }
   main { min-height: 0; padding: var(--spacing-15); }
   aside { position: static; max-height: none; border-left: 0; border-top: 1px solid var(--color-steel-gray); }
