@@ -18,7 +18,7 @@ Requires Node 24.
 ```bash
 $ npm install
 $ npm run dev     # viewer on http://localhost:5173
-$ npm run cli -- --dungeon-seed 7 --key m-7-zelda.md   # m-7-zelda-map.svg and its GM key
+$ npm run cli -- --dungeon-seed 7 --key m-7-classic.md   # m-7-classic-map.svg and its GM key
 ```
 
 ## How it works
@@ -37,7 +37,7 @@ layout seed ─▶ room shapes ─▶ configuration spaces ──┘
    bonus room…), paced so harder content sits closer to the boss. Small rooms of one kind are
    merged, then a solver walks from START collecting keys to prove the GOAL is reachable. Size
    (XS, S, M, L) sets which variants each roll can pick, so how large it grows; the theme
-   (`zelda`, `cyber`, `plain`) only changes names, so a seed gives the same graph with any theme.
+   (`classic`, `cyber`, `plain`) only changes names, so a seed gives the same graph with any theme.
    The whole grammar on one sheet:
 
    ![Combined dungeon grammar: rule cards with d20 ranges per size and variant diagrams](docs/grammar.svg)
@@ -55,7 +55,7 @@ layout seed ─▶ room shapes ─▶ configuration spaces ──┘
      touch at every door).
 4. **Render.** SVG with room numbers, door symbols per gate kind, a key column and a title; PNG via
    resvg in the CLI. Three styles: neon (glowing role-coloured rooms on black) for the cyber
-   theme, hand-inked Dyson Logos look (hatched rock, thick walls, floor grid) for zelda, a clean
+   theme, hand-inked Dyson Logos look (hatched rock, thick walls, floor grid) for classic, a clean
    plain look for any other theme; `--style` overrides. The GM key lists rooms, gates and objects, numbered as on the map.
 
 All randomness goes through one seeded PRNG, split into named streams. Dungeon seed + size + theme
@@ -70,8 +70,8 @@ Full design, constants and trade-offs: [docs/design.md](docs/design.md); map sty
 
 ```bash
 # generate
-$ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber|plain] \
-    [--json m-7-zelda.json] [--key m-7-zelda.md] [--graph m-7-zelda-graph.svg] [-o m-7-zelda-map.svg | .png] \
+$ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme classic|cyber|plain] \
+    [--json m-7-classic.json] [--key m-7-classic.md] [--graph m-7-classic-graph.svg] [-o m-7-classic-map.svg | .png] \
     [--layout-seed N] [--no-corridors] [--style plain|dyson|neon]
 
 # or load a dungeon JSON
@@ -82,8 +82,8 @@ $ npm run cli -- ruin.json [-o ruin-map.svg | .png] [--key ruin.md] [--graph rui
 $ npm run cli -- --grammar docs/grammar.svg
 ```
 
-Defaults: size M, theme zelda, output `<size>-<seed>-<theme>-map.svg` (or `<input>-map.svg`), layout
-seed = dungeon seed (or the JSON's seed), style neon for cyber, Dyson for zelda, plain otherwise. No layout found → the error names the stuck rooms; try
+Defaults: size M, theme classic, output `<size>-<seed>-<theme>-map.svg` (or `<input>-map.svg`), layout
+seed = dungeon seed (or the JSON's seed), style neon for cyber, Dyson for classic, plain otherwise. No layout found → the error names the stuck rooms; try
 another `--layout-seed`. `--graph` draws the room graph, layered from START; it needs no layout, so
 it is written even when the map fails. `--grammar` writes the grammar sheet and nothing else.
 
@@ -97,7 +97,7 @@ $ npm run build   # static site in dist/
 Settings sit right of the map. Dungeon: seed, size, theme, generate (random seed, written into the
 field; or type one and press Enter). Layout: seed, reroll, corridors. File: load a JSON or drop it on
 the map. Export saves the SVG, the JSON (generated only) and the GM key. The theme also picks the
-map look: zelda Dyson, cyber neon, plain plain (a loaded file's other or missing theme plain). A
+map look: classic Dyson, cyber neon, plain plain (a loaded file's other or missing theme plain). A
 theme change keeps the layout seed (same graph, other labels and look); a size change resets it.
 View switches between the map and the room graph of the same dungeon; the graph shows even when
 no layout is found. `help` in the header opens the help page: what it is, how it works, the grammar
@@ -109,6 +109,9 @@ sheet, how it was built.
   Generator with Unity Integration* (Charles University, 2020); the Edgar-DotNet source (MIT) only
   for constants and details. Comments name the thesis section or Edgar file a function follows.
   Edgar's hand-made room templates are replaced by a seeded procedural shape pool.
+- **Grammar from the forum.** The dungeon grammar is fantomx11's, posted on the RPG.net forum as
+  [My Zelda dungeon generator](https://forum.rpg.net/index.php?threads/necro-my-zelda-dungeon-generator.827119/);
+  the Combined grammar here grew from it.
 - **Generator ported, then owned.** The grammar started in a separate Python project; it was
   ported here, its known issues fixed (one-way gates, gate chains, merges across a gate), and this
   TypeScript version is now the only one. Checked by properties and statistics over seeds 1–500 per
@@ -165,6 +168,8 @@ ref/                   generator port notes, style reference; ref/120370675/ (th
 
 ## References
 
+- fantomx11, [My Zelda dungeon generator](https://forum.rpg.net/index.php?threads/necro-my-zelda-dungeon-generator.827119/),
+  RPG.net forum: the dungeon grammar.
 - Ondřej Nepožitek, *Procedural Level Generator with Unity Integration*, master thesis, Charles
   University (2020).
 - [Edgar-DotNet](https://github.com/OndrejNepozitek/Edgar-DotNet), MIT licence, the reference
@@ -172,3 +177,7 @@ ref/                   generator port notes, style reference; ref/120370675/ (th
 - Ma et al., *Game level layout from design specification*, Eurographics 2014.
 - Dyson Logos, [commercial maps](https://dysonlogos.blog/maps/commercial-maps/), the second map
   style.
+
+## Licence
+
+MIT, [LICENSE](LICENSE). Third-party code and font: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

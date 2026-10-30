@@ -17,7 +17,7 @@ no change under `src/`, so no tests or bench.
   are `gb: <reward>` (with a space), matched by prefix. Unlisted types placed: `exit` with start,
   `n`, `p`, `c`, `e`, `t` as other. Gate nodes (`kind: gate`) are not rooms, no role.
 - Mock-up on a generated cyber M, dungeon seed 1, layout seed 1 (`ref/neon/m-1-cyber.json`),
-  not bench m-1: m-1 is zelda, and neon draws cyber glyphs and labels.
+  not bench m-1: m-1 is classic, and neon draws cyber glyphs and labels.
 - Mock-up made from real geometry with no engine code: `ref/neon/mock.py` restyles the CLI's
   catalogue SVG (CSS swap, page colour, role class per room from its number, glow copies of each
   room outline). Output `ref/neon/m-1-cyber-neon.svg`, PNG by resvg (the CLI's renderer) and

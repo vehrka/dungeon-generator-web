@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateDungeon } from "../../src/engine/generator/index";
-import { rewardVariant, THEMES } from "../../src/engine/generator/themes";
+import { rewardVariant, savedTheme, THEMES } from "../../src/engine/generator/themes";
 
 describe("themes", () => {
   it.each(Object.keys(THEMES))("%s rewards cover 1–20", (name) => {
@@ -9,14 +9,21 @@ describe("themes", () => {
     expect(rolls).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
   });
 
-  it("plain has zelda's text, only the theme field differs", () => {
-    expect(THEMES.plain).toEqual(THEMES.zelda);
-    for (const seed of [1, 7]) expect(generateDungeon({ seed, theme: "plain" })).toEqual({ ...generateDungeon({ seed, theme: "zelda" }), theme: "plain" });
+  it("plain has classic's text, only the theme field differs", () => {
+    expect(THEMES.plain).toEqual(THEMES.classic);
+    for (const seed of [1, 7]) expect(generateDungeon({ seed, theme: "plain" })).toEqual({ ...generateDungeon({ seed, theme: "classic" }), theme: "plain" });
   });
 
   it("reward variants are dead-end gb rooms", () => {
     const v = rewardVariant(THEMES.cyber, 6);
     expect(v.nodes).toEqual([["gb", "room", "gb: paydata"]]);
     expect(v.edges).toEqual([["prev", "gb", "both"]]);
+  });
+});
+
+describe("savedTheme", () => {
+  it("reads a theme's name before 1.0.0 as today's", () => {
+    expect(savedTheme("zelda")).toBe("classic");
+    for (const t of ["classic", "cyber", "tor-barrow", "toString", "__proto__"]) expect(savedTheme(t)).toBe(t);
   });
 });

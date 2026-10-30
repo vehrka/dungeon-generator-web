@@ -39,7 +39,7 @@ symbol set in step 3). Cyber maps turn neon. No engine, layout or schema change,
   - Legend: corridor, gate, secret, one-way as drawn, plus one swatch per role on the map (start,
     goal, boss, pickup, treasure; not the "other" tones).
 - `render/svg.ts`: `MapStyle` and `mapStyles` gain `neon`, `painters` gains it;
-  `styleFor`: cyber → `neon`, zelda → `dyson`, any other theme or none → `plain` (decided
+  `styleFor`: cyber → `neon`, classic → `dyson`, any other theme or none → `plain` (decided
   2026-10-30, replacing "plain keeps no default"; was: anything not cyber → Dyson). A loaded
   JSON with a foreign theme, like the fixture's `tor-barrow`, now draws plain.
 - CLI: `--style neon` works through `mapStyles`; help text lists it.
@@ -54,11 +54,11 @@ symbol set in step 3). Cyber maps turn neon. No engine, layout or schema change,
   escaped (hostile input); no `<filter>`; same input same string; fixture snapshot. `role` on every
   row of the table, `exit` start, unknown type other, `number % 3`; legend lists only roles
   drawn.
-- `styleFor`: cyber, Cyber → neon; zelda, Zelda → dyson; tor-barrow, empty, undefined → plain.
+- `styleFor`: cyber, Cyber → neon; classic, Classic → dyson; tor-barrow, empty, undefined → plain.
 - `tests/scene.test.ts`: `type`, `start`, `goal` on the fixture.
 - CLI: `--style neon` writes SVG and PNG; cyber default is neon.
-- Existing tests that change: `draw` picks-the-style test (fixture now plain, cyber neon, zelda
-  dyson); CLI default-follows-theme test; viewer preset if it tests a non-zelda theme.
+- Existing tests that change: `draw` picks-the-style test (fixture now plain, cyber neon, classic
+  dyson); CLI default-follows-theme test; viewer preset if it tests a non-classic theme.
 
 ## Byte-identical guard
 
@@ -90,7 +90,7 @@ keep the open point or note it reads fine.
 
 Three commits: rename (`catalogue` → `plain`, no alias); scene `type`, `start`, `goal` and
 `doorMark` into `marks.ts`; the neon painter. Plain and Dyson dumps before and after the refactors:
-221 maps each (bench, generated zelda and cyber M and L, layout seeds 1–5, failures skipped),
+221 maps each (bench, generated classic and cyber M and L, layout seeds 1–5, failures skipped),
 `diff -r` empty.
 
 l-1, layout seed 1, render only, mean of 20: plain 0.8 ms 31.0 kB, neon 0.9 ms 38.8 kB, Dyson
@@ -99,7 +99,7 @@ for the 1-unit pad and the role legend) and cyber L 2: roles read at a glance. S
 shared walls show one colour (open point); two gate tags on one corridor end crowd (cyber L 2,
 E and F), the plain style's placement until the doors step uses `tagAt`.
 
-Decided on the way: plain is the default for any theme but cyber and zelda (was Dyson); `styleFor`
+Decided on the way: plain is the default for any theme but cyber and classic (was Dyson); `styleFor`
 compares strings rather than indexing an object, so a `constructor` theme stays plain. Role tone
 for a non-integer room number is other-0, as numbers are untyped at runtime.
 

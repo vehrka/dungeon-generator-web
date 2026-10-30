@@ -31,12 +31,12 @@ Branch `feature/generator-cli` off `dev`. STATUS step 14 (first half; viewer in
   generator-specific.
 - `src/cli/main.ts`:
   - `npm run cli -- ruin.json [-o …] [--layout-seed N] [--no-corridors] [--key ruin.md]`
-  - `npm run cli -- --dungeon-seed 7 [--size M] [--theme zelda] [--json m-7-zelda.json]
-    [--key m-7-zelda.md] [-o …] [--layout-seed N] [--no-corridors]`
-  - `--size` any case of `XS S M L`, default `M`; `--theme` one of `THEMES`, default `zelda`;
+  - `npm run cli -- --dungeon-seed 7 [--size M] [--theme classic] [--json m-7-classic.json]
+    [--key m-7-classic.md] [-o …] [--layout-seed N] [--no-corridors]`
+  - `--size` any case of `XS S M L`, default `M`; `--theme` one of `THEMES`, default `classic`;
     `--size`/`--theme` without `--dungeon-seed` → error. Seed rule `seedFromText`.
   - Default output when generating: `<size>-<seed>-<theme>-map.svg` in the working directory
-    (lower-case size, e.g. `m-7-zelda-map.svg`); the same base name in 14b.
+    (lower-case size, e.g. `m-7-classic-map.svg`); the same base name in 14b.
   - `CliArgs` becomes `{ source: { input } | { generate: GenerateOptions }, output, json?, key?,
     layoutSeed, corridors }`. Log line adds the dungeon seed, size and theme when generated.
 - `bench/run.ts` `--generated`: dungeons `gen-<size>-<seed>`, sizes M and L, seeds 1–8 from
@@ -64,7 +64,7 @@ Branch `feature/generator-cli` off `dev`. STATUS step 14 (first half; viewer in
 - `key`: golden `ruin.json` → `ruin-key.md` byte-equal; small hand-built JSONs for each gate
   condition, one-way exit (`a → b` listed only from `a`), multi-requires suffix, `on`/`off`
   suffix, no objects → no keys table, unsolvable reasons listed.
-- `cli` `parseCli`: generate mode defaults (size M, theme zelda, output name), size case,
+- `cli` `parseCli`: generate mode defaults (size M, theme classic, output name), size case,
   unknown size/theme, file + `--dungeon-seed` → error, `--size` without seed → error, `--json`
   with a file → error, bad seed. `main`: generate writes SVG, JSON (parses, `seed` matches) and
   key; same args twice → byte-identical files; `--key` with a file input.

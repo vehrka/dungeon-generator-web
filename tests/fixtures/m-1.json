@@ -3,7 +3,7 @@
   "grammar": "Combined",
   "seed": 1,
   "size": "M",
-  "theme": "zelda",
+  "theme": "classic",
   "start": 0,
   "goal": 1,
   "solvable": true,

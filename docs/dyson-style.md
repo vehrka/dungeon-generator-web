@@ -3,7 +3,7 @@
 A second map style, after Dyson Logos' hand-inked dungeon maps
 (https://dysonlogos.blog/maps/commercial-maps/): black ink on white, thick walls, hatched rock
 around the rooms, a faint grid on the floors. The plain style (`docs/design.md` §7,
-`ref/webdesign/design.md`) stays as it is and fits the cyber theme; zelda, any other theme and a JSON
+`ref/webdesign/design.md`) stays as it is and fits the cyber theme; classic, any other theme and a JSON
 without a theme get the Dyson style. Decided 2026-10-27.
 
 This file is the source of truth for the Dyson style. `docs/design.md` covers everything else
@@ -56,7 +56,7 @@ config) → { svg, rooms }`:
 - Key column: rooms (number, label), gates (tag, text), legend. Width estimated at 7.5 px/char.
 
 Gate kinds (`GateKind`): `lock`, `state`, `on`, `off`, `secret`. Room types used by glyphs: start,
-goal, `gb:*` (treasure). Themes: `zelda` (default), `cyber`.
+goal, `gb:*` (treasure). Themes: `classic` (default), `cyber`.
 
 Size of the hatching job, measured on the bench at layout seed 1 (grid cells):
 
@@ -79,7 +79,7 @@ most of the bbox stays white, as in Dyson's maps.
 - Default by theme, decided 2026-10-27: `styleFor(theme)` → `"plain"` for `cyber`, `"dyson"`
   for any other theme or none (a loaded JSON may lack one). `draw(json, layoutSeed, config,
   style = styleFor(json.theme))`, so CLI and viewer share the rule. Changed 2026-10-30 with
-  neon: cyber → neon, zelda → Dyson, any other theme or none → plain (`docs/design.md` §7).
+  neon: cyber → neon, classic → Dyson, any other theme or none → plain (`docs/design.md` §7).
 - CLI: `--style plain|dyson` (and `neon` since) overrides the theme's default; unknown value → error listing the
   options (same pattern as `--size`, `--theme`). Output name unchanged unless `-o` is given.
 - Viewer: a `style` select in the layout section under corridors, preset from the theme
@@ -89,7 +89,7 @@ most of the bbox stays white, as in Dyson's maps.
   layout (`layoutCache` in `viewer/state.ts`, layout failures included), so only the render runs; a style
 change during a run restarts it. Export name `<name>-map-<seed>.svg` for
   plain, `<name>-map-<seed>-<style>.svg` otherwise. Changed 2026-10-30 (`docs/plans/22-one-theme-select.md`):
-  the style select and `layoutCache` are gone, the theme select picks the look (zelda, cyber,
+  the style select and `layoutCache` are gone, the theme select picks the look (classic, cyber,
   plain).
 
 ### Code structure
@@ -302,12 +302,12 @@ byte-identical.
   label once, escaped (same hostile-input test as plain); no amber, no `#e5e5e5`; door symbol
   counts by kind on the fixture (3 lock, 1 state); one-way chevrons point a → b; snapshot of the
   fixture; same input same string.
-- `styleFor`: cyber → plain; zelda, any other string, undefined → dyson (until neon, see above).
+- `styleFor`: cyber → plain; classic, any other string, undefined → dyson (until neon, see above).
 - CLI: `--style dyson` writes SVG and PNG; default follows the theme; bad style exits 1 with the
   options listed. Existing CLI tests that render a non-cyber dungeon now get Dyson: pass
   `--style plain` where they check plain output.
 - Viewer: `state.ts` style parsing and export name.
-- By hand: CLI PNG of `bench/dungeons/m-1.json`, `l-1.json` and a generated zelda L, viewed
+- By hand: CLI PNG of `bench/dungeons/m-1.json`, `l-1.json` and a generated classic L, viewed
   side by side with a Dyson map; viewer in both styles. Time and SVG size of l-1 noted here
   (target < 100 ms render, < 1 MB SVG).
 
@@ -325,7 +325,7 @@ hatching, numbers, key column, `--style`) → doors and gates → wobble and sha
 - Hatching density vs size: 300 kB per L map is fine for files, maybe heavy for viewer reroll
   speed; measure in the core step.
 - Door symbols on L/T arms and short walls: the door rectangle is half a wall short at each end, so
-  it clears the corner (`cornerDistance = 0`); checked on m-1, l-1 and a generated zelda L.
+  it clears the corner (`cornerDistance = 0`); checked on m-1, l-1 and a generated classic L.
 - Gate tags beside doors: always inside room a (0.6 < 1 unit); see doors and gates.
 - Fonts: the serif stack looks different per machine; the key column width estimate (7.5 px/char)
   must be checked for the serif.

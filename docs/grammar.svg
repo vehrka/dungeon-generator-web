@@ -542,33 +542,33 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="card" x="795" y="760" width="581" height="216"/>
 <rect class="head" x="795" y="760" width="581" height="28"/>
 <text class="head-title" x="805" y="779">GB()</text>
-<text class="head-sub" x="850.8" y="779">Bonus goal · dead end · the theme's rewards (zelda shown)</text>
+<text class="head-sub" x="850.8" y="779">Bonus goal · dead end · the theme's rewards (classic shown)</text>
 <text class="col" x="818" y="802">XS</text>
 <text class="col" x="864" y="802">S</text>
 <text class="col" x="910" y="802">M</text>
 <text class="col" x="956" y="802">L</text>
-<g data-variant="GB heart piece">
+<g data-variant="GB healing potion">
 <text class="range" x="818" y="833">1-4</text>
 <text class="range" x="864" y="833">1-4</text>
 <text class="range" x="910" y="833">1-4</text>
 <text class="range" x="956" y="833">1-4</text>
-<text class="name" x="989" y="832">heart piece</text>
-<path class="edge both" data-edge="1-2" d="M1077 829L1113 829"/>
-<rect class="g-room" fill="#7b8cde" x="1057" y="816" width="20" height="26" rx="6"/>
-<rect class="g-room" fill="#7cc98f" x="1113" y="816" width="122" height="26" rx="6"/>
-<text class="g-node" x="1174" y="833" fill="#000">gb: heart piece</text>
+<text class="name" x="989" y="832">healing potion</text>
+<path class="edge both" data-edge="1-2" d="M1093 829L1129 829"/>
+<rect class="g-room" fill="#7b8cde" x="1073" y="816" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1129" y="816" width="142" height="26" rx="6"/>
+<text class="g-node" x="1200" y="833" fill="#000">gb: healing potion</text>
 </g>
-<g class="tint" data-variant="GB rupees">
+<g class="tint" data-variant="GB coins">
 <rect x="795.5" y="850" width="580" height="42" fill="#f6f7f9"/>
 <text class="range" x="818" y="875">5-12</text>
 <text class="range" x="864" y="875">5-12</text>
 <text class="range" x="910" y="875">5-12</text>
 <text class="range" x="956" y="875">5-12</text>
-<text class="name" x="989" y="874">rupees</text>
-<path class="edge both" data-edge="1-2" d="M1077 871L1113 871"/>
-<rect class="g-room" fill="#7b8cde" x="1057" y="858" width="20" height="26" rx="6"/>
-<rect class="g-room" fill="#7cc98f" x="1113" y="858" width="88" height="26" rx="6"/>
-<text class="g-node" x="1157" y="875" fill="#000">gb: rupees</text>
+<text class="name" x="989" y="874">coins</text>
+<path class="edge both" data-edge="1-2" d="M1093 871L1129 871"/>
+<rect class="g-room" fill="#7b8cde" x="1073" y="858" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1129" y="858" width="81" height="26" rx="6"/>
+<text class="g-node" x="1169.5" y="875" fill="#000">gb: coins</text>
 </g>
 <g data-variant="GB bombs">
 <text class="range" x="818" y="917">13-16</text>
@@ -576,10 +576,10 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="range" x="910" y="917">13-16</text>
 <text class="range" x="956" y="917">13-16</text>
 <text class="name" x="989" y="916">bombs</text>
-<path class="edge both" data-edge="1-2" d="M1077 913L1113 913"/>
-<rect class="g-room" fill="#7b8cde" x="1057" y="900" width="20" height="26" rx="6"/>
-<rect class="g-room" fill="#7cc98f" x="1113" y="900" width="81" height="26" rx="6"/>
-<text class="g-node" x="1153.5" y="917" fill="#000">gb: bombs</text>
+<path class="edge both" data-edge="1-2" d="M1093 913L1129 913"/>
+<rect class="g-room" fill="#7b8cde" x="1073" y="900" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1129" y="900" width="81" height="26" rx="6"/>
+<text class="g-node" x="1169.5" y="917" fill="#000">gb: bombs</text>
 </g>
 <g class="tint" data-variant="GB arrows">
 <rect x="795.5" y="934" width="580" height="42" fill="#f6f7f9"/>
@@ -588,10 +588,10 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="range" x="910" y="959">17-20</text>
 <text class="range" x="956" y="959">17-20</text>
 <text class="name" x="989" y="958">arrows</text>
-<path class="edge both" data-edge="1-2" d="M1077 955L1113 955"/>
-<rect class="g-room" fill="#7b8cde" x="1057" y="942" width="20" height="26" rx="6"/>
-<rect class="g-room" fill="#7cc98f" x="1113" y="942" width="88" height="26" rx="6"/>
-<text class="g-node" x="1157" y="959" fill="#000">gb: arrows</text>
+<path class="edge both" data-edge="1-2" d="M1093 955L1129 955"/>
+<rect class="g-room" fill="#7b8cde" x="1073" y="942" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1129" y="942" width="88" height="26" rx="6"/>
+<text class="g-node" x="1173" y="959" fill="#000">gb: arrows</text>
 </g>
 </g>
 <g data-rule="H">
