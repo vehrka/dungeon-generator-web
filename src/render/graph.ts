@@ -11,7 +11,10 @@ import { gap, keyColumn, margin, plain, titleBlock, titleHeight, type TitleMeta 
 // bottom, rooms coloured by type, pickups and switches as their own shapes, gates as coloured
 // labelled edges.
 export type Shape = "room" | "special" | "item" | "switch";
-export type GraphBox = { id: RoomId; layer: number; x: number; y: number; w: number; h: number; shape: Shape; code: string; label: string };
+// A box's look: the number goes before the label when present (the graph view numbers rooms, the
+// grammar sheet does not); fill is the room shape's, the other shapes fill by class.
+export type Look = { shape: Shape; code: string; label: string; fill: string; colour: string; number?: string };
+export type GraphBox = Look & { id: RoomId; layer: number; x: number; y: number; w: number; h: number };
 export type EdgeKind = "both" | "one" | "lock" | "state" | "on" | "off" | "secret";
 export type GraphEdge = {
   a: RoomId; // the end first in (layer, position)
@@ -25,7 +28,10 @@ export type GraphEdge = {
   secret: boolean;
   towards?: RoomId; // one-way: the room it leads to
 };
-export type GraphLayout = { layers: RoomId[][]; boxes: Map<RoomId, GraphBox>; edges: GraphEdge[]; bbox: Rect };
+export type GraphLayout = { layers: RoomId[][]; boxes: Map<RoomId, GraphBox>; edges: GraphEdge[]; bbox: Rect; across: boolean };
+// across: layers left to right (the grammar sheet's variants, Python's rankdir=LR), else top to
+// bottom. look: a box's look, the room's by its type when absent.
+export type GraphOptions = { across?: boolean; look?: (id: RoomId) => Look };
 
 const sweeps = 8; // barycenter sweeps, each down then up
 const boxHeight = 26;
@@ -38,6 +44,7 @@ const rowGap = 64; // px between rows
 const maxBow = 2 * (rowGap - 20); // a same-layer curve's dip (half its bow) stays clear of the next row
 const step = 16; // px, the control point's sideways step while a curve that skips rows looks for a way past
 const clearance = 4; // px, a curve that skips rows stays this far off every box
+const labelGap = 8; // px, across: an edge label to the boxes either side
 
 // Room type (before any ':'): fill, font colour, legend text; the Python plot's ROOM_STYLE.
 const roomStyle: Record<string, [string, string, string]> = {
@@ -52,27 +59,31 @@ const roomStyle: Record<string, [string, string, string]> = {
   gb: ["#a8dba8", "#000", "bonus goal"],
 };
 const roomFallback: [string, string, string] = ["#fff", "#000", "room"];
-const special = "#f0d24a";
-const pickup = "#56b4e9";
-const switchFill = "#e39ac8";
-const page = "#eef0f3";
-const edgeColour: Record<EdgeKind, string> = { both: "#555", one: "#111", lock: "#c0601a", state: "#b34d8f", on: "#b34d8f", off: "#b34d8f", secret: "#888" };
+export const special = "#f0d24a";
+export const pickup = "#56b4e9";
+export const switchFill = "#e39ac8";
+export const page = "#eef0f3";
+export const edgeColour: Record<EdgeKind, string> = { both: "#555", one: "#111", lock: "#c0601a", state: "#b34d8f", on: "#b34d8f", off: "#b34d8f", secret: "#888" };
 const pickupTypes = new Set(["item", "key", "bosskey"]);
 const switchTypes = new Set(["switch", "lever"]);
 
 const typeCode = (type: string) => String(type).split(":")[0]!;
 
-// Shape and text of a room: START and GOAL by name, pickups as Get and the objects, switches by
-// their objects, any other room by its type.
-function node(graph: RoomGraph, id: RoomId): { shape: Shape; code: string; label: string } {
+// Look of a room: START and GOAL by name, pickups as Get and the objects, switches by their
+// objects, any other room by its type, coloured by it.
+function node(graph: RoomGraph, id: RoomId): Look {
   const room = graph.rooms.get(id)!;
   const code = typeCode(room.type);
+  const number = String(room.number);
   const names = room.objects.map((o) => o.name).join(", ");
-  if (id === graph.start || id === graph.goal) return { shape: "special", code, label: id === graph.start ? "START" : "GOAL" };
-  if (pickupTypes.has(code)) return { shape: "item", code, label: names ? `Get ${names}` : String(room.type) };
-  if (switchTypes.has(code)) return { shape: "switch", code, label: names || String(room.type) };
-  return { shape: "room", code, label: String(room.type) };
+  if (id === graph.start || id === graph.goal) return { shape: "special", code, label: id === graph.start ? "START" : "GOAL", fill: special, colour: "#000", number };
+  if (pickupTypes.has(code)) return { shape: "item", code, label: names ? `Get ${names}` : String(room.type), fill: pickup, colour: "#000", number };
+  if (switchTypes.has(code)) return { shape: "switch", code, label: names || String(room.type), fill: switchFill, colour: "#000", number };
+  const [fill, colour] = roomStyle[code] ?? roomFallback;
+  return { shape: "room", code, label: String(room.type), fill, colour, number };
 }
+
+const boxText = (b: Look) => (b.number === undefined ? b.label : `${b.number} ${b.label}`);
 
 // Edge kind of a room pair: a lock wins, then the first other gate, then secret, one-way, two-way.
 function edgeKind(gates: Gate[], secret: boolean, oneway: boolean): EdgeKind {
@@ -90,7 +101,9 @@ const quad = (p: Point, c: Point, q: Point, t: number): Point => ({
   y: (1 - t) ** 2 * p.y + 2 * t * (1 - t) * c.y + t ** 2 * q.y,
 });
 
-export function graphLayout(graph: RoomGraph): GraphLayout {
+// Across: laid out top to bottom with each box's width and height swapped, then mirrored across the
+// diagonal, so one algorithm serves both.
+export function graphLayout(graph: RoomGraph, { across = false, look = (id) => node(graph, id) }: GraphOptions = {}): GraphLayout {
   const byNumber = (a: RoomId, b: RoomId) => graph.rooms.get(a)!.number - graph.rooms.get(b)!.number || a - b;
   const neighbours = new Map<RoomId, RoomId[]>([...graph.rooms.keys()].map((id) => [id, []]));
   for (const d of graph.doors) neighbours.get(d.a)!.push(d.b), neighbours.get(d.b)!.push(d.a);
@@ -135,26 +148,6 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
     for (let i = layers.length - 2; i >= 0; i--) reorder(i, i + 1);
   }
 
-  // Rows top to bottom, one height for all, so straight edges between adjacent rows stay in the
-  // gaps; each row centred.
-  const boxes = new Map<RoomId, GraphBox>();
-  const sized = layers.map((l) =>
-    l.map((id) => {
-      const n = node(graph, id);
-      const text = `${graph.rooms.get(id)!.number} ${n.label}`.length * charWidth;
-      return { id, ...n, w: Math.round(text + 2 * (n.shape === "item" || n.shape === "switch" ? roundPad : boxPad)) };
-    }),
-  );
-  const rowWidth = (r: { w: number }[]) => r.reduce((s, b) => s + b.w, 0) + (r.length - 1) * colGap;
-  const widest = Math.max(...sized.map(rowWidth));
-  sized.forEach((row, i) => {
-    let x = (widest - rowWidth(row)) / 2;
-    for (const b of row) {
-      boxes.set(b.id, { ...b, layer: i, x, y: i * (boxHeight + rowGap), h: boxHeight });
-      x += b.w + colGap;
-    }
-  });
-
   // One edge per room pair, as the map's door groups: all the pair's gates on it; secret and
   // one-way only when every door of the pair is (opposite one-ways cross both ways).
   const groups = new Map<string, Door[]>();
@@ -168,9 +161,39 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
     .map((group) => {
       const [first] = group as [Door];
       const [a, b] = before(first.a, first.b) < 0 ? [first.a, first.b] : [first.b, first.a];
-      return { a, b, group, first };
+      const gates = group.flatMap((d) => (d.gate && d.gate.kind !== "secret" ? [d.gate] : []));
+      const secret = group.every((d) => d.gate?.kind === "secret");
+      const label = gates.length ? gates.map(gateLabel).join(" ") : secret ? "secret" : undefined;
+      return { a, b, group, first, gates, secret, label };
     })
     .sort((p, q) => before(p.a, q.a) || before(p.b, q.b));
+
+  // Rows top to bottom, each as tall as its tallest box (all alike unless across), so straight
+  // edges between adjacent rows stay in the gaps; each row centred, each box centred in its row.
+  // Across, a gap is also as wide as the labels of the edges crossing it.
+  const boxes = new Map<RoomId, GraphBox>();
+  const sized = layers.map((l) =>
+    l.map((id) => {
+      const n = look(id);
+      const w = Math.round(boxText(n).length * charWidth + 2 * (n.shape === "item" || n.shape === "switch" ? roundPad : boxPad));
+      return { id, ...n, w: across ? boxHeight : w, h: across ? w : boxHeight };
+    }),
+  );
+  const rowWidth = (r: { w: number }[]) => r.reduce((s, b) => s + b.w, 0) + (r.length - 1) * colGap;
+  const widest = Math.max(...sized.map(rowWidth));
+  const rowHeight = sized.map((row) => Math.max(...row.map((b) => b.h)));
+  const gaps = layers.map((_, i) => {
+    const labels = across ? pairs.filter((p) => p.label && layer.get(p.a) === i && layer.get(p.b) === i + 1) : [];
+    return Math.max(rowGap, ...labels.map((p) => Math.ceil(p.label!.length * labelCharWidth) + 2 * labelGap));
+  });
+  const rowY = rowHeight.map((_, i) => rowHeight.slice(0, i).reduce((s, h, j) => s + h + gaps[j]!, 0));
+  sized.forEach((row, i) => {
+    let x = (widest - rowWidth(row)) / 2;
+    for (const b of row) {
+      boxes.set(b.id, { ...b, layer: i, x, y: rowY[i]! + (rowHeight[i]! - b.h) / 2 });
+      x += b.w + colGap;
+    }
+  });
 
   // Adjacent layers: straight, bottom of a to top of b. Same layer: a curve out of the bottoms,
   // dipping into the gap below. Skipping layers (GOAL's edges): bottom to top, straight if clear,
@@ -184,11 +207,9 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
     }
     return true;
   };
-  const edges = pairs.map(({ a, b, group, first }): GraphEdge => {
+  let edges = pairs.map(({ a, b, group, first, gates, secret, label }): GraphEdge => {
     const [ba, bb] = [boxes.get(a)!, boxes.get(b)!];
-    const gates = group.flatMap((d) => (d.gate && d.gate.kind !== "secret" ? [d.gate] : []));
     const oneway = group.every((d) => d.oneway && d.a === first.a);
-    const secret = group.every((d) => d.gate?.kind === "secret");
     const from = { x: ba.x + ba.w / 2, y: ba.y + ba.h };
     const same = ba.layer === bb.layer;
     const to = { x: bb.x + bb.w / 2, y: same ? bb.y + bb.h : bb.y };
@@ -216,15 +237,22 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
       ...(ctrl ? { ctrl } : {}),
       gates,
       kind: edgeKind(gates, secret, oneway),
-      ...(gates.length ? { label: gates.map(gateLabel).join(" ") } : secret ? { label: "secret" } : {}),
+      ...(label ? { label } : {}),
       secret,
       ...(oneway ? { towards: first.b } : {}),
     };
   });
 
+  const tall = rowY.at(-1)! + rowHeight.at(-1)!;
+  if (across) {
+    const flip = (p: Point): Point => ({ x: p.y, y: p.x });
+    for (const [id, b] of boxes) boxes.set(id, { ...b, x: b.y, y: b.x, w: b.h, h: b.w });
+    edges = edges.map((e) => ({ ...e, from: flip(e.from), to: flip(e.to), ...(e.ctrl ? { ctrl: flip(e.ctrl) } : {}) }));
+  }
+
   // Everything drawn, curves and edge labels included.
-  const xs: number[] = [0, widest];
-  const ys: number[] = [0, layers.length * (boxHeight + rowGap) - rowGap];
+  const xs: number[] = [0, across ? tall : widest];
+  const ys: number[] = [0, across ? widest : tall];
   for (const e of edges) {
     const c = e.ctrl ?? e.from;
     for (let i = 0; i <= 8; i++) {
@@ -232,24 +260,35 @@ export function graphLayout(graph: RoomGraph): GraphLayout {
       xs.push(s.x), ys.push(s.y);
     }
     if (e.label) {
-      const m = labelAt(e);
-      xs.push(m.x + (m.end ? -1 : 1) * e.label.length * labelCharWidth);
-      ys.push(m.y + 4);
+      const m = labelAt(e, across);
+      const w = e.label.length * labelCharWidth;
+      xs.push(...(m.anchor === "middle" ? [m.x - w / 2, m.x + w / 2] : [m.x + (m.anchor === "end" ? -w : w)]));
+      ys.push(m.y + 4, ...(across ? [m.y - 10] : []));
     }
   }
-  return { layers, boxes, edges, bbox: { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) } };
+  return { layers, boxes, edges, across, bbox: { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) } };
 }
+
+type Anchor = "start" | "middle" | "end";
 
 // An edge label beside the edge's middle, on the side the edge leans to, so the labels of edges
-// fanning out of one room part ways. end: anchored at its end (left of the edge).
-function labelAt(e: GraphEdge): Point & { end: boolean } {
+// fanning out of one room part ways: left or right of it top to bottom (anchored at its end on
+// the left). Across: centred above or below, as far off as the edge's slope under the text needs;
+// a curve within a layer (a vertical chord) on its right.
+function labelAt(e: GraphEdge, across: boolean, length = e.label?.length ?? 0): Point & { anchor: Anchor } {
   const m = quad(e.from, e.ctrl ?? e.from, e.to, 0.5);
+  if (across && e.from.x !== e.to.x) {
+    const lean = e.ctrl ? e.ctrl.y - (e.from.y + e.to.y) / 2 : e.to.y - e.from.y;
+    const off = 5 + (Math.abs(e.to.y - e.from.y) / Math.abs(e.to.x - e.from.x)) * (length * labelCharWidth) / 2;
+    return { x: m.x, y: lean > 0 ? m.y + off + 8 : m.y - off, anchor: "middle" };
+  }
+  if (across) return { x: m.x + 6, y: m.y + 3, anchor: "start" };
   const lean = e.ctrl && e.from.y !== e.to.y ? e.ctrl.x - (e.from.x + e.to.x) / 2 : e.to.x - e.from.x;
   const end = lean < 0;
-  return { x: m.x + (end ? -6 : 6), y: m.y + (e.ctrl ? 0 : 3), end };
+  return { x: m.x + (end ? -6 : 6), y: m.y + (e.ctrl ? 0 : 3), anchor: end ? "end" : "start" };
 }
 
-const css = `<style>
+export const graphCss = `<style>
 .g-node{font-size:12px;font-weight:400;text-anchor:middle}
 .g-node tspan.g-number{font-weight:700}
 .g-room{stroke:none}
@@ -278,18 +317,16 @@ function outline(b: { x: number; y: number; w: number; h: number; shape: Shape }
 }
 
 // Arrowhead at p, pointing along d.
-function arrow(p: Point, d: Point, kind: EdgeKind): string {
+export function arrow(p: Point, d: Point, kind: EdgeKind): string {
   const l = Math.hypot(d.x, d.y) || 1;
   const [ux, uy] = [d.x / l, d.y / l];
   const at = (along: number, across: number) => `${round(p.x - ux * along - uy * across)},${round(p.y - uy * along + ux * across)}`;
   return `<polygon class="arrow" fill="${edgeColour[kind]}" points="${at(0, 0)} ${at(9, 4)} ${at(9, -4)}"/>`;
 }
 
-// Graph → standalone SVG: graph on the left, key column on the right (rooms by number, legend).
-export function renderGraph(graph: RoomGraph, meta: TitleMeta): string {
-  const l = graphLayout(graph);
-  const top = margin + titleHeight;
-  const px = (p: Point) => ({ x: round(margin + p.x - l.bbox.x0), y: round(top + p.y - l.bbox.y0) });
+// The layout's edges, boxes and edge labels, each point through px: the graph view's body and
+// each variant diagram of the grammar sheet.
+export function graphBody(l: GraphLayout, graph: RoomGraph, px: (p: Point) => Point): string[] {
   const marks: string[] = [];
   for (const e of l.edges) {
     const [p, q] = [px(e.from), px(e.to)];
@@ -304,21 +341,29 @@ export function renderGraph(graph: RoomGraph, meta: TitleMeta): string {
     }
   }
   for (const b of l.boxes.values()) {
-    const [fill, colour] = b.shape === "room" ? (roomStyle[b.code] ?? roomFallback) : ["", "#000"];
     const { x, y } = px(b);
-    const number = esc(String(graph.rooms.get(b.id)!.number));
-    marks.push(
-      outline({ ...b, x, y }, fill),
-      `<text class="g-node" data-room="${number}" x="${round(x + b.w / 2)}" y="${round(y + b.h / 2 + 4)}" fill="${colour}"><tspan class="g-number">${number}</tspan> ${esc(b.label)}</text>`,
-    );
+    marks.push(outline({ ...b, x, y }, b.fill));
+    const number = b.number === undefined ? undefined : esc(b.number);
+    if (number === undefined && !b.label) continue; // a grammar anchor, blank
+    const text = number === undefined ? esc(b.label) : `<tspan class="g-number">${number}</tspan> ${esc(b.label)}`;
+    marks.push(`<text class="g-node"${number === undefined ? "" : ` data-room="${number}"`} x="${round(x + b.w / 2)}" y="${round(y + b.h / 2 + 4)}" fill="${b.colour}">${text}</text>`);
   }
   for (const e of l.edges) {
     if (!e.label) continue;
-    const at = labelAt(e);
+    const at = labelAt(e, l.across);
     const m = px(at);
-    const anchor = at.end ? ` text-anchor="end"` : "";
+    const anchor = at.anchor === "start" ? "" : ` text-anchor="${at.anchor}"`;
     marks.push(`<text class="g-label"${anchor} x="${m.x}" y="${m.y}" fill="${e.kind === "secret" ? "#666" : edgeColour[e.kind]}">${esc(e.label)}</text>`);
   }
+  return marks;
+}
+
+// Graph → standalone SVG: graph on the left, key column on the right (rooms by number, legend).
+export function renderGraph(graph: RoomGraph, meta: TitleMeta): string {
+  const l = graphLayout(graph);
+  const top = margin + titleHeight;
+  const px = (p: Point) => ({ x: round(margin + p.x - l.bbox.x0), y: round(top + p.y - l.bbox.y0) });
+  const marks = graphBody(l, graph, px);
 
   // Legend of what is drawn: room types in the Python plot's order, unknown ones after, nodes, paths.
   const codes = new Set([...l.boxes.values()].filter((b) => b.shape === "room").map((b) => b.code));
@@ -348,7 +393,7 @@ export function renderGraph(graph: RoomGraph, meta: TitleMeta): string {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
     plain.css,
-    css,
+    graphCss,
     `<rect width="${width}" height="${height}" fill="${page}"/>`,
     ...t.marks,
     ...marks,
