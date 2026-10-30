@@ -75,8 +75,8 @@ export const layoutFailed = (rooms: number[], generated: boolean): string[] => [
 
 // As the CLI (14a): m-7-zelda.
 export const dungeonName = ({ seed, size, theme }: Required<GenerateOptions>): string => `${size.toLowerCase()}-${seed}-${theme}`;
-// Catalogue keeps the name it had before styles (19).
-export const exportName = (name: string, seed: number, style: MapStyle): string => `${name}-map-${seed}${style === "catalogue" ? "" : `-${style}`}.svg`;
+// Plain keeps the name it had before styles (19).
+export const exportName = (name: string, seed: number, style: MapStyle): string => `${name}-map-${seed}${style === "plain" ? "" : `-${style}`}.svg`;
 export const jsonName = (name: string): string => `${name}.json`;
 export const keyName = (name: string): string => `${name}-key.md`;
 

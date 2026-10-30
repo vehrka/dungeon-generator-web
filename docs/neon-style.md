@@ -12,9 +12,9 @@ This file is the source of truth for the neon style. `docs/design.md` covers the
 
 ## Decisions (2026-10-28)
 
-- Third style `neon`, beside `catalogue` and `dyson`. The catalogue style stays as it is.
-  `styleFor("cyber")` → `neon` once the style is ready; catalogue until then, and by `--style`
-  after.
+- Third style `neon`, beside `plain` and `dyson`. The plain style stays as it is.
+  `styleFor("cyber")` → `neon`, zelda → `dyson`, any other theme or none → `plain` (decided
+  2026-10-30, in the core step).
 - Screen only: built for the viewer and VTT (FoundryVTT), not for print. A black page and
   saturated colour are fine. PNG export at Foundry's grid scale: not in scope, add later if needed.
 - Glow from stacked strokes (3 wider copies of the outline at falling opacity), no SVG filters:
@@ -35,7 +35,7 @@ This file is the source of truth for the neon style. `docs/design.md` covers the
 ## Constraints
 
 Same as `docs/dyson-style.md` § Constraints: `render` pure; randomness only through
-`rng(layoutSeed, "render/neon/<name>")`; same input → byte-identical SVG; catalogue and Dyson
+`rng(layoutSeed, "render/neon/<name>")`; same input → byte-identical SVG; plain and Dyson
 output unchanged by neon work (their snapshots guard it); plain SVG 1.1; every JSON value escaped;
 style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
 
@@ -52,9 +52,10 @@ style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
 ### Paint order
 
 1. Page indigo-black. Title and key column in light text.
-2. Corridors: dark fill, a thin dim outline (streets between blocks).
-3. Glow: each room outline stroked 3 times, widest and faintest first, in the room's colour, all
+2. Glow: each room outline stroked 3 times, widest and faintest first, in the room's colour, all
    rooms before any fill: the fill covers the inner half, so the glow shows outside only.
+3. Corridors: dark fill, a thin dim outline (streets between blocks). Over the glows, so no glow
+   band crosses a doorway (core step review).
 4. Room fills: the role colour mixed into the page, dark enough that numbers stay readable.
 5. Room detail (own step): small panels, vents, stripes inside each room, seeded, kept away from
    the number anchor and glyphs.
@@ -77,7 +78,7 @@ Colour marks the rooms that matter to the run; everything else recedes in three 
 | goal | `id === goal`, type `gl` | magenta, brightest fill |
 | boss | type `eb`, `em` | red |
 | pickup | type `key`, `bosskey`, `item`, `switch`, `lever` | amber |
-| treasure | type starting `gb:` (`gb: bombs`) | violet |
+| treasure | type `gb` or `gb: <reward>`, as the layout's `shapeRules` reads it | violet |
 | other | everything else (`n`, `p`, `c`, `e`, `t`, unknown) | teal, blue, steel by `number % 3` |
 
 Changed from the draft on the mock-up: boss in a dimmer magenta read as a second goal (m-1 cyber
@@ -123,14 +124,14 @@ accepted for now, open point.
 Same symbol set as Dyson (door, archway, secret, lock bar, portcullis, gate tag, one-way chevron),
 geometry from `scene.ts`, drawn in neon: ink strokes, gaps in the corridor fill, gate tags as
 gate-yellow outlined boxes with a yellow letter on the page colour. The mock-up only restyles the
-catalogue's gaps and jambs; symbol sizes are the doors step's.
+the plain style's gaps and jambs; symbol sizes are the doors step's.
 
 ### Type
 
 Monospace, no web font: `'DejaVu Sans Mono','Noto Sans Mono','Liberation Mono',Menlo,Consolas,
 monospace` (resvg needs named fonts first, see Dyson § Type). Text 12 px, numbers 17 px bold,
 title 18 px bold, tag letters 10 px bold. Checked in resvg 2.6.2 (DejaVu Sans Mono); the mono key
-column is wider per character than the catalogue's 7.5 px estimate allows for 13 px text, so the
+column is wider per character than the plain style's 7.5 px estimate allows for 13 px text, so the
 painter sets 12 px.
 
 ### Legend
@@ -142,9 +143,15 @@ goal, boss, pickup, treasure), so the colours read without the key. Not in the m
 
 As Dyson: standalone SVG, one floor polygon per room and corridor, every number and label once and
 escaped, door symbol counts on the fixture, snapshot, same input same string, no `<filter>`.
-`styleFor("cyber")` → `neon` once switched. Catalogue and Dyson snapshots unchanged. By hand: CLI
+`styleFor("cyber")` → `neon`. Plain and Dyson snapshots unchanged. By hand: CLI
 PNG of m-1 and l-1 and a generated cyber L; time and SVG size of l-1 noted here (target < 100 ms,
 < 1 MB).
+
+## Measurements
+
+Core step, l-1, layout seed 1, render only (layout excluded), mean of 20: plain 0.8 ms, 31.0 kB;
+neon 0.9 ms, 38.8 kB (Dyson 102 ms, 421 kB). Each outline once in `<defs>`, its five passes
+(3 glows, fill, wall) as `<use>`.
 
 ## Steps
 
@@ -153,11 +160,6 @@ room detail → viewer. Each step its own branch off `dev`, test first, `/code-r
 
 ## Open points
 
-- Glow cost on L maps: 3 copies per room outline, ~280 B per room on the mock (4.4 kB on 16
-  rooms). l-1 has 28 rooms, catalogue SVG 31 kB, so ~40 kB before room detail. Measure in the core
-  step.
 - Shared walls lose the glow and show one room's colour (§ Tokens). If it reads badly on L maps:
   stroke each room's wall clipped to its own inside, so a shared seam shows both colours.
 - Detail density vs room shapes and numbers: room detail step.
-- Catalogue keeps no default theme once cyber moves to neon: reachable by `--style` and the
-  viewer select only. Decided 2026-10-30.

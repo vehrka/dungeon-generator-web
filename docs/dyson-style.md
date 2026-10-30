@@ -2,12 +2,12 @@
 
 A second map style, after Dyson Logos' hand-inked dungeon maps
 (https://dysonlogos.blog/maps/commercial-maps/): black ink on white, thick walls, hatched rock
-around the rooms, a faint grid on the floors. The catalogue style (`docs/design.md` §7,
+around the rooms, a faint grid on the floors. The plain style (`docs/design.md` §7,
 `ref/webdesign/design.md`) stays as it is and fits the cyber theme; zelda, any other theme and a JSON
 without a theme get the Dyson style. Decided 2026-10-27.
 
 This file is the source of truth for the Dyson style. `docs/design.md` covers everything else
-(engine, layout, catalogue render, CLI, viewer) and links here from §7. Progress: `STATUS.md`.
+(engine, layout, plain render, CLI, viewer) and links here from §7. Progress: `STATUS.md`.
 
 ## Scope
 
@@ -25,7 +25,7 @@ This file is the source of truth for the Dyson style. `docs/design.md` covers ev
 - `render` stays pure: no DOM, no Node APIs; the viewer worker and the CLI call it.
 - All randomness through `rng(layoutSeed, "render/<name>")` (`engine/rng.ts`); never
   `Math.random`. Same JSON + layout seed + style → byte-identical SVG (snapshot test).
-- Catalogue output must stay byte-identical: its snapshot (`tests/__snapshots__`) is the guard for
+- Plain output must stay byte-identical: its snapshot (`tests/__snapshots__`) is the guard for
   the refactor.
 - Exported SVG must render anywhere (browser, resvg 2.6.2 for PNG, Inkscape): plain SVG 1.1
   features only. resvg supports `pattern`, `clipPath`, `mask`, stroke joins; avoid filters
@@ -74,12 +74,13 @@ most of the bbox stays white, as in Dyson's maps.
 
 ### Style selection
 
-- `type MapStyle = "catalogue" | "dyson"`; `RenderMeta` carries it. `render` keeps catalogue
+- `type MapStyle = "plain" | "dyson"`; `RenderMeta` carries it. `render` keeps plain
   when none is given, so its tests and snapshot stay as they are.
-- Default by theme, decided 2026-10-27: `styleFor(theme)` → `"catalogue"` for `cyber`, `"dyson"`
+- Default by theme, decided 2026-10-27: `styleFor(theme)` → `"plain"` for `cyber`, `"dyson"`
   for any other theme or none (a loaded JSON may lack one). `draw(json, layoutSeed, config,
-  style = styleFor(json.theme))`, so CLI and viewer share the rule.
-- CLI: `--style catalogue|dyson` overrides the theme's default; unknown value → error listing the
+  style = styleFor(json.theme))`, so CLI and viewer share the rule. Changed 2026-10-30 with
+  neon: cyber → neon, zelda → Dyson, any other theme or none → plain (`docs/design.md` §7).
+- CLI: `--style plain|dyson` (and `neon` since) overrides the theme's default; unknown value → error listing the
   options (same pattern as `--size`, `--theme`). Output name unchanged unless `-o` is given.
 - Viewer: a `style` select in the layout section under corridors, preset from the theme
   (generate) or the loaded JSON's theme, changeable by hand. A load always presets; generate
@@ -87,7 +88,7 @@ most of the bbox stays white, as in Dyson's maps.
   layout seed, corridors, size and generate with the same theme. A style change redraws through the worker, which keeps its last
   layout (`layoutCache` in `viewer/state.ts`, layout failures included), so only the render runs; a style
 change during a run restarts it. Export name `<name>-map-<seed>.svg` for
-  catalogue, `<name>-map-<seed>-<style>.svg` otherwise.
+  plain, `<name>-map-<seed>-<style>.svg` otherwise.
 
 ### Code structure
 
@@ -99,9 +100,9 @@ Split `svg.ts` before adding the second style:
   (step 1, `docs/plans/15-render-scene.md`). The legend flags `anySecret` / `anyOneway` went in
   step 2: the painters read `s.doors`, so the legend lists secret and one-way only as drawn.
 - `render/svg.ts`: `MapStyle`, `styleFor`, `render`, `draw`; the shared frame (key column, title,
-  page) and the catalogue painter. A `Painter` gives CSS, page colour, `pad` (grid units of room
+  page) and the plain painter. A `Painter` gives CSS, page colour, `pad` (grid units of room
   around the map, 2 for Dyson so the hatching stays on the page) and `paint(scene, px, layoutSeed)
-  → { defs, map, legend }`. Catalogue output byte-identical to step 1.
+  → { defs, map, legend }`. Plain output byte-identical to step 1.
 - `render/marks.ts`: `unit`, `esc`, glyph, gate tag and room-number marks shared by both
   painters; own module so `svg.ts` and `dyson.ts` do not import each other.
 - `render/dyson.ts`: Dyson painter (floors, grid, walls, hatching, doors, numbers) and its
@@ -196,10 +197,10 @@ bottom and right. Decided 2026-10-29, replacing step 4's grey stroke on the rock
 ### Doors and gates
 
 Door symbols sit on the wall at the door segment (`doorLength` units long). Grouping, tags and
-one-way direction come from the scene, as in the catalogue. Done (step 3,
+one-way direction come from the scene, as in the plain style. Done (step 3,
 `docs/plans/17-dyson-doors.md`); the geometry is in `scene.ts` so the neon painter reuses it.
 
-| door | catalogue | Dyson |
+| door | plain | Dyson |
 |------|-----------|-------|
 | plain | gap + jambs | white rectangle across the wall, segment − wall long (as the gap, clears corners), 8 px across, 1.5 px black outline |
 | corridor end | gap, corridor half grey | the door symbol at room a's end; archway (open gap, filled and gridded like the floor) at room b's end |
@@ -234,7 +235,7 @@ one-way direction come from the scene, as in the catalogue. Done (step 3,
   'DejaVu Serif', 'Noto Serif', serif`. Named fonts first: resvg maps the generic `serif` to Times
   New Roman, not to fontconfig. A bundled hand-lettered font (OFL, via resvg `font.fontFiles` in
   the CLI) is a later option; the exported SVG would still fall back to the stack.
-- Room numbers 17 px, regular, black, in the same anchor as the catalogue.
+- Room numbers 17 px, regular, black, in the same anchor as the plain style.
 - Glyphs: the same `icons.ts` symbols, black, 1.2 px stroke.
 - Key column: kept (Dyson's own maps have none, but our maps need labels). Serif, black rules
   (`#000`, 0.5 px) instead of steel grey, no amber. Title and subtitle in the serif.
@@ -255,7 +256,7 @@ No other colour. Values tuned against PNG renders of m-1 and l-1 (step 4).
 
 Layout seed 1, Dyson core (no wobble, shadow or door symbols), Node 24, mean of 10 renders:
 
-| dungeon | catalogue | Dyson | Dyson SVG |
+| dungeon | plain | Dyson | Dyson SVG |
 |---------|-----------|-------|-----------|
 | m-1 | 0.7 ms | 67 ms | 366 kB |
 | l-1 | 0.6 ms | 78 ms | 390 kB |
@@ -266,7 +267,7 @@ code (machine load); 5,240 clusters, 15,758 strokes, nearly all the time in `hat
 reroll feels slow: fewer Bridson tries (30 now) or a jittered grid. Doors are plain gaps in the
 wall, half a wall short at each end, so a door flush with a corner leaves the other wall whole;
 the gaps are filled and gridded like the floors. Until step 3, gate tags and one-way chevrons sit on
-the door as in the catalogue, and a secret door is the wall unbroken with a bold serif S (white
+the door as in the plain style, and a secret door is the wall unbroken with a bold serif S (white
 halo), so no default map loses information while the symbols are pending. On this machine the serif stack falls back to DejaVu Serif
 (no Palatino); the 7.5 px/char key column estimate fits it.
 
@@ -275,7 +276,7 @@ halo), so no default map loses information while the symbols are pending. On thi
 Door symbols on the same three maps, layout seed 1, mean of 10 renders, against `dev` (step 2) on
 the same machine in the same session: m-1 90–95 ms (377 → 379 kB), l-1 97–101 ms (401 → 403 kB),
 l-8 43 ms (171 → 172 kB). The doors cost ~2 kB and no measurable time; the machine was slower than
-in step 2 for both branches. Catalogue dump (172 bench and generated maps, layout seeds 1–3,
+in step 2 for both branches. Plain dump (172 bench and generated maps, layout seeds 1–3,
 corridors on and off) byte-identical.
 
 ## Measured (step 4)
@@ -283,26 +284,26 @@ corridors on and off) byte-identical.
 Wobble and shadow, layout seed 1, mean of 10 renders, against `dev` (step 3) in the same session:
 m-1 93 ms both (379 → 394 kB), l-1 95 → 99 ms (403 → 417 kB), l-8 42 ms both (171 → 178 kB). About
 +15 kB per map from the extra polygon points (the 0.5 step halves the planned ×4), time within noise.
-Catalogue dump (172 bench and generated maps, layout seeds 1–3, corridors on and off)
+Plain dump (172 bench and generated maps, layout seeds 1–3, corridors on and off)
 byte-identical.
 
 ## Testing
 
-- Refactor: catalogue snapshot unchanged; `tests/render.test.ts` passes without edits.
+- Refactor: plain snapshot unchanged; `tests/render.test.ts` passes without edits.
 - `hatch.ts`: no sample inside a floor cell or farther than `hatchDepth`; same seed same strokes,
-  other seed other strokes; streams independent of the catalogue (adding hatching changes no
+  other seed other strokes; streams independent of the plain (adding hatching changes no
   layout).
 - Wobble: a shared edge gives the same points from both rooms (two touching rectangles, one corner
   on the other's edge); whole-unit points fixed; offsets ≤ amplitude, across the edge only;
   amplitude 0 gives the straight outline; deterministic per layout seed.
 - Dyson render: standalone SVG; one floor polygon per room and corridor; every room number and
-  label once, escaped (same hostile-input test as catalogue); no amber, no `#e5e5e5`; door symbol
+  label once, escaped (same hostile-input test as plain); no amber, no `#e5e5e5`; door symbol
   counts by kind on the fixture (3 lock, 1 state); one-way chevrons point a → b; snapshot of the
   fixture; same input same string.
-- `styleFor`: cyber → catalogue; zelda, any other string, undefined → dyson.
+- `styleFor`: cyber → plain; zelda, any other string, undefined → dyson (until neon, see above).
 - CLI: `--style dyson` writes SVG and PNG; default follows the theme; bad style exits 1 with the
   options listed. Existing CLI tests that render a non-cyber dungeon now get Dyson: pass
-  `--style catalogue` where they check catalogue output.
+  `--style plain` where they check plain output.
 - Viewer: `state.ts` style parsing and export name.
 - By hand: CLI PNG of `bench/dungeons/m-1.json`, `l-1.json` and a generated zelda L, viewed
   side by side with a Dyson map; viewer in both styles. Time and SVG size of l-1 noted here

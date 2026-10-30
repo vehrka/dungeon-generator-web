@@ -4,8 +4,8 @@ import type { Gate, RoomGraph, RoomId } from "../engine/types";
 import { glyphs } from "./icons";
 import { tagBox, unit } from "./marks";
 
-// Style-free geometry of a map in grid units: every painter (catalogue, Dyson) draws from this.
-export type SceneRoom = { id: RoomId; number: number; outline: Polygon; anchor: Point; glyphs: string[] };
+// Style-free geometry of a map in grid units: every painter (plain, Dyson, neon) draws from this.
+export type SceneRoom = { id: RoomId; number: number; type: string; outline: Polygon; anchor: Point; glyphs: string[] };
 export type SceneDoor = {
   segment: Segment; // the door; through a corridor, the one on room a
   gates: Gate[]; // the group's gates but secret
@@ -17,7 +17,7 @@ export type SceneDoor = {
   tagAt?: Point; // gate tag, inside room a beside the door
   onewayAt?: Point; // one-way chevron, on room b's side (in the corridor through one)
 };
-export type Scene = { rooms: SceneRoom[]; corridors: Polygon[]; doors: SceneDoor[]; bbox: Rect };
+export type Scene = { rooms: SceneRoom[]; corridors: Polygon[]; doors: SceneDoor[]; bbox: Rect; start: RoomId; goal: RoomId };
 
 const markOffset = 0.6; // grid units from the door's middle to its tag or chevron; < 1, so a tag stays in the cell next to the door, in room a
 const tagSize = tagBox / unit; // grid units
@@ -51,7 +51,8 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
     // Number and glyphs in the middle of the largest rectangle of both slab cuts, so an L, T or
     // plus keeps them inside its longest arm.
     const r = [...cells.get(id)!, ...partition(outline, "rows")].reduce((a, b) => ((b.x1 - b.x0) * (b.y1 - b.y0) > (a.x1 - a.x0) * (a.y1 - a.y0) ? b : a));
-    return { id, number: graph.rooms.get(id)!.number, outline, anchor: { x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 }, glyphs: roomGlyphs(graph, id) };
+    const { number, type } = graph.rooms.get(id)!;
+    return { id, number, type, outline, anchor: { x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 }, glyphs: roomGlyphs(graph, id) };
   });
 
   // Doors between the same two rooms share a segment or a corridor: one door for all their gates;
@@ -110,5 +111,7 @@ export function scene(graph: RoomGraph, layout: Layout): Scene {
     corridors: [...corridors.values()],
     doors,
     bbox: bbox([...outlines.values(), ...corridors.values()].flat()),
+    start: graph.start,
+    goal: graph.goal,
   };
 }

@@ -33,7 +33,12 @@ describe("scene", () => {
     for (const [i, pl] of layout.placements.entries()) {
       expect(s.rooms[i]!.outline).toEqual(translate(pl.shape.outline, pl.at));
       expect(s.rooms[i]!.number).toBe(graph.rooms.get(pl.room)!.number);
+      expect(s.rooms[i]!.type).toBe(graph.rooms.get(pl.room)!.type);
     }
+  });
+
+  it("names the start and goal rooms", () => {
+    expect([s.start, s.goal]).toEqual([graph.start, graph.goal]);
   });
 
   it("has one corridor per distinct corridor shape and position", () => {
