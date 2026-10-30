@@ -77,9 +77,12 @@ the story of the project. Decided 2026-10-30: own drawing code, no new dependenc
   stale. Embedded in README. Done: diagrams through the graph view's layout (`across`) and painter
   (`graphBody`), graph SVGs byte-identical; R by pacing tier; size table rooms after merge, means
   XS 6.5 … L 28.9 (the plan's 7.7 … 35.7 counted gate nodes too) (`docs/plans/25-grammar-sheet.md`).
-- [ ] 3. **help page** (`feature/help-page`): second viewer page `help.html`, linked from the header,
+- [x] 3. **help page** (`feature/help-page`): second viewer page `help.html`, linked from the header,
   TE guide look: the project's story, how it is built (pipeline), the grammar sheet, references.
-  Hand-written HTML, no Markdown dependency.
+  Hand-written HTML, no Markdown dependency. Done: five bands, prose in sentence case capped at
+  70ch, sheet at its own size scrolling sideways; the sheet comes in through a module import of
+  `docs/grammar.svg?url` (an HTML `src` outside the root breaks in dev, an `a href` in the build),
+  so the page needs JS for it (`docs/plans/26-help-page.md`).
 
 ## Open points
 

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>delve generator · help</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="doc">
+    <header>
+      <h1>delve generator</h1>
+      <p>dungeon generator<br />and map layout</p>
+      <a class="nav" href="./index.html">map</a>
+    </header>
+    <main>
+      <section>
+        <h2><span class="n">1</span>what it is</h2>
+        <p>Delve generator makes a dungeon from a number. Pick a seed, a size and a theme: it grows a
+          dungeon (rooms, locked doors and their keys, switches, secret doors, one-way paths, a
+          boss), draws it as a map and writes a GM key that names every room and what it holds. Seed,
+          size and theme always give the same dungeon; its layout seed and corridors always give the
+          same map of it, so any map can be shared as those five settings.</p>
+        <p>The theme names the rooms and picks the look: zelda is hand-inked in the manner of Dyson
+          Logos' maps, cyber glows in neon on black, plain is a clean catalogue map. Not every
+          dungeon is a place underground, so the graph view shows the dungeon as what it is, rooms
+          and the gates between them: a heist, a starship deck, a city district.</p>
+        <h3>on the map page</h3>
+        <ul>
+          <li><b>Generate</b> picks a random dungeon seed and writes it into the field; type a seed and
+            press Enter to get that one back.</li>
+          <li><b>Layout seed</b> gives another map of the same dungeon; <b>reroll</b> picks a random
+            one. <b>Corridors</b> off: rooms touch at every door.</li>
+          <li><b>Load json</b>, or drop a file on the map, reopens a dungeon saved with export.</li>
+          <li><b>Export</b> saves the map (SVG), the dungeon (JSON, generated ones only: a
+            loaded one is already a file) and the GM key (Markdown).</li>
+        </ul>
+      </section>
+      <section>
+        <h2><span class="n">2</span>how it works</h2>
+        <ol class="steps">
+          <li>
+            <h3>generate</h3>
+            <p>A graph grammar grows the dungeon from the start room to the goal. Each rule rolls a
+              d20 to pick a variant: a locked door with its key somewhere else, a switch that opens a
+              gate, a mini-boss, a bonus room. Harder content sits closer to the boss. Small rooms of
+              one kind are merged, then a solver walks from the start, picking up keys, to prove the
+              goal can be reached. Size sets how far it grows; the theme only changes names and look,
+              so one seed gives the same dungeon in every theme.</p>
+          </li>
+          <li>
+            <h3>write it down</h3>
+            <p>The dungeon becomes a JSON file: rooms, gates, keys, what lies where. Export it to keep
+              it, load it back later; everything after this step reads only the file.</p>
+          </li>
+          <li>
+            <h3>lay out</h3>
+            <p>Every room gets a shape (rectangle, L or T) from the layout seed, then the rooms are
+              placed so each door joins two rooms and nothing overlaps, loops first, after Ondřej
+              Nepožitek's graph-based algorithm. When a part does not fit it backs up and tries
+              again. Most doors get a short corridor. Now and then no layout is found: another layout
+              seed usually fixes it.</p>
+          </li>
+          <li>
+            <h3>draw</h3>
+            <p>The map is drawn as SVG: numbered rooms, a mark for each kind of door, a key column and a
+              title. Every look tags a gate with a letter shared with its key and marks one-way doors
+              with a chevron; zelda and cyber also draw a bar for locked, dots for a portcullis and an
+              S for secret, plain a dashed line for secret. The GM key lists the same numbers.</p>
+          </li>
+        </ol>
+      </section>
+      <section>
+        <h2><span class="n">3</span>the grammar</h2>
+        <p>The rules the generator follows, on one sheet. Each card is a rule; its variants are drawn
+          as small graphs, with the d20 range that picks each one per size. It is the Combined
+          grammar, grown from fantomx11's
+          <a href="https://forum.rpg.net/index.php?threads/necro-my-zelda-dungeon-generator.827119/">Zelda
+          dungeon generator</a> on the RPG.net forum.</p>
+        <figure class="sheet">
+          <div class="scroll"><img alt="Combined dungeon grammar: rule cards with d20 ranges per size and variant diagrams" /></div>
+          <figcaption>scroll sideways · <a id="sheet-full">open full size</a></figcaption>
+        </figure>
+      </section>
+      <section>
+        <h2><span class="n">4</span>how we built it</h2>
+        <dl class="story">
+          <dt>2021-11</dt>
+          <dd>A Python dungeon generator after fantomx11's grammar: a graph of rooms and gates, no
+            map. Version 1.0 in December.</dd>
+          <dt>2024-11</dt>
+          <dd>The Python code tidied up: dungeon utilities apart from the grammars.</dd>
+          <dt>2026-10-25</dt>
+          <dd>Python generator 2.0: the Combined grammar paced by difficulty, sizes, themes, a JSON
+            export and a GM key. The same day this project starts: a design for the map layout,
+            checked against Nepožitek's thesis and the Edgar source.</dd>
+          <dt>2026-10-26</dt>
+          <dd>The layout engine, ported from the thesis: planarity, chains, room shapes,
+            configuration spaces, simulated annealing.</dd>
+          <dt>2026-10-27</dt>
+          <dd>Map render, command line and this viewer; corridors; L and T rooms. The generator ported
+            from Python to TypeScript, its known issues fixed; from then on the TypeScript version is
+            the only one.</dd>
+          <dt>2026-10-28</dt>
+          <dd>The Dyson look: hatched rock, thick walls, floor grid; door symbols, wobbly walls and
+            shadow the day after.</dd>
+          <dt>2026-10-30</dt>
+          <dd>The neon look for cyber, one theme select for names and look, the graph view, the
+            grammar sheet and this page.</dd>
+        </dl>
+        <p>Built step by step with Claude Code: each step a written plan, a branch, tests first and a
+          code review before it was merged. A benchmark of 16 fixed dungeons, laid out five times
+          each, runs on every change to the layout. Plan and progress:
+          <a href="https://github.com/vehrka/dungeon-generator-web/blob/main/STATUS.md">STATUS.md</a>.</p>
+      </section>
+      <section>
+        <h2><span class="n">5</span>references</h2>
+        <ul>
+          <li>Ondřej Nepožitek, <i>Procedural Level Generator with Unity Integration</i>, master thesis,
+            Charles University, 2020: the layout algorithm.</li>
+          <li><a href="https://github.com/OndrejNepozitek/Edgar-DotNet">Edgar-DotNet</a> (MIT), the
+            thesis' implementation: constants and details.</li>
+          <li><a href="https://forum.rpg.net/index.php?members/fantomx11.74669/">fantomx11</a>, <a href="https://forum.rpg.net/index.php?threads/necro-my-zelda-dungeon-generator.827119/">my
+            Zelda dungeon generator</a>, RPG.net forum: the grammar the generator grew from.</li>
+          <li><a href="https://dysonlogos.blog/maps/commercial-maps/">Dyson Logos</a>: the hand-inked map
+            look.</li>
+          <li><a href="https://teenage.engineering/guides/ep-35">teenage engineering, EP-35 guide</a>:
+            the look of these pages.</li>
+          <li>Design notes:
+            <a href="https://github.com/vehrka/dungeon-generator-web/blob/main/docs/design.md">design</a>,
+            <a href="https://github.com/vehrka/dungeon-generator-web/blob/main/docs/dyson-style.md">Dyson style</a>,
+            <a href="https://github.com/vehrka/dungeon-generator-web/blob/main/docs/neon-style.md">neon style</a>.</li>
+        </ul>
+      </section>
+    </main>
+    <!-- The sheet lives outside the Vite root: dev does not rewrite an HTML src there and the build
+         never rewrites an a href, but both resolve an import. -->
+    <script type="module">
+      import sheet from "../../docs/grammar.svg?url";
+      document.querySelector(".sheet img").src = sheet;
+      document.querySelector("#sheet-full").href = sheet;
+    </script>
+    <footer>delve generator 0.1.0 · type: Jura, SIL Open Font License 1.1</footer>
+  </body>
+</html>
