@@ -1,6 +1,6 @@
 import type { Point, Polygon, Segment } from "../engine/geometry";
 import { hatch, hatchReach, wallShadow, wobble } from "./hatch";
-import { chevron, roomMarks, tagMark, unit, type Painter } from "./marks";
+import { barMark, chevron, dotMarks, round, roomMarks, secretMark, tagMark, unit, wallRect, type Painter } from "./marks";
 
 // Dyson Logos look (docs/dyson-style.md): black ink on white, thick walls, hatched rock, a faint
 // grid on the floors. Doors white rectangles across the wall, a bar for a lock, dots in a gap for a
@@ -40,11 +40,6 @@ text{font-family:${serif};font-size:13px;fill:${ink}}
 </style>`;
 
 const doorAcross = 8; // px, the door rectangle across the wall
-const barLength = 12; // px, a lock's bar along the door's normal, past the rectangle
-const dots = 3; // a portcullis's dots along the gap
-const dotRadius = 1.5; // px
-
-const round = (v: number) => Math.round(v * 10) / 10;
 
 // Paint order: hatching, floors white, floor grid, wall shadow inside the floors (light from the
 // upper left), walls, gaps (white, gridded: archways and portcullis), door symbols, then tags and
@@ -87,15 +82,15 @@ export const dyson: Painter = {
     // so the corridor does not give it away. Gaps only at archways and portcullis.
     const gaps = s.doors
       .flatMap((door) => [...(door.symbol === "portcullis" ? [door.segment] : []), ...(door.corridor && !door.secret ? [door.corridor.segment] : [])])
-      .map((g) => wallRect(g, px, wall / 2 + 1, "gap"));
+      .map((g) => wallRect(g, px, wall / 2 + 1, "gap", wall));
     const symbols = s.doors.flatMap((door) => {
       switch (door.symbol) {
         case "secret":
           return [door.segment, ...(door.corridor ? [door.corridor.segment] : [])].map((e) => secretMark(e, px));
         case "door":
-          return [wallRect(door.segment, px, doorAcross / 2, "door")];
+          return [wallRect(door.segment, px, doorAcross / 2, "door", wall)];
         case "lock":
-          return [wallRect(door.segment, px, doorAcross / 2, "door"), barMark(door.segment, px)];
+          return [wallRect(door.segment, px, doorAcross / 2, "door", wall), barMark(door.segment, px)];
         case "portcullis":
           return dotMarks(door.segment, px);
       }
@@ -127,8 +122,8 @@ export const dyson: Painter = {
         ...s.rooms.flatMap((room) => roomMarks(room, px(room.anchor), 6)),
       ],
       legend: [
-        ...(drawn("door") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door"), text: "door" }] : []),
-        ...(drawn("lock") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door") + barMark(sample, same), text: "locked door" }] : []),
+        ...(drawn("door") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall), text: "door" }] : []),
+        ...(drawn("lock") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall) + barMark(sample, same), text: "locked door" }] : []),
         ...(drawn("portcullis") ? [{ mark: `<path class="wall" d="M0 -4H2M12 -4H14"/>${dotMarks({ from: { x: 0, y: -4 }, to: { x: 14, y: -4 } }, same).join("")}`, text: "portcullis" }] : []),
         ...(drawn("secret") ? [{ mark: `<text class="secret" x="7" y="0">S</text>`, text: "secret door" }] : []),
         ...(s.doors.some((door) => door.onewayAt) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
@@ -137,39 +132,3 @@ export const dyson: Painter = {
     };
   },
 };
-
-// A secret door: the wall unbroken, an S across its middle.
-function secretMark(s: Segment, px: (p: Point) => Point): string {
-  const [a, b] = [px(s.from), px(s.to)];
-  return `<text class="secret" x="${(a.x + b.x) / 2}" y="${(a.y + b.y) / 2 + 4.5}">S</text>`;
-}
-
-// A rectangle over the wall along the door, h px each side of it and half a wall short at each end,
-// so a door flush with a corner leaves the other wall whole: a gap (paper, a pixel wider than the
-// wall) or a door.
-function wallRect(s: Segment, px: (p: Point) => Point, h: number, cls: string): string {
-  const [a, b] = [px(s.from), px(s.to)];
-  const r = a.y === b.y
-    ? { x: Math.min(a.x, b.x) + wall / 2, y: a.y - h, w: Math.abs(b.x - a.x) - wall, h: 2 * h }
-    : { x: a.x - h, y: Math.min(a.y, b.y) + wall / 2, w: 2 * h, h: Math.abs(b.y - a.y) - wall };
-  return `<rect class="${cls}" x="${round(r.x)}" y="${round(r.y)}" width="${round(r.w)}" height="${round(r.h)}"/>`;
-}
-
-// A lock: a bar across the door rectangle's middle, along the normal.
-function barMark(s: Segment, px: (p: Point) => Point): string {
-  const [a, b] = [px(s.from), px(s.to)];
-  const m = { x: round((a.x + b.x) / 2), y: round((a.y + b.y) / 2) };
-  const h = barLength / 2;
-  return a.y === b.y
-    ? `<line class="bar" x1="${m.x}" y1="${m.y - h}" x2="${m.x}" y2="${m.y + h}"/>`
-    : `<line class="bar" x1="${m.x - h}" y1="${m.y}" x2="${m.x + h}" y2="${m.y}"/>`;
-}
-
-// A portcullis: dots evenly along the gap, on the wall line.
-function dotMarks(s: Segment, px: (p: Point) => Point): string[] {
-  const [a, b] = [px(s.from), px(s.to)];
-  return Array.from({ length: dots }, (_, i) => {
-    const f = (i + 1) / (dots + 1);
-    return `<circle class="dot" cx="${round(a.x + (b.x - a.x) * f)}" cy="${round(a.y + (b.y - a.y) * f)}" r="${dotRadius}"/>`;
-  });
-}

@@ -13,6 +13,12 @@ export type Painter = { css: string; page: string; pad: number; paint: (s: Scene
 export const unit = 24; // px per grid unit, both styles
 export const tagBox = 14; // px, a gate tag's square; scene.ts keeps tags this far apart
 
+const barLength = 12; // px, a lock's bar along the door's normal, past the rectangle
+const dots = 3; // a portcullis's dots along the gap
+const dotRadius = 1.5; // px
+
+export const round = (v: number) => Math.round(v * 10) / 10;
+
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export const useGlyph = (id: string, x: number, y: number) =>
@@ -81,4 +87,42 @@ export function doorMark(
   if (tag) parts.push(tagMark(mid.x, mid.y, tag, gate));
   if (d) parts.push(chevron(mid, horizontal, d, !!tag));
   return `<g class="door${tag ? " gated" : ""}${secret ? " secret" : ""}">${parts.join("")}</g>`;
+}
+
+// Door symbols of the Dyson and neon styles, wall their wall width in px.
+
+// A secret door: the wall unbroken, an S across its middle.
+export function secretMark(s: Segment, px: (p: Point) => Point): string {
+  const [a, b] = [px(s.from), px(s.to)];
+  return `<text class="secret" x="${(a.x + b.x) / 2}" y="${(a.y + b.y) / 2 + 4.5}">S</text>`;
+}
+
+// A rectangle over the wall along the door, h px each side of it and half a wall short at each end,
+// so a door flush with a corner leaves the other wall whole: a gap (a pixel wider than the wall) or
+// a door.
+export function wallRect(s: Segment, px: (p: Point) => Point, h: number, cls: string, wall: number): string {
+  const [a, b] = [px(s.from), px(s.to)];
+  const r = a.y === b.y
+    ? { x: Math.min(a.x, b.x) + wall / 2, y: a.y - h, w: Math.abs(b.x - a.x) - wall, h: 2 * h }
+    : { x: a.x - h, y: Math.min(a.y, b.y) + wall / 2, w: 2 * h, h: Math.abs(b.y - a.y) - wall };
+  return `<rect class="${cls}" x="${round(r.x)}" y="${round(r.y)}" width="${round(r.w)}" height="${round(r.h)}"/>`;
+}
+
+// A lock: a bar across the door rectangle's middle, along the normal.
+export function barMark(s: Segment, px: (p: Point) => Point): string {
+  const [a, b] = [px(s.from), px(s.to)];
+  const m = { x: round((a.x + b.x) / 2), y: round((a.y + b.y) / 2) };
+  const h = barLength / 2;
+  return a.y === b.y
+    ? `<line class="bar" x1="${m.x}" y1="${m.y - h}" x2="${m.x}" y2="${m.y + h}"/>`
+    : `<line class="bar" x1="${m.x - h}" y1="${m.y}" x2="${m.x + h}" y2="${m.y}"/>`;
+}
+
+// A portcullis: dots evenly along the gap, on the wall line.
+export function dotMarks(s: Segment, px: (p: Point) => Point): string[] {
+  const [a, b] = [px(s.from), px(s.to)];
+  return Array.from({ length: dots }, (_, i) => {
+    const f = (i + 1) / (dots + 1);
+    return `<circle class="dot" cx="${round(a.x + (b.x - a.x) * f)}" cy="${round(a.y + (b.y - a.y) * f)}" r="${dotRadius}"/>`;
+  });
 }
