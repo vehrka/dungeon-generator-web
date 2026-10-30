@@ -75,7 +75,8 @@ weighted `distances` (Dijkstra, undirected). A small graph module covers it.
   by id. `label`: theme room description, else `SPECIAL_ROOMS`, `gb: <reward>`, `Pickup: …`,
   `Switch: …`, `Lever: … (starts OFF)`, `ROOM_STYLE` description, else name. Keep schema 2 as the
   interchange format: loading a JSON file in the viewer and CLI keeps working.
-- **Theme**: text only. Same seed and size give the same graph with any theme.
+- **Theme**: text only. Same seed and size give the same graph with any theme. TS adds `plain`
+  (zelda's text) so the viewer's one theme select can pick the plain map style (2026-10-30).
 
 ## Fixes (decision 5)
 

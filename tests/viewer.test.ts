@@ -3,8 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { isSeed, maxSeed } from "../src/engine/rng";
 import { defaultConfig } from "../src/engine/config";
-import { LayoutError } from "../src/engine/layout";
-import { layoutCache, panelFor, dungeonName, exportName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseStyle, parseTheme } from "../src/viewer/state";
+import { panelFor, dungeonName, exportName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseTheme, styleOf } from "../src/viewer/state";
 
 const text = readFileSync(join(import.meta.dirname, "fixtures", "ruin.json"), "utf8");
 
@@ -93,7 +92,7 @@ describe("parseSize", () => {
 
 describe("parseTheme", () => {
   it("accepts the generator themes", () => {
-    for (const t of ["zelda", "cyber"]) expect(parseTheme(t)).toBe(t);
+    for (const t of ["zelda", "cyber", "plain"]) expect(parseTheme(t)).toBe(t);
   });
 
   it("rejects anything else", () => {
@@ -101,13 +100,15 @@ describe("parseTheme", () => {
   });
 });
 
-describe("parseStyle", () => {
-  it("accepts the map styles", () => {
-    for (const s of ["plain", "dyson", "neon"]) expect(parseStyle(s)).toBe(s);
+describe("styleOf", () => {
+  it("draws a dungeon in its theme's style", () => {
+    expect(styleOf("zelda")).toBe("dyson");
+    expect(styleOf("Cyber")).toBe("neon");
+    expect(styleOf("plain")).toBe("plain");
   });
 
-  it("rejects anything else", () => {
-    for (const s of ["", "Dyson", "toString", "__proto__"]) expect(() => parseStyle(s)).toThrow(/^Unknown style .*, expected one of plain dyson neon$/);
+  it("draws any other theme, or one that is not a string, plain", () => {
+    for (const t of ["tor-barrow", "", undefined, 5, null, {}]) expect(styleOf(t)).toBe("plain");
   });
 });
 
@@ -148,41 +149,6 @@ describe("layoutFailed", () => {
 
   it("suggests only the layout seed for a loaded file", () => {
     expect(layoutFailed([4], false)[1]).toBe("Try another layout seed (reroll).");
-  });
-});
-
-describe("layoutCache", () => {
-  const json = JSON.parse(text);
-  const catchIt = (f: () => unknown) => {
-    try {
-      f();
-    } catch (e) {
-      return e;
-    }
-  };
-
-  it("reuses the last layout for the same dungeon, seed and config", () => {
-    const place = layoutCache();
-    const a = place(json, 3, defaultConfig);
-    expect(place(structuredClone(json), 3, defaultConfig)).toBe(a); // the worker gets a copy each time
-    expect(place(json, 4, defaultConfig)).not.toBe(a);
-    expect(place(json, 3, layoutConfig(false))).not.toBe(place(json, 3, defaultConfig));
-  });
-
-  it("keeps a layout failure, so a style change does not run it again", () => {
-    const place = layoutCache();
-    const stuck = { ...defaultConfig, maxTotalIterations: 1 };
-    const e = catchIt(() => place(json, 1, stuck));
-    expect(e).toBeInstanceOf(LayoutError);
-    expect(catchIt(() => place(json, 1, stuck))).toBe(e);
-  });
-
-  it("tries any other error again", () => {
-    const place = layoutCache();
-    const bad = { ...json, schema_version: 3 };
-    const e = catchIt(() => place(bad, 1, defaultConfig));
-    expect(e).toBeInstanceOf(Error);
-    expect(catchIt(() => place(bad, 1, defaultConfig))).not.toBe(e);
   });
 });
 

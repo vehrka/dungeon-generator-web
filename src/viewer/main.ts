@@ -1,9 +1,9 @@
 import type { GenerateOptions } from "../engine/generator/index";
 import type { DungeonJson } from "../engine/types";
-import { styleFor, type MapStyle } from "../render/svg";
+import type { MapStyle } from "../render/svg";
 import { dungeonKey } from "../render/key";
 import type { DrawRequest, DrawResult } from "./worker";
-import { dungeonName, exportName, jsonName, keyName, layoutFailed, load, panelFor, parseSeed, parseSize, parseStyle, parseTheme, randomSeed } from "./state";
+import { dungeonName, exportName, jsonName, keyName, layoutFailed, load, panelFor, parseSeed, parseSize, parseTheme, randomSeed, styleOf } from "./state";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const dungeonSeedField = $<HTMLInputElement>("dungeon-seed");
@@ -14,7 +14,6 @@ const file = $<HTMLInputElement>("file");
 const seedField = $<HTMLInputElement>("seed");
 const rerollButton = $<HTMLButtonElement>("reroll");
 const corridorsBox = $<HTMLInputElement>("corridors");
-const styleSelect = $<HTMLSelectElement>("style");
 const svgButton = $<HTMLButtonElement>("export-svg");
 const jsonButton = $<HTMLButtonElement>("export-json");
 const keyButton = $<HTMLButtonElement>("export-key");
@@ -30,9 +29,6 @@ let current: { source: DrawRequest["source"]; name: string; options?: Options } 
 // when its layout failed) and the map.
 let dungeon: { json: DungeonJson; name: string; options?: Options } | undefined;
 let drawn: { svg: string; seed: number; style: MapStyle } | undefined;
-// The theme the style select was last preset from, lower case: generate keeps a style picked by hand
-// until the theme changes; a load always presets.
-let styleTheme: string | undefined;
 let worker: Worker | undefined;
 let busy = false;
 let opening = 0; // the latest load; an older file read that resolves late is dropped
@@ -72,20 +68,11 @@ function fail(message: string) {
   say([message], true);
 }
 
-// A loaded JSON's theme is unchecked: anything but a string counts as none.
-function presetStyle(theme: unknown, always: boolean) {
-  const t = typeof theme === "string" ? theme.toLowerCase() : undefined;
-  if (!always && t === styleTheme) return;
-  styleTheme = t;
-  styleSelect.value = styleFor(t);
-}
-
-const selectedStyle = () => parseStyle(styleSelect.value);
-
-// Callers that change current parse the style first, so a bad select leaves the dungeon as it was.
-function run(seed: number, style = selectedStyle()) {
+// The dungeon's theme picks the look.
+function run(seed: number) {
   const c = current;
   if (!c) return; // never after the first generate: a failed load keeps the dungeon before it
+  const style = styleOf("json" in c.source ? c.source.json.theme : c.source.generate.theme);
   stop();
   const w = (worker ??= new Worker(new URL("./worker.ts", import.meta.url), { type: "module" }));
   busy = true;
@@ -130,18 +117,16 @@ function attempt(f: () => void) {
 // Generate from the panel's values; layoutSeed undefined resets the layout seed to the dungeon seed.
 function generate(layoutSeed?: number) {
   const options = { seed: parseSeed(dungeonSeedField.value, "Dungeon seed"), size: parseSize(sizeSelect.value), theme: parseTheme(themeSelect.value) };
-  presetStyle(options.theme, false);
-  const style = selectedStyle();
   opening++; // a file read still pending must not replace this dungeon
   dungeonSeedField.value = String(options.seed);
   current = { source: { generate: options }, name: dungeonName(options), options };
-  run(layoutSeed ?? options.seed, style);
+  run(layoutSeed ?? options.seed);
 }
 
 const layoutSeed = () => parseSeed(seedField.value);
 
-// Size or theme changed. Theme is text only (step 13): the same seed and size give the same graph,
-// so the layout seed shown is kept; anything else starts at the dungeon seed. On an error the
+// Size or theme changed. Theme is text and look only (step 13): the same seed and size give the
+// same graph, so the layout seed shown is kept; anything else starts at the dungeon seed. On an error the
 // selects go back to the dungeon shown, so the panel keeps matching the map.
 function reselect(keepLayout: boolean) {
   try {
@@ -154,8 +139,17 @@ function reselect(keepLayout: boolean) {
     generate(seed);
   } catch (e) {
     if (current?.options) ({ size: sizeSelect.value, theme: themeSelect.value } = current.options);
+    else if (current && "json" in current.source) showSelects(current.source.json);
     say([(e as Error).message], true);
   }
+}
+
+// A loaded file's size and theme; a theme the generator does not take is drawn plain, so the select
+// says plain.
+function showSelects(json: DungeonJson) {
+  const panel = panelFor(json);
+  if (panel.size) sizeSelect.value = panel.size;
+  themeSelect.value = panel.theme ?? "plain";
 }
 
 async function open(f: File) {
@@ -168,11 +162,9 @@ async function open(f: File) {
     return;
   }
   if (n !== opening) return;
-  presetStyle(loaded.json.theme, true); // the select now holds a valid style
   const panel = panelFor(loaded.json);
   dungeonSeedField.value = panel.seed === undefined ? "" : String(panel.seed);
-  if (panel.size) sizeSelect.value = panel.size;
-  if (panel.theme) themeSelect.value = panel.theme;
+  showSelects(loaded.json);
   current = { source: { json: loaded.json }, name: loaded.name };
   if (loaded.seed === undefined) {
     fail(`${f.name} has no usable seed; enter a layout seed`);
@@ -208,7 +200,6 @@ seedField.addEventListener("keydown", (e) => {
 });
 rerollButton.addEventListener("click", () => attempt(() => run(randomSeed())));
 corridorsBox.addEventListener("change", () => attempt(() => run(layoutSeed())));
-styleSelect.addEventListener("change", () => attempt(() => run(layoutSeed())));
 
 file.addEventListener("change", () => {
   if (file.files?.[0]) void open(file.files[0]);

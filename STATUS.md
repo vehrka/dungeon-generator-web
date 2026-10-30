@@ -55,7 +55,8 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 - [ ] 3. **doors and gates**: Dyson's symbol set from `scene.ts`, in neon.
 - [ ] 4. **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
   clear of numbers and glyphs.
-- [ ] 5. **viewer**: check by hand in the viewer (select and `-neon` export done in step 2).
+- [x] 5. **viewer**: done in step 2 and `feature/one-theme-select`: one theme select (zelda, cyber,
+  plain) picks the look, the style select is gone (`docs/plans/22-one-theme-select.md`).
 
 ## Open points
 
@@ -70,6 +71,10 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 - Generator solvability assumes the player can walk back; a key behind a one-way edge with no
   return would pass. Not seen.
 - Viewer export name does not say whether corridors were on.
+- Viewer theme select picks the look (step 22): a loaded file can't be restyled (its look follows
+  its theme; picking a theme generates instead), Python tor-barrow/tor-dwarf files draw plain only
+  (CLI `--style` still restyles). A theme change re-runs an identical layout: a cache keyed on
+  graph, seed and config without labels would skip it. Revisit if either bites.
 - `normalize` does not check `theme` is a string: a loaded `"theme": 5` fails in the render with
   `s.replace is not a function` instead of a schema error.
 - Render (plain, applies to Dyson too): key column width estimated from character counts; 4+

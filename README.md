@@ -37,7 +37,7 @@ layout seed ─▶ room shapes ─▶ configuration spaces ──┘
    bonus room…), paced so harder content sits closer to the boss. Small rooms of one kind are
    merged, then a solver walks from START collecting keys to prove the GOAL is reachable. Size
    (XS, S, M, L) sets which variants each roll can pick, so how large it grows; the theme
-   (`zelda`, `cyber`) only changes names, so a seed gives the same graph with either theme.
+   (`zelda`, `cyber`, `plain`) only changes names, so a seed gives the same graph with any theme.
 2. **The JSON is the seam.** The generator writes the dungeon as JSON
    ([format](docs/design.md#input-schema-2)); the CLI and viewer can also load one from a file.
    Everything after this point is the same code.
@@ -67,7 +67,7 @@ Full design, constants and trade-offs: [docs/design.md](docs/design.md); map sty
 
 ```bash
 # generate
-$ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber] \
+$ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber|plain] \
     [--json m-7-zelda.json] [--key m-7-zelda.md] [-o m-7-zelda-map.svg | .png] \
     [--layout-seed N] [--no-corridors] [--style plain|dyson|neon]
 
@@ -89,8 +89,9 @@ $ npm run build   # static site in dist/
 
 Settings sit right of the map. Dungeon: seed, size, theme, generate (random seed, written into the
 field; or type one and press Enter). Layout: seed, reroll, corridors. File: load a JSON or drop it on
-the map. Export saves the SVG, the JSON (generated only) and the GM key. A theme change keeps the
-layout seed (same graph, other labels); a size change resets it.
+the map. Export saves the SVG, the JSON (generated only) and the GM key. The theme also picks the
+map look: zelda Dyson, cyber neon, plain plain (a loaded file's other or missing theme plain). A
+theme change keeps the layout seed (same graph, other labels and look); a size change resets it.
 
 ## How we built it
 

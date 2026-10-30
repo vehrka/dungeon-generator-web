@@ -88,7 +88,9 @@ most of the bbox stays white, as in Dyson's maps.
   layout seed, corridors, size and generate with the same theme. A style change redraws through the worker, which keeps its last
   layout (`layoutCache` in `viewer/state.ts`, layout failures included), so only the render runs; a style
 change during a run restarts it. Export name `<name>-map-<seed>.svg` for
-  plain, `<name>-map-<seed>-<style>.svg` otherwise.
+  plain, `<name>-map-<seed>-<style>.svg` otherwise. Changed 2026-10-30 (`docs/plans/22-one-theme-select.md`):
+  the style select and `layoutCache` are gone, the theme select picks the look (zelda, cyber,
+  plain).
 
 ### Code structure
 
