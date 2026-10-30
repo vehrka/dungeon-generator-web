@@ -1,12 +1,12 @@
 import type { LayoutConfig } from "../engine/config";
-import type { Point, Polygon, Segment } from "../engine/geometry";
+import type { Point, Polygon } from "../engine/geometry";
 import { generate } from "../engine/index";
 import type { Layout } from "../engine/layout";
 import { isSeed } from "../engine/rng";
 import type { DungeonJson, Gate, RoomGraph } from "../engine/types";
 import { dyson } from "./dyson";
 import { defs, glyphs } from "./icons";
-import { chevron, esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
+import { doorMark, esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
 import { scene } from "./scene";
 
 export type MapStyle = "plain" | "dyson";
@@ -153,45 +153,4 @@ export function draw(json: DungeonJson, layoutSeed: number, config: LayoutConfig
   const { graph, layout } = place(json, layoutSeed, config);
   const meta = { seed: isSeed(json.seed) ? json.seed : undefined, layoutSeed, theme: json.theme, size: json.size, grammar: json.grammar, style };
   return { svg: render(graph, layout, meta), rooms: graph.rooms.size };
-}
-
-// A gap of the door's length across the wall with a jamb at each end; secret doors dashed; a gate
-// tag on the door; a one-way chevron pointing away from room a (past the tag when there is one).
-// Into a corridor, the gap's corridor half is the corridor's grey.
-function doorMark(
-  s: Segment,
-  px: (p: Point) => Point,
-  gate: string | undefined,
-  tag: string | undefined,
-  secret: boolean,
-  d: 1 | -1 | undefined, // one-way: +1 points down or right
-  c?: 1 | -1, // corridor: +1 below or right of the door
-): string {
-  const a = px(s.from);
-  const b = px(s.to);
-  const horizontal = a.y === b.y;
-  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-  const parts = horizontal
-    ? [
-        `<rect class="gap" x="${a.x + 1}" y="${a.y - 2}" width="${b.x - a.x - 2}" height="4"/>`,
-        `<line class="jamb" x1="${a.x}" y1="${a.y - 3}" x2="${a.x}" y2="${a.y + 3}"/>`,
-        `<line class="jamb" x1="${b.x}" y1="${b.y - 3}" x2="${b.x}" y2="${b.y + 3}"/>`,
-      ]
-    : [
-        `<rect class="gap" x="${a.x - 2}" y="${a.y + 1}" width="4" height="${b.y - a.y - 2}"/>`,
-        `<line class="jamb" x1="${a.x - 3}" y1="${a.y}" x2="${a.x + 3}" y2="${a.y}"/>`,
-        `<line class="jamb" x1="${b.x - 3}" y1="${b.y}" x2="${b.x + 3}" y2="${b.y}"/>`,
-      ];
-  if (c) {
-    const o = c > 0 ? 0.5 : -2; // past the wall's half-pixel stroke
-    parts.push(
-      horizontal
-        ? `<rect class="gap-corridor" x="${a.x + 1}" y="${a.y + o}" width="${b.x - a.x - 2}" height="1.5"/>`
-        : `<rect class="gap-corridor" x="${a.x + o}" y="${a.y + 1}" width="1.5" height="${b.y - a.y - 2}"/>`,
-    );
-  }
-  if (secret) parts.push(`<line class="dash" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`);
-  if (tag) parts.push(tagMark(mid.x, mid.y, tag, gate));
-  if (d) parts.push(chevron(mid, horizontal, d, !!tag));
-  return `<g class="door${tag ? " gated" : ""}${secret ? " secret" : ""}">${parts.join("")}</g>`;
 }
