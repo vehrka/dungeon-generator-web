@@ -84,7 +84,7 @@ describe("renderGrammar", () => {
   });
 
   it("writes each preset's d20 range as a-b, a or a dash", () => {
-    const row = (symbol: string, name: string) => sheet.match(new RegExp(`<g data-variant="${symbol} ${name}">(.*?)</g>`, "s"))![1]!;
+    const row = (symbol: string, name: string) => sheet.match(new RegExp(`<g[^>]* data-variant="${symbol} ${name}">(.*?)</g>`, "s"))![1]!;
     const ranges = (symbol: string, name: string) => [...row(symbol, name).matchAll(/<text class="range"[^>]*>([^<]*)</g)].map((m) => m[1]);
     expect(ranges("L", "switch")).toEqual(["18", "18", "15", "13-14"]);
     expect(ranges("L", "toggle")).toEqual(["—", "—", "16", "15"]);
@@ -95,7 +95,7 @@ describe("renderGrammar", () => {
     const card = sheet.match(/<g data-rule="R">(.*?)<\/g>\n<g data-rule/s)![1]!;
     for (const tier of ["early", "middle", "late"]) expect(card).toContain(`>${tier}</text>`);
     expect(card).not.toContain(">XS</text>");
-    const nothing = card.match(/<g data-variant="R nothing">(.*?)<\/g>/s)![1]!;
+    const nothing = card.match(/<g[^>]* data-variant="R nothing">(.*?)<\/g>/s)![1]!;
     expect([...nothing.matchAll(/<text class="range"[^>]*>([^<]*)</g)].map((m) => m[1])).toEqual(PACING.map(([, r]) => (r.nothing![0] === r.nothing![1] ? `${r.nothing![0]}` : `${r.nothing![0]}-${r.nothing![1]}`)));
   });
 

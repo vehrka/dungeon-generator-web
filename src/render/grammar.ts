@@ -4,7 +4,7 @@ import { generateDungeon } from "../engine/generator/index";
 import { defaultGeneratorConfig } from "../engine/generator/config";
 import { DEFAULT_THEME } from "../engine/generator/themes";
 import type { Door, GameObject, GateKind, Room, RoomGraph, RoomId } from "../engine/types";
-import { arrow, edgeColour, graphBody, graphCss, graphLayout, pickup, special, switchFill, type EdgeKind, type GraphLayout, type Look } from "./graph";
+import { arrow, edgeColour, graphBody, graphCss, graphLayout, page, pickup, pickupTypes, special, switchFill, switchTypes, type EdgeKind, type GraphLayout, type Look } from "./graph";
 import { esc, round } from "./marks";
 import { plain } from "./svg";
 
@@ -12,14 +12,11 @@ import { plain } from "./svg";
 // each variant per size and its diagram, legend, how to use, expected size. After Python's
 // grammar/render.py sheet (Graphviz), drawn with the graph view's painter, left to right.
 
-const page = "#eef0f3";
 const tint = "#f6f7f9"; // every other variant row
 const ink = "#2f343c"; // card headers
 const anchorFill = { prev: "#7b8cde", next: "#7fd6d6" }; // Python's NODE_STYLE
 const ntFill = "#e8735a";
 const roomFill = "#7cc98f";
-const pickupTypes = new Set(["item", "key", "bosskey"]);
-const switchTypes = new Set(["switch", "lever"]);
 const runs = 1000; // dungeons per preset for the size table; Python ran 5000, 1000 keeps the staleness test under 2 s
 
 const margin = 40;
@@ -101,6 +98,7 @@ const css = `<style>
 .cell{font-size:11px;font-weight:400;text-anchor:middle}
 .key{font-size:11px;font-weight:700}
 .g-label{stroke:#fff}
+.tint .g-label{stroke:${tint}}
 </style>`;
 
 type Card = { w: number; h: number; draw: (x: number, y: number, w: number) => string[] };
@@ -147,7 +145,7 @@ function ruleCard(symbol: string): Card {
       cols.forEach((c, i) => marks.push(`<text class="col" x="${x + (i + 0.5) * rangeWidth}" y="${y + headHeight + 14}">${c}</text>`));
       let top = y + headHeight + subHeight;
       rows.forEach(({ v, g, l, h }, i) => {
-        marks.push(`<g data-variant="${esc(symbol)} ${esc(v.name)}">`);
+        marks.push(`<g${i % 2 ? ` class="tint"` : ""} data-variant="${esc(symbol)} ${esc(v.name)}">`);
         if (i % 2) marks.push(`<rect x="${x + 0.5}" y="${top}" width="${w - 1}" height="${h}" fill="${tint}"/>`);
         ranges(v).forEach((span, j) => marks.push(`<text class="range" x="${x + (j + 0.5) * rangeWidth}" y="${top + h / 2 + 4}">${rangeText(span)}</text>`));
         marks.push(`<text class="name" x="${x + left + pad}" y="${top + h / 2 + 3}">${esc(v.name)}</text>`);

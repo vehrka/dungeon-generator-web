@@ -184,7 +184,8 @@ describe("main", () => {
     expect(parseGrammar(["a.json"])).toBeUndefined();
     expect(() => parseGrammar(["--grammar", "g.png"])).toThrow("--grammar must end in .svg: g.png");
     expect(() => parseGrammar(["--grammar", "g.svg", "--size", "M"])).toThrow(/size/);
-    expect(() => parseGrammar(["a.json", "--grammar", "g.svg"])).toThrow(/a\.json/);
+    expect(() => parseGrammar(["a.json", "--grammar", "g.svg"])).toThrow("--grammar takes no other option: a.json");
+    expect(() => parseGrammar(["--dungeon-seed", "7", "--key", "--grammar"])).toThrow(/'--key' argument is ambiguous/); // not grammar mode
   });
 
   it("writes the grammar sheet", async () => {

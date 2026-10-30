@@ -47,6 +47,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 .cell{font-size:11px;font-weight:400;text-anchor:middle}
 .key{font-size:11px;font-weight:700}
 .g-label{stroke:#fff}
+.tint .g-label{stroke:#f6f7f9}
 </style>
 <rect width="2225" height="1596" fill="#eef0f3"/>
 <text class="s-title" x="40" y="64">Combined dungeon grammar</text>
@@ -134,7 +135,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-special" x="475" y="772" width="47" height="26" rx="6"/>
 <text class="g-node" x="498.5" y="789" fill="#000">GOAL</text>
 </g>
-<g data-variant="Start key wing">
+<g class="tint" data-variant="Start key wing">
 <rect x="40.5" y="806" width="726" height="42" fill="#f6f7f9"/>
 <text class="range" x="63" y="831">—</text>
 <text class="range" x="109" y="831">1-12</text>
@@ -174,7 +175,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-special" x="634" y="856" width="47" height="26" rx="6"/>
 <text class="g-node" x="657.5" y="873" fill="#000">GOAL</text>
 </g>
-<g data-variant="Start item + wing">
+<g class="tint" data-variant="Start item + wing">
 <rect x="40.5" y="890" width="726" height="42" fill="#f6f7f9"/>
 <text class="range" x="63" y="915">—</text>
 <text class="range" x="109" y="915">—</text>
@@ -222,7 +223,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="394" y="1023" fill="#000">L()</text>
 <rect class="g-room" fill="#7fd6d6" x="450" y="1006" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="E extra entrance">
+<g class="tint" data-variant="E extra entrance">
 <rect x="40.5" y="1040" width="726" height="90" fill="#f6f7f9"/>
 <text class="range" x="63" y="1089">—</text>
 <text class="range" x="109" y="1089">19-20</text>
@@ -266,7 +267,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="314.5" y="1221" fill="#000">n</text>
 <rect class="g-room" fill="#7fd6d6" x="364" y="1204" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="R enemy">
+<g class="tint" data-variant="R enemy">
 <rect x="40.5" y="1238" width="726" height="42" fill="#f6f7f9"/>
 <text class="range" x="63" y="1263">6-11</text>
 <text class="range" x="109" y="1263">4-8</text>
@@ -291,7 +292,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="314.5" y="1305" fill="#000">t</text>
 <rect class="g-room" fill="#7fd6d6" x="364" y="1288" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="R puzzle">
+<g class="tint" data-variant="R puzzle">
 <rect x="40.5" y="1322" width="726" height="42" fill="#f6f7f9"/>
 <text class="range" x="63" y="1347">13-18</text>
 <text class="range" x="109" y="1347">12-16</text>
@@ -339,7 +340,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="362" y="1497" fill="#000">R()</text>
 <rect class="g-room" fill="#7fd6d6" x="418" y="1480" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="S continue">
+<g class="tint" data-variant="S continue">
 <rect x="40.5" y="1514" width="726" height="42" fill="#f6f7f9"/>
 <text class="range" x="63" y="1539">19-20</text>
 <text class="range" x="109" y="1539">18-20</text>
@@ -379,7 +380,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="1138" y="163" fill="#000">R()</text>
 <rect class="g-room" fill="#7fd6d6" x="1194" y="146" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="L linear">
+<g class="tint" data-variant="L linear">
 <rect x="795.5" y="180" width="580" height="42" fill="#f6f7f9"/>
 <text class="range" x="818" y="205">15-17</text>
 <text class="range" x="864" y="205">13-15</text>
@@ -406,7 +407,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="1138" y="247" fill="#000">K()</text>
 <rect class="g-room" fill="#7fd6d6" x="1194" y="230" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="L switch">
+<g class="tint" data-variant="L switch">
 <rect x="795.5" y="264" width="580" height="42" fill="#f6f7f9"/>
 <text class="range" x="818" y="289">18</text>
 <text class="range" x="864" y="289">18</text>
@@ -433,7 +434,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="1141.5" y="331" fill="#000">TG()</text>
 <rect class="g-room" fill="#7fd6d6" x="1201" y="314" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="L hook">
+<g class="tint" data-variant="L hook">
 <rect x="795.5" y="348" width="580" height="42" fill="#f6f7f9"/>
 <text class="range" x="818" y="373">19-20</text>
 <text class="range" x="864" y="373">19</text>
@@ -470,7 +471,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="1290" y="439" fill="#000">R()</text>
 <rect class="g-room" fill="#7fd6d6" x="1346" y="422" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="L one-way loop">
+<g class="tint" data-variant="L one-way loop">
 <rect x="795.5" y="480" width="580" height="90" fill="#f6f7f9"/>
 <text class="range" x="818" y="529">—</text>
 <text class="range" x="864" y="529">—</text>
@@ -557,7 +558,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-room" fill="#7cc98f" x="1113" y="816" width="122" height="26" rx="6"/>
 <text class="g-node" x="1174" y="833" fill="#000">gb: heart piece</text>
 </g>
-<g data-variant="GB rupees">
+<g class="tint" data-variant="GB rupees">
 <rect x="795.5" y="850" width="580" height="42" fill="#f6f7f9"/>
 <text class="range" x="818" y="875">5-12</text>
 <text class="range" x="864" y="875">5-12</text>
@@ -580,7 +581,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-room" fill="#7cc98f" x="1113" y="900" width="81" height="26" rx="6"/>
 <text class="g-node" x="1153.5" y="917" fill="#000">gb: bombs</text>
 </g>
-<g data-variant="GB arrows">
+<g class="tint" data-variant="GB arrows">
 <rect x="795.5" y="934" width="580" height="42" fill="#f6f7f9"/>
 <text class="range" x="818" y="959">17-20</text>
 <text class="range" x="864" y="959">17-20</text>
@@ -618,7 +619,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <text class="g-node" x="1186.5" y="1067" fill="#000">GB()</text>
 <rect class="g-room" fill="#7fd6d6" x="1176.5" y="1098" width="20" height="26" rx="6"/>
 </g>
-<g data-variant="H secret">
+<g class="tint" data-variant="H secret">
 <rect x="795.5" y="1132" width="580" height="90" fill="#f6f7f9"/>
 <text class="range" x="818" y="1181">13-20</text>
 <text class="range" x="864" y="1181">13-20</text>
@@ -669,7 +670,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-room" fill="#7fd6d6" x="1943.5" y="194.2" width="20" height="26" rx="6"/>
 <text class="g-label" text-anchor="middle" x="1789" y="217.8" fill="#c0601a">[small key]</text>
 </g>
-<g data-variant="K guarded key">
+<g class="tint" data-variant="K guarded key">
 <rect x="1404.5" y="230" width="780" height="92" fill="#f6f7f9"/>
 <text class="range" x="1427" y="280">13-20</text>
 <text class="range" x="1473" y="280">13-20</text>
@@ -723,7 +724,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-room" fill="#7fd6d6" x="1965.5" y="444.4" width="20" height="26" rx="6"/>
 <text class="g-label" text-anchor="middle" x="1829.5" y="469.6" fill="#b34d8f">[switch]</text>
 </g>
-<g data-variant="SW two switches (and)">
+<g class="tint" data-variant="SW two switches (and)">
 <rect x="1404.5" y="482" width="780" height="147" fill="#f6f7f9"/>
 <text class="range" x="1427" y="559.5">—</text>
 <text class="range" x="1473" y="559.5">15-20</text>
@@ -823,7 +824,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-room" fill="#7fd6d6" x="2099" y="955" width="20" height="26" rx="6"/>
 <text class="g-label" text-anchor="middle" x="1855" y="979" fill="#c0601a">[dungeon item]</text>
 </g>
-<g data-variant="IG item + backtrack bonus">
+<g class="tint" data-variant="IG item + backtrack bonus">
 <rect x="1404.5" y="991" width="780" height="138" fill="#f6f7f9"/>
 <text class="range" x="1427" y="1064">11-20</text>
 <text class="range" x="1473" y="1064">11-20</text>
@@ -887,7 +888,7 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 <rect class="g-room" fill="#7fd6d6" x="2007" y="1251.2" width="20" height="26" rx="6"/>
 <text class="g-label" text-anchor="middle" x="1859" y="1273.8" fill="#c0601a">[boss key]</text>
 </g>
-<g data-variant="BK boss key behind small key">
+<g class="tint" data-variant="BK boss key behind small key">
 <rect x="1404.5" y="1286" width="780" height="91" fill="#f6f7f9"/>
 <text class="range" x="1427" y="1335.5">18-20</text>
 <text class="range" x="1473" y="1335.5">13-20</text>

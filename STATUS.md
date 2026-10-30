@@ -98,6 +98,11 @@ the story of the project. Decided 2026-10-30: own drawing code, no new dependenc
   its theme; picking a theme generates instead), Python tor-barrow/tor-dwarf files draw plain only
   (CLI `--style` still restyles). A theme change re-runs an identical layout: a cache keyed on
   graph, seed and config without labels would skip it. Revisit if either bites.
+- Graph layout across (grammar sheet): boxes of one layer differ in length and are centred, and
+  edges leave their own box, not the layer's edge, so a slanted edge from a short box, or a
+  same-layer curve (dip capped at 16 px), could cross a longer neighbour; labels of several gated
+  edges leaving one layer share one x and could overlap. No variant does either (tested on every
+  variant: no edge through a box); revisit if a grammar change hits it.
 - `normalize` does not check `theme` is a string: a loaded `"theme": 5` fails in the render with
   `s.replace is not a function` instead of a schema error.
 - Render (plain, applies to Dyson and neon too): key column width estimated from character counts; 4+

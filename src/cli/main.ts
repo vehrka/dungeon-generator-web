@@ -36,22 +36,25 @@ const parseSeed = (flag: string, text: string | undefined): number | undefined =
   return seed;
 };
 
+const options = {
+  output: { type: "string", short: "o" },
+  "layout-seed": { type: "string" },
+  "no-corridors": { type: "boolean" },
+  "dungeon-seed": { type: "string" },
+  size: { type: "string" },
+  theme: { type: "string" },
+  json: { type: "string" },
+  key: { type: "string" },
+  graph: { type: "string" },
+  style: { type: "string" },
+  grammar: { type: "string" }, // parseGrammar's; main routes it there first
+} as const;
+
 export function parseCli(argv: string[]): CliArgs {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
-    options: {
-      output: { type: "string", short: "o" },
-      "layout-seed": { type: "string" },
-      "no-corridors": { type: "boolean" },
-      "dungeon-seed": { type: "string" },
-      size: { type: "string" },
-      theme: { type: "string" },
-      json: { type: "string" },
-      key: { type: "string" },
-      graph: { type: "string" },
-      style: { type: "string" },
-    },
+    options,
   });
   if (positionals.length > 1) throw new Error(`Expected one input JSON, got ${positionals.length}`);
   const dungeonSeed = parseSeed("dungeon-seed", values["dungeon-seed"]);
@@ -80,11 +83,14 @@ export function parseCli(argv: string[]): CliArgs {
   return { source, output, json: values.json, key: values.key, graph: values.graph, layoutSeed, corridors: !values["no-corridors"], style };
 }
 
-// --grammar out.svg: the grammar sheet alone, no dungeon, so no other option.
+// --grammar out.svg: the grammar sheet alone, no dungeon, so no other option. Parsed with every
+// option, so a "--grammar" that is another option's value is not taken for it.
 export function parseGrammar(argv: string[]): string | undefined {
-  if (!argv.some((a) => a === "--grammar" || a.startsWith("--grammar="))) return undefined;
-  const { values } = parseArgs({ args: argv, options: { grammar: { type: "string" } } });
-  if (!/\.svg$/i.test(values.grammar!)) throw new Error(`--grammar must end in .svg: ${values.grammar}`);
+  const { values, positionals, tokens } = parseArgs({ args: argv, allowPositionals: true, options, tokens: true });
+  if (values.grammar === undefined) return undefined;
+  const others = [...tokens.flatMap((t) => (t.kind === "option" && t.name !== "grammar" ? [`--${t.name}`] : [])), ...positionals];
+  if (others.length) throw new Error(`--grammar takes no other option: ${others.join(" ")}`);
+  if (!/\.svg$/i.test(values.grammar)) throw new Error(`--grammar must end in .svg: ${values.grammar}`);
   return values.grammar;
 }
 

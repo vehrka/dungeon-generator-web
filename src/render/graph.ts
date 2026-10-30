@@ -65,8 +65,8 @@ export const pickup = "#56b4e9";
 export const switchFill = "#e39ac8";
 export const page = "#eef0f3";
 export const edgeColour: Record<EdgeKind, string> = { both: "#555", one: "#111", lock: "#c0601a", state: "#b34d8f", on: "#b34d8f", off: "#b34d8f", secret: "#888" };
-const pickupTypes = new Set(["item", "key", "bosskey"]);
-const switchTypes = new Set(["switch", "lever"]);
+export const pickupTypes = new Set(["item", "key", "bosskey"]);
+export const switchTypes = new Set(["switch", "lever"]);
 
 const typeCode = (type: string) => String(type).split(":")[0]!;
 
