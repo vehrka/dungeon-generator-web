@@ -1,10 +1,10 @@
-import type { Polygon } from "../engine/geometry";
-import { doorMark, roomMarks, type Painter } from "./marks";
+import type { Point, Polygon, Segment } from "../engine/geometry";
+import { barMark, chevron, dotMarks, round, roomMarks, secretMark, tagMark, wallRect, type Painter } from "./marks";
 import type { Scene, SceneRoom } from "./scene";
 
 // Neon look (docs/neon-style.md): an indigo-black page, dark corridors like streets, rooms as blocks
-// in their role's colour with a glow from stacked strokes (no SVG filters), mono type. Doors as the
-// plain style's gaps and jambs until the doors step; gate tags yellow on the page.
+// in their role's colour with a glow from stacked strokes (no SVG filters), mono type. Dyson's door
+// symbols in ink, archways and portcullis gaps in the corridor fill; gate tags yellow on the page.
 const page = "#0b0814";
 const corridorFill = "#141a2a";
 const corridorLine = "#2b3550";
@@ -13,6 +13,7 @@ const muted = "#7d86a8";
 const rule = "#232a40";
 const gate = "#ffd23f";
 const wall = 2; // px
+const doorAcross = 8; // px, the door rectangle across the wall, Dyson's
 const glow: [number, number][] = [[16, 0.1], [9, 0.22], [4, 0.45]]; // stroke px, opacity; widest first
 const mono = `'DejaVu Sans Mono','Noto Sans Mono','Liberation Mono',Menlo,Consolas,monospace`; // resvg needs named fonts first
 
@@ -52,9 +53,11 @@ ${glow.map(([w, o], i) => `.glow${i}{fill:none;stroke-width:${w};stroke-opacity:
 .wall{fill:none;stroke-width:${wall};stroke-linejoin:miter}
 .swatch{stroke-width:${wall}}
 .number{font-size:17px;font-weight:bold;text-anchor:middle}
-.gap,.gap-corridor{fill:${corridorFill}}
-.jamb,.dash{stroke:${ink};stroke-width:1}
-.dash{stroke-dasharray:2 2}
+.gap{fill:${corridorFill}}
+.door{fill:${page};stroke:${ink};stroke-width:1.5}
+.bar{stroke:${ink};stroke-width:1.5}
+.dot{fill:${ink};stroke:none}
+.secret{font-size:13px;font-weight:bold;text-anchor:middle;stroke:${page};stroke-width:3;paint-order:stroke}
 .oneway{fill:none;stroke:${ink};stroke-width:1.5}
 .tag{fill:${page};stroke:${gate};stroke-width:1}
 .tag-letter{font-size:10px;font-weight:bold;text-anchor:middle;fill:${gate}}
@@ -67,8 +70,9 @@ ${glow.map(([w, o], i) => `.glow${i}{fill:none;stroke-width:${w};stroke-opacity:
 
 // Paint order (docs/neon-style.md): every room's glows widest first, corridors (over the glows, so
 // none crosses a doorway), fills (covering the glows' inner half and the neighbours' outer glow),
-// walls, doors, numbers and glyphs. Each outline
-// once in defs, its passes as <use>, the role class inherited.
+// walls, gaps (archways and portcullis, corridor fill over the wall), door symbols, tags and
+// chevrons (over every symbol, as in Dyson), numbers and glyphs. Each outline once in defs, its
+// passes as <use>, the role class inherited.
 export const neon: Painter = {
   css,
   page,
@@ -77,10 +81,34 @@ export const neon: Painter = {
     const points = (outline: Polygon) => outline.map((q) => px(q)).map((p) => `${p.x},${p.y}`).join(" ");
     const rooms = s.rooms.map((room, i) => ({ room, i, role: role(room, s) }));
     const use = (pass: string) => rooms.map(({ i, role }) => `<use href="#room-${i}" class="${pass} r-${role}"/>`);
-    const doors = s.doors.flatMap((d) => [
-      doorMark(d.segment, px, d.tag && d.gates.map((g) => g.kind).join(" "), d.tag, d.secret, d.oneway, d.corridor?.sideA),
-      ...(d.corridor ? [doorMark(d.corridor.segment, px, undefined, undefined, d.secret, undefined, d.corridor.sideB)] : []),
-    ]);
+    // Room a's end: the door symbol; a corridor's room b end: an archway, or an S for a secret door.
+    const gaps = s.doors
+      .flatMap((door) => [...(door.symbol === "portcullis" ? [door.segment] : []), ...(door.corridor && !door.secret ? [door.corridor.segment] : [])])
+      .map((g) => wallRect(g, px, wall / 2 + 1, "gap", wall));
+    const symbols = s.doors.flatMap((door) => {
+      switch (door.symbol) {
+        case "secret":
+          return [door.segment, ...(door.corridor ? [door.corridor.segment] : [])].map((e) => secretMark(e, px));
+        case "door":
+          return [wallRect(door.segment, px, doorAcross / 2, "door", wall)];
+        case "lock":
+          return [wallRect(door.segment, px, doorAcross / 2, "door", wall), barMark(door.segment, px)];
+        case "portcullis":
+          return dotMarks(door.segment, px);
+      }
+    });
+    const marks = s.doors.flatMap((door) => {
+      const horizontal = door.segment.from.y === door.segment.to.y;
+      const at = (p: Point) => ({ x: round(px(p).x), y: round(px(p).y) });
+      return [
+        ...(door.tagAt ? [tagMark(at(door.tagAt).x, at(door.tagAt).y, door.tag!, door.gates.map((g) => g.kind).join(" "))] : []),
+        ...(door.onewayAt ? [chevron(at(door.onewayAt), horizontal, door.oneway!, false)] : []),
+      ];
+    });
+    const drawn = (symbol: string) => s.doors.some((door) => door.symbol === symbol);
+    // Legend symbols through the map's own marks, on a 14 px door half a wall past each end.
+    const sample: Segment = { from: { x: -wall / 2, y: -4 }, to: { x: 14 + wall / 2, y: -4 } };
+    const same = (p: Point) => p;
     const used = new Set(rooms.map((r) => r.role));
     return {
       defs: rooms.map(({ room, i }) => `<polygon id="room-${i}" points="${points(room.outline)}"/>`).join(""),
@@ -89,15 +117,20 @@ export const neon: Painter = {
         ...s.corridors.map((c) => `<polygon class="corridor" points="${points(c)}"/>`),
         ...use("fill"),
         ...use("wall"),
-        ...doors,
+        ...gaps,
+        ...symbols,
+        ...marks,
         ...s.rooms.flatMap((room) => roomMarks(room, px(room.anchor), 6)),
       ],
       legend: [
         ...legendRoles.filter((r) => used.has(r)).map((r) => ({ mark: `<rect class="swatch r-${r}" x="1" y="-10" width="12" height="12"/>`, text: `${r} room` })),
         ...(s.corridors.length ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
-        ...(s.doors.some((d) => d.tag) ? [{ mark: `<rect class="tag" x="0" y="-11" width="14" height="14"/>`, text: "gate" }] : []),
-        ...(s.doors.some((d) => d.secret) ? [{ mark: `<line class="dash" x1="0" y1="-4" x2="14" y2="-4"/>`, text: "secret door" }] : []),
-        ...(s.doors.some((d) => d.oneway) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
+        ...(drawn("door") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall), text: "door" }] : []),
+        ...(drawn("lock") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall) + barMark(sample, same), text: "locked door" }] : []),
+        ...(drawn("portcullis") ? [{ mark: `<rect class="gap" x="0" y="-6" width="14" height="4"/>${dotMarks({ from: { x: 0, y: -4 }, to: { x: 14, y: -4 } }, same).join("")}`, text: "portcullis" }] : []),
+        ...(drawn("secret") ? [{ mark: `<text class="secret" x="7" y="0">S</text>`, text: "secret door" }] : []),
+        ...(s.doors.some((door) => door.onewayAt) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
+        ...(s.doors.some((door) => door.tagAt) ? [{ mark: tagMark(7, -4, ""), text: "gate" }] : []),
       ],
     };
   },
