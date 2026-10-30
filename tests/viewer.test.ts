@@ -43,7 +43,7 @@ describe("panelFor", () => {
   });
 
   it("reads size and theme in any case", () => {
-    expect(panelFor({ ...json, seed: 7, size: "m", theme: "Zelda" })).toEqual({ seed: 7, size: "M", theme: "zelda" });
+    expect(panelFor({ ...json, seed: 7, size: "m", theme: "Classic" })).toEqual({ seed: 7, size: "M", theme: "classic" });
   });
 
   it("leaves out what the generator does not take", () => {
@@ -92,17 +92,17 @@ describe("parseSize", () => {
 
 describe("parseTheme", () => {
   it("accepts the generator themes", () => {
-    for (const t of ["zelda", "cyber", "plain"]) expect(parseTheme(t)).toBe(t);
+    for (const t of ["classic", "cyber", "plain"]) expect(parseTheme(t)).toBe(t);
   });
 
   it("rejects anything else", () => {
-    for (const t of ["", "Zelda", "toString", "__proto__"]) expect(() => parseTheme(t)).toThrow(/^Unknown theme/);
+    for (const t of ["", "Classic", "toString", "__proto__"]) expect(() => parseTheme(t)).toThrow(/^Unknown theme/);
   });
 });
 
 describe("styleOf", () => {
   it("draws a dungeon in its theme's style", () => {
-    expect(styleOf("zelda")).toBe("dyson");
+    expect(styleOf("classic")).toBe("dyson");
     expect(styleOf("Cyber")).toBe("neon");
     expect(styleOf("plain")).toBe("plain");
   });
@@ -114,13 +114,13 @@ describe("styleOf", () => {
 
 describe("names", () => {
   it("names a generated dungeon as the CLI", () => {
-    expect(dungeonName({ seed: 7, size: "M", theme: "zelda" })).toBe("m-7-zelda");
+    expect(dungeonName({ seed: 7, size: "M", theme: "classic" })).toBe("m-7-classic");
     expect(dungeonName({ seed: 0, size: "XS", theme: "cyber" })).toBe("xs-0-cyber");
   });
 
   it("names the JSON and key exports", () => {
-    expect(jsonName("m-7-zelda")).toBe("m-7-zelda.json");
-    expect(keyName("m-7-zelda")).toBe("m-7-zelda-key.md");
+    expect(jsonName("m-7-classic")).toBe("m-7-classic.json");
+    expect(keyName("m-7-classic")).toBe("m-7-classic-key.md");
     expect(keyName("ruin")).toBe("ruin-key.md");
   });
 });
@@ -133,14 +133,14 @@ describe("exportName", () => {
   });
 
   it("names any style but plain", () => {
-    expect(exportName("m-7-zelda", 7, "dyson")).toBe("m-7-zelda-map-7-dyson.svg");
+    expect(exportName("m-7-classic", 7, "dyson")).toBe("m-7-classic-map-7-dyson.svg");
     expect(exportName("m-7-cyber", 7, "neon")).toBe("m-7-cyber-map-7-neon.svg");
   });
 });
 
 describe("graphName", () => {
   it("names the graph without a layout seed or style", () => {
-    expect(graphName("m-7-zelda")).toBe("m-7-zelda-graph.svg");
+    expect(graphName("m-7-classic")).toBe("m-7-classic-graph.svg");
     expect(graphName("ruin")).toBe("ruin-graph.svg");
   });
 });

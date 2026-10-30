@@ -255,5 +255,5 @@ document.addEventListener("drop", (e) => {
   if (f) void open(f);
 });
 
-// Opens with a dungeon: the panel's defaults, M, zelda, seed 1.
+// Opens with a dungeon: the panel's defaults, M, classic, seed 1.
 attempt(() => generate());

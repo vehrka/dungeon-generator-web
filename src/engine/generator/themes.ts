@@ -5,12 +5,12 @@ import { REWARDS, rewardVariants, type Reward, type Variant } from "./grammar";
 // START, GOAL, EXIT), missing types use ROOM_STYLE and SPECIAL_ROOMS. objects: name per object type,
 // missing types keep the grammar name. rewards: bonus goal d20 table, covers 1–20.
 export type Theme = { rooms: Record<string, string>; objects: Record<string, string>; rewards: Reward[] };
-export type ThemeName = "zelda" | "cyber" | "plain";
+export type ThemeName = "classic" | "cyber" | "plain";
 
-export const DEFAULT_THEME: ThemeName = "zelda";
+export const DEFAULT_THEME: ThemeName = "classic";
 
 export const THEMES: Record<ThemeName, Theme> = {
-  zelda: { rooms: {}, objects: {}, rewards: REWARDS },
+  classic: { rooms: {}, objects: {}, rewards: REWARDS },
   cyber: {
     rooms: {
       st: "jack-in point (START)",
@@ -33,7 +33,7 @@ export const THEMES: Record<ThemeName, Theme> = {
       ["crypto wallet", 17, 20],
     ],
   },
-  plain: { rooms: {}, objects: {}, rewards: REWARDS }, // TS only: zelda's text, drawn in the plain style (theme picks the look)
+  plain: { rooms: {}, objects: {}, rewards: REWARDS }, // TS only: classic's text, drawn in the plain style (theme picks the look)
 };
 
 // Default room descriptions (Python utils/dungeon_render.py ROOM_STYLE, utils/dungeon_json.py).

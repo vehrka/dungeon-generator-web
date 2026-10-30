@@ -325,8 +325,10 @@ Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 `docs/plans/09-render-cli.md`.
 A second style after Dyson Logos (ink, hatching) is designed in `docs/dyson-style.md`, a third,
 neon, for the cyber theme in `docs/neon-style.md`; this section describes the plain style. Style
-by theme (`styleFor`, decided 2026-10-30): cyber → neon, zelda → Dyson, any other theme or none →
-plain; `--style` and the viewer select override it.
+by theme (`styleFor`, decided 2026-10-30): cyber → neon, classic → Dyson, any other theme or none →
+plain; `--style` and the viewer select override it. Classic was `zelda` before 1.0.0 (renamed for the
+public repo, with the Zelda-flavoured rewards: coins, healing potion); a file saved with `zelda`
+still draws Dyson.
 
 - Map on the left, key column on the right (rooms, gates, legend), title on top: theme, size,
   dungeon seed, layout seed, grammar. Grid unit 24 px.
@@ -353,7 +355,7 @@ of objects: where found, which doors they open. Exits walk the JSON from each ro
 to the next room (Python `_exits`), first path kept. Pure TS, for the viewer too (step 14b).
 
 CLI (`cli/main.ts`, step 14a, plan `docs/plans/14a-generator-cli.md`): one command. A positional
-JSON loads a file; `--dungeon-seed N [--size M] [--theme zelda]` generates one (both or neither is
+JSON loads a file; `--dungeon-seed N [--size M] [--theme classic]` generates one (both or neither is
 an error; the seed is required). `--json` (generating only) and `--key` write the JSON and key
 before layout, so a dungeon that fails to lay out can still be inspected. Generated output defaults
 to `<size>-<seed>-<theme>-map.svg`, size lower case. `--graph <file.svg>` (step 24) writes the graph
@@ -406,8 +408,8 @@ plan `docs/plans/10-viewer.md`.
   control. Panel: result band (name, rooms, seeds, ms; errors in amber, message only; exports svg,
   json for a generated dungeon, key `.md`; first so errors and exports stay in view), dungeon
   (seed, size, theme, generate), layout (seed, reroll, corridors), file (load JSON or drop on the
-  map). Opens with M, zelda, seed 1. One select for theme and look (decided 2026-10-30): the theme
-  picks the map style (`styleOf` in `state.ts`: zelda Dyson, cyber neon, plain plain; a loaded JSON's
+  map). Opens with M, classic, seed 1. One select for theme and look (decided 2026-10-30): the theme
+  picks the map style (`styleOf` in `state.ts`: classic Dyson, cyber neon, plain plain; a loaded JSON's
   other or missing theme plain); no style select, the CLI keeps `--style`.
 - Look of TE's product guides: all capitals, dark numbered section bands, underlined text actions.
   Font Jura (OFL, self-hosted Latin subset in `src/viewer/fonts/`) standing in for TE's TechnoType;
@@ -455,7 +457,7 @@ the same that `normalize` reads; in the CLI since step 14a, in the viewer since 
 
 - `graph.ts`: directed multigraph, stable ids in insertion order (replaces igraph; order, not
   index parity, is what expansion and merging depend on). `simplify`, undirected Dijkstra.
-- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 3 themes (zelda, cyber; Python's tor-barrow and tor-dwarf dropped; plain, TS only, zelda's text for the plain map style), `ROOM_STYLE`; data dumped from
+- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 3 themes (classic, Python's zelda renamed; cyber; Python's tor-barrow and tor-dwarf dropped; plain, TS only, classic's text for the plain map style), `ROOM_STYLE`; data dumped from
   Python into typed literals.
 - `expand.ts`: START, GOAL, the `Start` rule, then the first non-terminal in vertex order, R last
   (pacing by progress START → boss, last tier within `nearBoss` steps of `em`/`eb`). One d20 per
@@ -488,7 +490,7 @@ as one SVG, `docs/grammar.svg`, after Python's `grammar/render.py` PNG (Graphviz
 Python's columns ([how to use, legend, Start, E, R, S], [L, expected size, GB, H], [K, SW, TG, IG,
 BK]), each column as wide as its widest card: d20 range per preset (`a-b`, `a`, `—`), variant name,
 diagram. R's columns are the `PACING` tiers early / middle / late (it rolls by progress, not by
-size); GB names the theme's `rewards` table (zelda shown). Diagrams: `variantGraph(symbol, variant)`
+size); GB names the theme's `rewards` table (classic shown). Diagrams: `variantGraph(symbol, variant)`
 builds a `RoomGraph` (prev as start, next as goal, a branch rule's goal its start; gates from the
 object ids) laid out by the graph view's `graphLayout` with `across` (laid out with each box's w
 and h swapped, rows as tall as their tallest box, then mirrored across the diagonal; layers left to

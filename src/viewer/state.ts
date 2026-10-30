@@ -69,7 +69,7 @@ export const layoutFailed = (rooms: number[], generated: boolean): string[] => [
   `Stuck on rooms ${rooms.join(", ")}.`,
 ];
 
-// As the CLI (14a): m-7-zelda.
+// As the CLI (14a): m-7-classic.
 export const dungeonName = ({ seed, size, theme }: Required<GenerateOptions>): string => `${size.toLowerCase()}-${seed}-${theme}`;
 // Plain keeps the name it had before styles (19).
 export const exportName = (name: string, seed: number, style: MapStyle): string => `${name}-map-${seed}${style === "plain" ? "" : `-${style}`}.svg`;

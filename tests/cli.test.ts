@@ -31,10 +31,10 @@ describe("parseCli", () => {
     expect(() => parseCli(["a.json", "--corridors"])).toThrow();
   });
 
-  it("generates with size M and theme zelda by default, output named after them", () => {
+  it("generates with size M and theme classic by default, output named after them", () => {
     expect(parseCli(["--dungeon-seed", "7"])).toEqual({
-      source: { generate: { seed: 7, size: "M", theme: "zelda" } },
-      output: "m-7-zelda-map.svg",
+      source: { generate: { seed: 7, size: "M", theme: "classic" } },
+      output: "m-7-classic-map.svg",
       layoutSeed: undefined,
       corridors: true,
     });
@@ -78,7 +78,7 @@ describe("main", () => {
     expect(readFileSync(off, "utf8")).not.toContain('class="corridor"');
   });
 
-  it("draws neon for cyber, Dyson for zelda, plain for any other theme, unless --style says otherwise", async () => {
+  it("draws neon for cyber, Dyson for classic, plain for any other theme, unless --style says otherwise", async () => {
     const dir = tmp();
     const svg = async (...args: string[]) => {
       const out = join(dir, "s.svg");
@@ -87,7 +87,7 @@ describe("main", () => {
     };
     expect(await svg(fixture)).toContain('class="room"');
     expect(await svg(fixture, "--style", "dyson")).toContain('class="hatch"');
-    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "zelda")).toContain('class="hatch"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "classic")).toContain('class="hatch"');
     expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber")).toContain('fill="#0b0814"');
     expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "plain")).toContain('class="room"');
     expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber", "--style", "dyson")).toContain('class="hatch"');
@@ -114,9 +114,9 @@ describe("main", () => {
     expect(await main(["--dungeon-seed", "7", "-o", svg, "--json", json, "--key", key], { ...quiet, log: (m: string) => logs.push(m) })).toBe(0);
     expect(readFileSync(svg, "utf8")).toMatch(/^<svg /);
     const data = JSON.parse(readFileSync(json, "utf8"));
-    expect([data.schema_version, data.seed, data.size, data.theme]).toEqual([2, 7, "M", "zelda"]);
-    expect(readFileSync(key, "utf8")).toMatch(/^# GM key: Combined dungeon\n\nSeed 7 · size M · theme zelda · \d+ rooms · solvable\n/);
-    expect(logs).toEqual([expect.stringMatching(/^.*m\.svg \(\d+ rooms, dungeon seed 7, size M, theme zelda, layout seed 7\)$/)]);
+    expect([data.schema_version, data.seed, data.size, data.theme]).toEqual([2, 7, "M", "classic"]);
+    expect(readFileSync(key, "utf8")).toMatch(/^# GM key: Combined dungeon\n\nSeed 7 · size M · theme classic · \d+ rooms · solvable\n/);
+    expect(logs).toEqual([expect.stringMatching(/^.*m\.svg \(\d+ rooms, dungeon seed 7, size M, theme classic, layout seed 7\)$/)]);
   });
 
   it("generates the same files from the same arguments", async () => {

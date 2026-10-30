@@ -9,9 +9,9 @@ describe("themes", () => {
     expect(rolls).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
   });
 
-  it("plain has zelda's text, only the theme field differs", () => {
-    expect(THEMES.plain).toEqual(THEMES.zelda);
-    for (const seed of [1, 7]) expect(generateDungeon({ seed, theme: "plain" })).toEqual({ ...generateDungeon({ seed, theme: "zelda" }), theme: "plain" });
+  it("plain has classic's text, only the theme field differs", () => {
+    expect(THEMES.plain).toEqual(THEMES.classic);
+    for (const seed of [1, 7]) expect(generateDungeon({ seed, theme: "plain" })).toEqual({ ...generateDungeon({ seed, theme: "classic" }), theme: "plain" });
   });
 
   it("reward variants are dead-end gb rooms", () => {

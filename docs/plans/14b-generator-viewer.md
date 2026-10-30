@@ -19,7 +19,7 @@ teenage engineering style of steps 9–10, not dungen's.
     First, not last as on dungen: at the bottom it fell below the fold (1060px on a 927px
     window) and hid errors and exports.
   - **dungeon**: dungeon seed field, size select (`xs s m l`), theme select
-    (`zelda cyber tor-barrow tor-dwarf`), **generate** (primary, black).
+    (`classic cyber tor-barrow tor-dwarf`), **generate** (primary, black).
   - **layout**: layout seed field, reroll, corridors checkbox.
   - **file**: load json (file or drop on the map).
 
@@ -42,7 +42,7 @@ teenage engineering style of steps 9–10, not dungen's.
 - **Load and generate replace each other.** A loaded file shows its name in the result block and
   disables nothing; the dungeon controls keep their values and generate again on use. A file that
   fails to load keeps the dungeon before it; generate drops a file read still pending.
-- **Opens with a dungeon**: M, `zelda`, seed 1, layout seed 1. The page is a generator now; an empty
+- **Opens with a dungeon**: M, `classic`, seed 1, layout seed 1. The page is a generator now; an empty
   map on open is a wasted step. (Was: empty until a file is loaded.)
 - **Generation in the worker**, with the layout. One cancel path (a new request terminates a busy
   worker). A generated dungeon comes back as JSON, also when its layout fails, so it can be
@@ -78,7 +78,7 @@ teenage engineering style of steps 9–10, not dungen's.
 ## Done when
 
 - typecheck, tests, build clean. No engine change, so no bench.
-- By hand in Chrome (`npm run dev`), wide and narrow (< 800px): opens with M-1 zelda; generate;
+- By hand in Chrome (`npm run dev`), wide and narrow (< 800px): opens with M-1 classic; generate;
   generate fills the dungeon seed; blank dungeon seed + Enter errors; size and theme change (theme keeps the layout); reroll;
   corridors toggle; load `ruin.json` (json export disabled) then generate again; a stuck layout
   cancelled by generate; the three exports open and match the map (key room numbers = map numbers).

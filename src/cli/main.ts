@@ -1,7 +1,7 @@
-// ruin.json → ruin-map.svg / .png, or a generated dungeon → m-7-zelda-map.svg
+// ruin.json → ruin-map.svg / .png, or a generated dungeon → m-7-classic-map.svg
 //
 //   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--style plain|dyson|neon] [--key ruin.md] [--graph ruin-graph.svg]
-//   npm run cli -- --dungeon-seed 7 [--size M] [--theme zelda] [--json m-7-zelda.json] [--key m-7-zelda.md] [...]
+//   npm run cli -- --dungeon-seed 7 [--size M] [--theme classic] [--json m-7-classic.json] [--key m-7-classic.md] [...]
 //   npm run cli -- --grammar docs/grammar.svg
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";

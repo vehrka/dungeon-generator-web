@@ -15,7 +15,7 @@ npm run bench       # layout benchmark, bench/dungeons × layout seeds 1–5; ex
 npm run bench -- m-1 m-3   # only the named dungeons
 npm run bench -- --no-corridors   # rooms touch at every door
 npm run bench -- --generated      # generated dungeons gen-m-1 … gen-l-8 instead of bench/dungeons
-npm run cli -- --dungeon-seed 7 --size M --theme zelda --json m-7-zelda.json --key m-7-zelda.md
+npm run cli -- --dungeon-seed 7 --size M --theme classic --json m-7-classic.json --key m-7-classic.md
 npm run dev         # viewer, vite (root src/viewer)
 npm run build       # typecheck + viewer build to dist/, must succeed
 ```
@@ -33,7 +33,8 @@ doors, configuration spaces, energy or layout, and report the before/after table
   (layout in a Web Worker; logic in `state.ts`, tested; DOM checked by hand).
 - `tests/`: one test file per engine module, fixture `tests/fixtures/ruin.json`.
 - `bench/dungeons/`: Python generator output, M and L, seeds 1–8 (generator commit 573478c, default
-  theme), the regression set. Regenerate only on purpose; the numbers in `docs/design.md` refer to
+  theme; its `zelda` name and rewards renamed by hand to `classic`, coins, healing potion), the
+  regression set. Regenerate only on purpose; the numbers in `docs/design.md` refer to
   these files. `bench --generated` builds the same sizes and seeds from the TS generator on the fly.
 - `ref/120370675/` (git-ignored): thesis and Edgar-DotNet source.
 - `ref/generator-port.md`: decisions, scope, behaviour, fixes and baseline for porting the

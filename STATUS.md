@@ -49,7 +49,7 @@ Design in [docs/neon-style.md](docs/neon-style.md).
   role from room type; plain loses its default theme (`docs/plans/20-neon-design.md`).
 - [x] 2. **neon core** (`feature/neon-core`): `MapStyle` `neon`, `render/neon.ts`, black page,
   dark corridors, role fills, stacked-stroke glow, walls, type, `--style neon`;
-  `styleFor("cyber")` → neon. Done: catalogue renamed plain; style by theme cyber → neon, zelda →
+  `styleFor("cyber")` → neon. Done: catalogue renamed plain; style by theme cyber → neon, classic →
   Dyson, other or none → plain; role legend; doors as plain gaps meanwhile; neon in the viewer
   select; l-1 0.9 ms, 38.8 kB; plain and Dyson dumps byte-identical (`docs/plans/21-neon-core.md`).
 - [x] 3. **doors and gates** (`feature/neon-doors`): Dyson's symbol set from `scene.ts`, in neon.
@@ -58,7 +58,7 @@ Design in [docs/neon-style.md](docs/neon-style.md).
   plain and Dyson dumps byte-identical (`docs/plans/23-neon-doors.md`).
 - [ ] 4. *(postponed, maybe later)* **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
   clear of numbers and glyphs.
-- [x] 5. **viewer**: done in step 2 and `feature/one-theme-select`: one theme select (zelda, cyber,
+- [x] 5. **viewer**: done in step 2 and `feature/one-theme-select`: one theme select (classic, cyber,
   plain) picks the look, the style select is gone (`docs/plans/22-one-theme-select.md`).
 
 ## Steps: graph, grammar sheet, help

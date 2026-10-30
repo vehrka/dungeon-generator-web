@@ -15,11 +15,11 @@ export const mapStyles: MapStyle[] = ["plain", "dyson", "neon"];
 export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string; style?: MapStyle };
 export type TitleMeta = Omit<RenderMeta, "layoutSeed" | "style">; // the map's and the graph's title
 
-// Cyber is neon, zelda Dyson; any other theme, or none (a loaded JSON may lack one), plain
-// (docs/design.md §7).
+// Cyber is neon, classic Dyson; any other theme, or none (a loaded JSON may lack one), plain
+// (docs/design.md §7). Zelda: classic's name before 1.0.0, so files saved then keep their look.
 export const styleFor = (theme?: string): MapStyle => {
   const t = theme?.toLowerCase();
-  return t === "cyber" ? "neon" : t === "zelda" ? "dyson" : "plain";
+  return t === "cyber" ? "neon" : t === "classic" || t === "zelda" ? "dyson" : "plain";
 };
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no

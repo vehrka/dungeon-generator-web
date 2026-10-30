@@ -54,7 +54,7 @@ No engine, layout or schema change, so no bench.
 ## Byte-identical guard
 
 Plain and Dyson SVGs dumped from `dev` before the change (throwaway script, as in steps 15–21):
-bench and generated zelda and cyber M and L, layout seeds 1–5. After the refactor commit and at the
+bench and generated classic and cyber M and L, layout seeds 1–5. After the refactor commit and at the
 end: `diff -r` empty.
 
 ## By hand
