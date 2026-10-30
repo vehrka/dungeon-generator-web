@@ -26,6 +26,10 @@ change, so no bench.
      wide), each layer centred vertically. Constants at the top of `graph.ts`.
   5. Edges between adjacent layers straight; within a layer or skipping layers a quadratic curve
      bowed away from the rooms between, so an edge never runs through a box.
+- **Changed 2026-10-30, after the first version: the look of the Python generator's Graphviz
+  plot** (top to bottom, GOAL last, colour by room type, pickup and switch shapes, coloured gate
+  edges labelled with their objects, no gate letters); see `docs/design.md` § Graph view. The
+  first version's look, kept for the record:
 - **Look: the plain TE look**, whatever the theme (`ref/webdesign/design.md`): white boxes with a
   1 px hairline on canvas mist, number and glyph row inside (`roomMarks`, the same glyphs as the
   map: start, goal, key, boss key, item, switch, lever, treasure), amber gate tags, black one-way

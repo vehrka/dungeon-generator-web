@@ -53,7 +53,7 @@ function crossings(l: GraphLayout): string[] {
 }
 
 describe("graphLayout", () => {
-  it("puts START in layer 0 and each room in its BFS distance's layer", () => {
+  it("puts START in layer 0, GOAL in the deepest, every other room in its BFS distance's layer", () => {
     const l = graphLayout(graph);
     expect(l.layers[0]).toEqual([graph.start]);
     const dist = new Map([[graph.start, 0]]);
@@ -68,7 +68,7 @@ describe("graphLayout", () => {
             }
       queue = next;
     }
-    for (const [id, b] of l.boxes) expect(b.layer).toBe(dist.get(id));
+    for (const [id, b] of l.boxes) expect(b.layer).toBe(id === graph.goal ? Math.max(...dist.values()) : dist.get(id));
     expect(l.layers.flat().sort((a, b) => a - b)).toEqual([...graph.rooms.keys()].sort((a, b) => a - b));
   });
 
@@ -77,36 +77,42 @@ describe("graphLayout", () => {
     expect(l.layers).toEqual([[0], [1], [2], [3, 4]]);
   });
 
-  it("draws one edge per room pair, the pair's gates on it", () => {
+  it("bends an edge to GOAL that skips layers around the rooms between", () => {
+    // GOAL 4 next to START; 1 – 2 – 3 below START, 4 pulled down to 3's layer, straight under 0.
+    const l = graphLayout(normalize(dungeon(5, [[0, 1], [1, 2], [2, 3], [0, 4]])));
+    expect(l.boxes.get(4)!.layer).toBe(3);
+    const e = l.edges.find((e) => e.b === 4)!;
+    expect(e.ctrl).toBeDefined();
+    expect(crossings(l)).toEqual([]);
+  });
+
+  it("draws one edge per room pair, the pair's gates on it, labelled with what they need", () => {
     const l = graphLayout(normalize(dungeon(3, [[0, 1], [1, 0], [1, 2]], [{ between: [1, 2], gate: "lock" }, { between: [1, 2], gate: "state" }])));
     expect(l.edges).toHaveLength(2);
     const gated = l.edges.find((e) => e.gates.length)!;
     expect(gated.gates.map((g) => g.kind)).toEqual(["lock", "state"]);
-    expect(gated.tag).toBe("A");
+    expect([gated.kind, gated.label]).toEqual(["lock", "[] []"]);
+    const ruinLabels = graphLayout(graph).edges.flatMap((e) => (e.label ? [`${e.kind} ${e.label}`] : []));
+    expect(ruinLabels).toContain("lock [bronze key 1]");
+    expect(ruinLabels).toContain("state [gravestone catch 1 + gravestone catch 2]");
   });
 
-  it("letters gates A, B, … in edge order, layer then position", () => {
-    const l = graphLayout(normalize(dungeon(4, [], [
-      { between: [2, 3], gate: "lock" },
-      { between: [1, 3], gate: "lock" },
-      { between: [0, 2], gate: "lock" },
-      { between: [0, 1], gate: "lock" },
-    ])));
-    expect(l.layers).toEqual([[0], [1, 2], [3]]);
-    expect(l.edges.map((e) => `${e.a}-${e.b} ${e.tag}`)).toEqual(["0-1 A", "0-2 B", "1-3 C", "2-3 D"]);
+  it("orders edges by layer, then position", () => {
+    const l = graphLayout(normalize(dungeon(5, [[2, 3], [1, 3], [0, 2], [0, 1], [3, 4]])));
+    expect(l.layers).toEqual([[0], [1, 2], [3], [4]]);
+    expect(l.edges.map((e) => `${e.a}-${e.b}`)).toEqual(["0-1", "0-2", "1-3", "2-3", "3-4"]);
   });
 
   it("is secret and one-way only when every door of the pair is", () => {
     const l = graphLayout(normalize(dungeon(3, [[0, 1, true], [1, 2, true], [2, 1, true]], [{ between: [0, 1], gate: "secret" }])));
     const e01 = l.edges.find((e) => e.a + e.b === 1)!;
     const e12 = l.edges.find((e) => e.a + e.b === 3)!;
-    expect([e01.secret, e01.towards, e01.tag]).toEqual([false, undefined, undefined]);
-    expect(e12.towards).toBeUndefined(); // one-way both ways: crosses both ways
+    expect([e01.secret, e01.towards, e01.kind, e01.label]).toEqual([false, undefined, "both", undefined]);
+    expect([e12.towards, e12.kind]).toEqual([undefined, "both"]); // one-way both ways: crosses both ways
     const s = graphLayout(normalize(dungeon(2, [], [{ between: [0, 1], gate: "secret" }])));
-    expect(s.edges[0]).toMatchObject({ secret: true, gates: [] });
-    expect(s.edges[0]!.tag).toBeUndefined();
+    expect(s.edges[0]).toMatchObject({ secret: true, gates: [], kind: "secret", label: "secret" });
     const o = graphLayout(normalize(dungeon(2, [[1, 0, true]])));
-    expect(o.edges[0]!.towards).toBe(0);
+    expect([o.edges[0]!.towards, o.edges[0]!.kind]).toEqual([0, "one"]);
   });
 
   it("never runs an edge through a box", () => {
@@ -128,36 +134,46 @@ describe("renderGraph", () => {
     expect(svg.endsWith("</svg>")).toBe(true);
   });
 
-  it("draws one box per room with its number and glyphs, one edge per room pair", () => {
-    expect(count(svg, /<rect class="room"/g)).toBe(graph.rooms.size);
-    for (const r of graph.rooms.values()) expect(count(svg, new RegExp(`<text class="number" data-room="${r.number}"`, "g"))).toBe(1);
+  it("draws one node per room with its number, shaped by role, one edge per room pair", () => {
+    expect(count(svg, /<(rect|ellipse|polygon) class="g-(room|special|item|switch)"/g)).toBe(graph.rooms.size);
+    expect(count(svg, /class="g-special"/g)).toBe(2);
+    expect(count(svg, /<ellipse class="g-item"/g)).toBe(3);
+    expect(count(svg, /<polygon class="g-switch"/g)).toBe(2);
+    for (const r of graph.rooms.values()) expect(count(svg, new RegExp(`<text class="g-node" data-room="${r.number}"`, "g"))).toBe(1);
     const pairs = new Set(graph.doors.map((d) => [d.a, d.b].sort((x, y) => x - y).join("-")));
-    expect(count(svg, /<path class="edge/g)).toBe(pairs.size);
-    expect(svg).toContain('<use href="#glyph-start"');
-    expect(svg).toContain('<use href="#glyph-goal"');
+    expect(count(svg, /<path class="edge[^"]*" data-edge/g)).toBe(pairs.size);
+    expect(svg).toContain(">1</tspan> START</text>");
+    expect(svg).toContain(">21</tspan> GOAL</text>");
+    expect(svg).toContain(">22</tspan> Get bronze key 1</text>");
+    expect(svg).toContain(">14</tspan> gravestone catch 1</text>");
+    expect(svg).toContain(">18</tspan> eb</text>");
+    expect(svg).toContain('fill="#a93226"'); // eb, the Python plot's boss red
   });
 
-  it("tags gated edges and lists the gates in the key", () => {
+  it("colours and labels gated edges, no gate list in the key", () => {
     expect(count(svg, /data-gate="lock"/g)).toBe(3);
     expect(count(svg, /data-gate="state"/g)).toBe(1);
-    expect(svg).toMatch(/<text class="tag-letter"[^>]*>A<\/text>\n<text x="[\d.]+" y="[\d.]+">lock  /);
-    expect(svg).toContain(">gates</text>");
+    expect(svg).toMatch(/<text class="g-label"[^>]* fill="#c0601a">\[bronze key 1\]<\/text>/);
+    expect(svg).toMatch(/<text class="g-label"[^>]* fill="#b34d8f">\[gravestone catch 1 \+ gravestone catch 2\]<\/text>/);
+    expect(svg).not.toContain(">gates</text>");
   });
 
-  it("dashes secret edges, points one-way chevrons from a to b, legend only what is drawn", () => {
+  it("dashes secret edges, points one-way arrows from a to b, legend only what is drawn", () => {
+    const tip = (out: string) => out.match(/<polygon class="arrow"[^>]* points="([^"]+)"/)![1]!.split(" ").map((p) => p.split(",").map(Number)[1]!);
     const one = renderGraph(normalize(dungeon(2, [[0, 1, true]])), {});
-    const pts = one.match(/<polyline class="oneway" points="([^"]+)"/)![1]!.split(" ").map((p) => p.split(",").map(Number));
-    expect(pts[1]![0]).toBeGreaterThan(pts[0]![0]!); // room 0 left of room 1: points right
-    const back = renderGraph(normalize(dungeon(2, [[1, 0, true]])), {});
-    const bpts = back.match(/<polyline class="oneway" points="([^"]+)"/)![1]!.split(" ").map((p) => p.split(",").map(Number));
-    expect(bpts[1]![0]).toBeLessThan(bpts[0]![0]!);
-    expect(one).toContain(">one-way</text>");
-    expect(one).not.toMatch(/>(gate|secret door|gates)<\/text>/);
+    const [t, ...base] = tip(one);
+    expect(base.every((y) => t! > y)).toBe(true); // room 0 above room 1: points down
+    const [bt, ...bbase] = tip(renderGraph(normalize(dungeon(2, [[1, 0, true]])), {}));
+    expect(bbase.every((y) => bt! < y)).toBe(true);
+    expect(one).toContain(">one-way path (drop, ledge)</text>");
+    expect(one).not.toMatch(/>(two-way path|secret  hidden path|\[key\]  locked: needs that object)<\/text>/);
     const secret = renderGraph(normalize(dungeon(2, [], [{ between: [0, 1], gate: "secret" }])), {});
     expect(secret).toContain('<path class="edge secret"');
-    expect(secret).not.toContain('class="tag"');
-    expect(secret).toContain(">secret door</text>");
-    expect(secret).not.toContain(">one-way</text>");
+    expect(secret).toContain(">secret</text>");
+    expect(secret).toContain(">secret  hidden path</text>");
+    expect(secret).not.toContain('class="arrow"');
+    expect(svg).toContain(">eb  boss</text>");
+    expect(svg).not.toContain(">m  monster</text>");
   });
 
   it("titles the sheet with graph in place of the layout seed", () => {
@@ -167,7 +183,7 @@ describe("renderGraph", () => {
 
   it("escapes every value taken from the JSON", () => {
     const hostile = '"><img src=x onerror=alert(1)>';
-    const rooms = new Map([...graph.rooms].map(([id, r]) => [id, { ...r, number: hostile as unknown as number, label: hostile, objects: r.objects.map((o) => ({ ...o, name: hostile })) }]));
+    const rooms = new Map([...graph.rooms].map(([id, r]) => [id, { ...r, number: hostile as unknown as number, label: hostile, type: hostile, objects: r.objects.map((o) => ({ ...o, name: hostile })) }]));
     const doors = graph.doors.map((d) => (d.gate && d.gate.kind !== "secret" ? { ...d, gate: { kind: hostile as never, requires: [{ id: "x", type: "key", name: hostile }] } } : d));
     const out = renderGraph({ ...graph, rooms, doors }, { theme: hostile, size: hostile, grammar: hostile });
     expect(out).not.toContain("<img");
@@ -191,12 +207,12 @@ describe("drawGraph", () => {
     const k5: [number, number][] = [];
     for (let a = 0; a < 5; a++) for (let b = a + 1; b < 5; b++) k5.push([a, b]);
     const { svg: out } = drawGraph(dungeon(5, k5));
-    expect(count(out, /<path class="edge/g)).toBe(10);
+    expect(count(out, /<path class="edge[^"]*" data-edge/g)).toBe(10);
     expect(crossings(graphLayout(normalize(dungeon(5, k5))))).toEqual([]);
   });
 
   it("draws a dungeon that fails to lay out without corridors (bench m-3)", () => {
     const m3 = JSON.parse(readFileSync(join(import.meta.dirname, "..", "bench", "dungeons", "m-3.json"), "utf8")) as DungeonJson;
-    expect(count(drawGraph(m3).svg, /<rect class="room"/g)).toBe(normalize(m3).rooms.size);
+    expect(count(drawGraph(m3).svg, /class="g-node"/g)).toBe(normalize(m3).rooms.size);
   });
 });

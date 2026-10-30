@@ -367,20 +367,31 @@ out); deterministic, no randomness.
 
 - Edges: one per room pair, as the map's door groups (all the pair's gates on it; secret and
   one-way only when every door of the pair is).
-- Layers: BFS distance from START over the undirected graph, left to right; unreachable rooms in a
-  last layer of their own. BFS distances differ by at most 1 across an edge, so no edge skips a
-  layer: adjacent layers get a straight edge, right side to left side; within a layer a quadratic
-  curve out of the right sides, bowed right into the gap, never further than the next column.
-  One width per column, so straight edges stay in the gaps: no edge runs through a box (tested on
-  ruin and generated M and L 1–8).
+- Layers: BFS distance from START over the undirected graph, top to bottom; GOAL in the deepest
+  layer (Graphviz `rank=max` in the Python plot); unreachable rooms in a last layer of their own.
+  BFS distances differ by at most 1 across an edge, so only GOAL's edges can skip layers. Adjacent
+  layers: straight, bottom middle to top middle. Within a layer: a quadratic curve out of the
+  bottoms, dipping into the gap below, never as far as the next row. Skipping layers: straight if
+  clear, else a quadratic bowed sideways, 16 px further each try (alternating sides) until no
+  sample is within 4 px of a box between. One height per row, so straight edges stay in the gaps:
+  no edge runs through a box (tested on ruin, generated M and L 1–8, K5).
 - Order in a layer: by room number, then 8 barycenter sweeps (down, up), ties by room number; a
   room without neighbours in the other layer keeps its place.
-- Look: plain, whatever the theme. White boxes on `#f6f8f7`, number and the map's glyphs inside,
-  amber gate tags at the edge's middle, one-way chevrons along the edge past the tag, secret edges
-  dashed. Gate letters are the graph's own (A, B, … in edge order: layer, then position); the key
-  column (`keyColumn` in `svg.ts`, shared with the map) lists them. Title as the map's with `graph`
-  in place of the layout seed.
-- Cost: `drawGraph` on generated cyber L 7 (62 rooms) 2.8 ms, ruin 4 ms (first call), M 1 ms.
+- Look after the Python generator's Graphviz plot (`utils/dungeon_render.py`; changed 2026-10-30
+  from the plain TE look at the user's request): background `#eef0f3`; rooms rounded and coloured
+  by type with Python's `ROOM_STYLE` palette (n grey, e salmon, em, eb reds, t orange, p lavender,
+  c tan, gb green; unknown types white with a border), labelled number then type code; START and
+  GOAL yellow with a black border; pickups (item, key, boss key) blue ellipses `Get <objects>`;
+  switches and levers pink hexagons with their objects. Edges: two-way grey 1 px, one-way black
+  2 px with an arrowhead, lock orange, state, on, off magenta (off dashed), secret grey dashed; a
+  gated edge is labelled with what it needs (`[bronze key 1]`, `[a + b]`, `[breaker 1 ON]`) in its
+  colour, beside its middle on the side it leans to. The key column (`keyColumn` in `svg.ts`,
+  shared with the map) lists rooms by number and a legend of what is drawn (room types, nodes,
+  paths), no gate list. Title as the map's with `graph` in place of the layout seed.
+- Edge labels can overlap edges or each other in dense graphs (Graphviz places them, we do not):
+  cosmetic, accepted.
+- Cost: `drawGraph` on generated cyber L 7 (62 rooms) 13 ms (the sideways search of GOAL's edges),
+  ruin 5 ms (first call), M 1 ms.
 
 ### 8. Viewer (`src/viewer/`)
 

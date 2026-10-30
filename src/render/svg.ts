@@ -113,7 +113,7 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
 export type GateLine = { tag: string; gates: Gate[] };
 
 // Legend entries for the glyphs drawn, in the glyph table's order.
-export const glyphLegend = (used: string[]): LegendEntry[] =>
+const glyphLegend = (used: string[]): LegendEntry[] =>
   Object.keys(glyphs).filter((g) => used.includes(g)).map((g) => ({ mark: useGlyph(g, 0, -11), text: glyphs[g]!.name }));
 
 // Key column at (x, y), shared by the map and the graph: rooms by number, gates by tag, legend of
@@ -121,7 +121,7 @@ export const glyphLegend = (used: string[]): LegendEntry[] =>
 export function keyColumn(rooms: Room[], gateLines: GateLine[], legend: LegendEntry[], x: number, y: number): { marks: string[]; x1: number; y1: number } {
   rooms = [...rooms].sort((a, b) => a.number - b.number);
   const gateTexts = gateLines.map((g) => ({ tag: g.tag, text: g.gates.map(gateText).join("; ") }));
-  const keyWidth = Math.max(200, 28 + charWidth * Math.max(...rooms.map((r) => r.label.length), ...gateTexts.map((g) => g.text.length)));
+  const keyWidth = Math.max(200, 28 + charWidth * Math.max(...rooms.map((r) => r.label.length), ...gateTexts.map((g) => g.text.length), ...legend.map((l) => l.text.length)));
   const key: string[] = [];
   const heading = (text: string) => {
     key.push(`<text class="heading" x="${x}" y="${y + 13}">${text}</text>`, `<line class="rule" x1="${x}" y1="${y + 20}" x2="${x + keyWidth}" y2="${y + 20}"/>`);

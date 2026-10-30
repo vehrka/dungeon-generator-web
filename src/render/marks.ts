@@ -40,7 +40,7 @@ export function chevron(m: Point, horizontal: boolean, d: 1 | -1, tag: boolean):
 
 // Room number at the anchor c, a row of glyphs under it; dy lowers a number without glyphs to the
 // middle (font-size dependent).
-export function roomMarks(room: Pick<SceneRoom, "number" | "glyphs">, c: Point, dy: number): string[] {
+export function roomMarks(room: SceneRoom, c: Point, dy: number): string[] {
   const n = esc(String(room.number));
   const width = room.glyphs.length * glyphSize + (room.glyphs.length - 1) * 3;
   return [

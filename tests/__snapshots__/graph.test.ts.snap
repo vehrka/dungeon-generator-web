@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`renderGraph > is deterministic 1`] = `
-"<svg xmlns="http://www.w3.org/2000/svg" width="2183" height="1078" viewBox="0 0 2183 1078">
+"<svg xmlns="http://www.w3.org/2000/svg" width="1198" height="1058" viewBox="0 0 1198 1058">
 <style>
 text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-serif;font-size:13px;font-weight:100;fill:#000}
 .room{fill:#fff;stroke:#000;stroke-width:1}
@@ -20,188 +20,195 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 .heading{font-weight:300}
 .rule{stroke:#e5e5e5;stroke-width:1}
 </style>
-<style>.edge{fill:none;stroke:#000;stroke-width:1}.edge.secret{stroke-dasharray:4 3}</style>
-<defs><symbol id="glyph-start" viewBox="0 0 14 14"><path d="M3 2 L12 7 L3 12 Z"/></symbol><symbol id="glyph-goal" viewBox="0 0 14 14"><path d="M3 13 V1 M3 2 H12 L9 5 L12 8 H3"/></symbol><symbol id="glyph-key" viewBox="0 0 14 14"><circle cx="4" cy="7" r="3"/><path d="M7 7 H13 M11 7 V10 M13 7 V10"/></symbol><symbol id="glyph-bosskey" viewBox="0 0 14 14"><circle cx="4" cy="7" r="3"/><circle cx="4" cy="7" r="1"/><path d="M7 7 H13 M9 7 V10 M11 7 V10 M13 7 V10"/></symbol><symbol id="glyph-item" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z"/></symbol><symbol id="glyph-switch" viewBox="0 0 14 14"><rect x="1" y="4" width="12" height="6"/><circle cx="9.5" cy="7" r="1.5"/></symbol><symbol id="glyph-lever" viewBox="0 0 14 14"><path d="M1 12 H13 M7 12 L11 3"/><circle cx="11" cy="3" r="1.5"/></symbol><symbol id="glyph-treasure" viewBox="0 0 14 14"><rect x="1" y="5" width="12" height="7"/><path d="M1 8 H13 M6 7 H8 V10 H6 Z"/></symbol></defs>
-<rect width="2183" height="1078" fill="#f6f8f7"/>
+<style>
+.g-node{font-size:12px;font-weight:400;text-anchor:middle}
+.g-node tspan.g-number{font-weight:700}
+.g-room{stroke:none}
+.g-special{fill:#f0d24a;stroke:#000;stroke-width:1.5}
+.g-item{fill:#56b4e9;stroke:none}
+.g-switch{fill:#e39ac8;stroke:none}
+.edge{fill:none;stroke:#555;stroke-width:1}
+.edge.one{stroke:#111;stroke-width:2}
+.edge.lock{stroke:#c0601a;stroke-width:2}
+.edge.state,.edge.on,.edge.off{stroke:#b34d8f;stroke-width:2}
+.edge.off,.edge.secret{stroke-dasharray:5 3}
+.edge.secret{stroke:#888}
+.g-label{font-size:10px;font-weight:400;paint-order:stroke;stroke:#eef0f3;stroke-width:3px;stroke-linejoin:round}
+</style>
+<rect width="1198" height="1058" fill="#eef0f3"/>
 <text class="title" x="33" y="52">tor-barrow</text>
 <text class="muted" x="33" y="73">size L · seed 444 · graph · Combined</text>
-<rect class="room" x="33" y="207" width="48" height="44"/>
-<text class="number" data-room="1" x="57" y="227">1</text>
-<use href="#glyph-start" class="glyph" x="50" y="231" width="14" height="14"/>
-<rect class="room" x="193" y="207" width="48" height="44"/>
-<text class="number" data-room="2" x="217" y="236">2</text>
-<rect class="room" x="353" y="207" width="48" height="44"/>
-<text class="number" data-room="3" x="377" y="236">3</text>
-<rect class="room" x="513" y="171" width="48" height="44"/>
-<text class="number" data-room="4" x="537" y="200">4</text>
-<rect class="room" x="513" y="243" width="48" height="44"/>
-<text class="number" data-room="5" x="537" y="272">5</text>
-<rect class="room" x="673" y="135" width="48" height="44"/>
-<text class="number" data-room="6" x="697" y="164">6</text>
-<rect class="room" x="673" y="207" width="48" height="44"/>
-<text class="number" data-room="7" x="697" y="236">7</text>
-<rect class="room" x="673" y="279" width="48" height="44"/>
-<text class="number" data-room="8" x="697" y="308">8</text>
-<rect class="room" x="833" y="99" width="48" height="44"/>
-<text class="number" data-room="9" x="857" y="128">9</text>
-<rect class="room" x="833" y="171" width="48" height="44"/>
-<text class="number" data-room="10" x="857" y="200">10</text>
-<rect class="room" x="833" y="243" width="48" height="44"/>
-<text class="number" data-room="11" x="857" y="272">11</text>
-<rect class="room" x="833" y="315" width="48" height="44"/>
-<text class="number" data-room="12" x="857" y="344">12</text>
-<rect class="room" x="993" y="99" width="48" height="44"/>
-<text class="number" data-room="13" x="1017" y="128">13</text>
-<rect class="room" x="993" y="171" width="48" height="44"/>
-<text class="number" data-room="14" x="1017" y="191">14</text>
-<use href="#glyph-switch" class="glyph" x="1010" y="195" width="14" height="14"/>
-<rect class="room" x="993" y="243" width="48" height="44"/>
-<text class="number" data-room="15" x="1017" y="263">15</text>
-<use href="#glyph-switch" class="glyph" x="1010" y="267" width="14" height="14"/>
-<rect class="room" x="993" y="315" width="48" height="44"/>
-<text class="number" data-room="16" x="1017" y="335">16</text>
-<use href="#glyph-item" class="glyph" x="1010" y="339" width="14" height="14"/>
-<rect class="room" x="1153" y="207" width="48" height="44"/>
-<text class="number" data-room="17" x="1177" y="236">17</text>
-<rect class="room" x="1313" y="135" width="48" height="44"/>
-<text class="number" data-room="18" x="1337" y="164">18</text>
-<rect class="room" x="1313" y="207" width="48" height="44"/>
-<text class="number" data-room="19" x="1337" y="236">19</text>
-<rect class="room" x="1313" y="279" width="48" height="44"/>
-<text class="number" data-room="20" x="1337" y="308">20</text>
-<rect class="room" x="1473" y="99" width="48" height="44"/>
-<text class="number" data-room="21" x="1497" y="119">21</text>
-<use href="#glyph-goal" class="glyph" x="1490" y="123" width="14" height="14"/>
-<rect class="room" x="1473" y="171" width="48" height="44"/>
-<text class="number" data-room="23" x="1497" y="200">23</text>
-<rect class="room" x="1473" y="243" width="48" height="44"/>
-<text class="number" data-room="22" x="1497" y="263">22</text>
-<use href="#glyph-key" class="glyph" x="1490" y="267" width="14" height="14"/>
-<rect class="room" x="1473" y="315" width="48" height="44"/>
-<text class="number" data-room="24" x="1497" y="344">24</text>
-<rect class="room" x="1633" y="171" width="48" height="44"/>
-<text class="number" data-room="25" x="1657" y="191">25</text>
-<use href="#glyph-bosskey" class="glyph" x="1650" y="195" width="14" height="14"/>
-<rect class="room" x="1633" y="243" width="48" height="44"/>
-<text class="number" data-room="26" x="1657" y="263">26</text>
-<use href="#glyph-treasure" class="glyph" x="1650" y="267" width="14" height="14"/>
-<path class="edge" data-edge="1-2" d="M81 229L193 229"/>
-<path class="edge" data-edge="2-3" d="M241 229L353 229"/>
-<path class="edge" data-edge="3-4" d="M401 229L513 193"/>
-<path class="edge" data-edge="3-5" d="M401 229L513 265"/>
-<path class="edge" data-edge="4-6" d="M561 193L673 157"/>
-<path class="edge" data-edge="4-7" d="M561 193L673 229"/>
-<path class="edge" data-edge="5-8" d="M561 265L673 301"/>
-<path class="edge" data-edge="6-9" d="M721 157L833 121"/>
-<path class="edge" data-edge="7-9" d="M721 229L833 121"/>
-<path class="edge" data-edge="7-10" d="M721 229L833 193"/>
-<path class="edge" data-edge="7-11" d="M721 229L833 265"/>
-<path class="edge" data-edge="8-12" d="M721 301L833 337"/>
-<path class="edge" data-edge="9-13" d="M881 121L993 121"/>
-<path class="edge" data-edge="10-14" d="M881 193L993 193"/>
-<path class="edge" data-edge="11-15" d="M881 265L993 265"/>
-<path class="edge" data-edge="12-16" d="M881 337L993 337"/>
-<path class="edge" data-edge="13-17" d="M1041 121L1153 229"/>
-<path class="edge" data-edge="17-18" d="M1201 229L1313 157"/>
-<path class="edge" data-edge="17-19" d="M1201 229L1313 229"/>
-<path class="edge" data-edge="17-20" d="M1201 229L1313 301"/>
-<path class="edge" data-edge="18-21" d="M1361 157L1473 121"/>
-<path class="edge" data-edge="19-22" d="M1361 229L1473 265"/>
-<path class="edge" data-edge="20-23" d="M1361 301L1473 193"/>
-<path class="edge" data-edge="20-24" d="M1361 301L1473 337"/>
-<path class="edge" data-edge="23-24" d="M1521 193Q1617 265 1521 337"/>
-<path class="edge" data-edge="23-25" d="M1521 193L1633 193"/>
-<path class="edge" data-edge="24-26" d="M1521 337L1633 265"/>
-<rect class="tag" data-gate="lock" x="450" y="204" width="14" height="14"/><text class="tag-letter" x="457" y="215">A</text>
-<rect class="tag" data-gate="state" x="770" y="168" width="14" height="14"/><text class="tag-letter" x="777" y="179">B</text>
-<rect class="tag" data-gate="lock" x="1250" y="186" width="14" height="14"/><text class="tag-letter" x="1257" y="197">C</text>
-<rect class="tag" data-gate="lock" x="1250" y="258" width="14" height="14"/><text class="tag-letter" x="1257" y="269">D</text>
-<polyline class="oneway" points="1421.2,248.5 1415.6,248.4 1415.7,242.7"/>
-<polyline class="oneway" points="1416.3,314.6 1418.9,319.6 1413.9,322.2"/>
-<polyline class="oneway" points="1565,267 1569,263 1573,267"/>
-<text class="heading" x="1747" y="112">rooms</text>
-<line class="rule" x1="1747" y1="119" x2="2150" y2="119"/>
-<text class="muted" x="1747" y="141">1</text>
-<text data-key="1" x="1775" y="141">Grass-grown portal (START)</text>
-<text class="muted" x="1747" y="161">2</text>
-<text data-key="2" x="1775" y="161">Rhyming portal (Riddle, Lore)</text>
-<text class="muted" x="1747" y="181">3</text>
-<text data-key="3" x="1775" y="181">Silent crypt (Explore, Scan)</text>
-<text class="muted" x="1747" y="201">4</text>
-<text data-key="4" x="1775" y="201">Oath-rune seal (Lore, Song)</text>
-<text class="muted" x="1747" y="221">5</text>
-<text data-key="5" x="1775" y="221">Restless dead</text>
-<text class="muted" x="1747" y="241">6</text>
-<text data-key="6" x="1775" y="241">Rhyming portal (Riddle, Lore)</text>
-<text class="muted" x="1747" y="261">7</text>
-<text data-key="7" x="1775" y="261">Silent crypt (Explore, Scan)</text>
-<text class="muted" x="1747" y="281">8</text>
-<text data-key="8" x="1775" y="281">Sorcerous mist (Endurance loss)</text>
-<text class="muted" x="1747" y="301">9</text>
-<text data-key="9" x="1775" y="301">Silent crypt (Explore, Scan)</text>
-<text class="muted" x="1747" y="321">10</text>
-<text data-key="10" x="1775" y="321">Rhyming portal (Riddle, Lore)</text>
-<text class="muted" x="1747" y="341">11</text>
-<text data-key="11" x="1775" y="341">Rhyming portal (Riddle, Lore)</text>
-<text class="muted" x="1747" y="361">12</text>
-<text data-key="12" x="1775" y="361">Tomb sentinel</text>
-<text class="muted" x="1747" y="381">13</text>
-<text data-key="13" x="1775" y="381">Rhyming portal (Riddle, Lore)</text>
-<text class="muted" x="1747" y="401">14</text>
-<text data-key="14" x="1775" y="401">Switch: gravestone catch 1</text>
-<text class="muted" x="1747" y="421">15</text>
-<text data-key="15" x="1775" y="421">Switch: gravestone catch 2</text>
-<text class="muted" x="1747" y="441">16</text>
-<text data-key="16" x="1775" y="441">Pickup: blessed censer 1</text>
-<text class="muted" x="1747" y="461">17</text>
-<text data-key="17" x="1775" y="461">Silent crypt (Explore, Scan)</text>
-<text class="muted" x="1747" y="481">18</text>
-<text data-key="18" x="1775" y="481">Barrow-wight lord</text>
-<text class="muted" x="1747" y="501">19</text>
-<text data-key="19" x="1775" y="501">Sorcerous mist (Endurance loss)</text>
-<text class="muted" x="1747" y="521">20</text>
-<text data-key="20" x="1775" y="521">Sorcerous mist (Endurance loss)</text>
-<text class="muted" x="1747" y="541">21</text>
-<text data-key="21" x="1775" y="541">Burial vault of the prince (GOAL)</text>
-<text class="muted" x="1747" y="561">22</text>
-<text data-key="22" x="1775" y="561">Pickup: bronze key 1</text>
-<text class="muted" x="1747" y="581">23</text>
-<text data-key="23" x="1775" y="581">Restless dead</text>
-<text class="muted" x="1747" y="601">24</text>
-<text data-key="24" x="1775" y="601">Sorcerous mist (Endurance loss)</text>
-<text class="muted" x="1747" y="621">25</text>
-<text data-key="25" x="1775" y="621">Pickup: rune-inscribed sigil 1</text>
-<text class="muted" x="1747" y="641">26</text>
-<text data-key="26" x="1775" y="641">Royal grave-goods (Shadow: Greed): treasure points</text>
-<text class="heading" x="1747" y="694">gates</text>
-<line class="rule" x1="1747" y1="701" x2="2150" y2="701"/>
-<rect class="tag" x="1747" y="712" width="14" height="14"/><text class="tag-letter" x="1754" y="723">A</text>
-<text x="1775" y="723">lock  blessed censer 1</text>
-<rect class="tag" x="1747" y="732" width="14" height="14"/><text class="tag-letter" x="1754" y="743">B</text>
-<text x="1775" y="743">state  gravestone catch 1, gravestone catch 2</text>
-<rect class="tag" x="1747" y="752" width="14" height="14"/><text class="tag-letter" x="1754" y="763">C</text>
-<text x="1775" y="763">lock  rune-inscribed sigil 1</text>
-<rect class="tag" x="1747" y="772" width="14" height="14"/><text class="tag-letter" x="1754" y="783">D</text>
-<text x="1775" y="783">lock  bronze key 1</text>
-<text class="heading" x="1747" y="836">legend</text>
-<line class="rule" x1="1747" y1="843" x2="2150" y2="843"/>
-<g transform="translate(1747,865)"><use href="#glyph-start" class="glyph" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="865">start</text>
-<g transform="translate(1747,885)"><use href="#glyph-goal" class="glyph" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="885">goal</text>
-<g transform="translate(1747,905)"><use href="#glyph-key" class="glyph" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="905">key</text>
-<g transform="translate(1747,925)"><use href="#glyph-bosskey" class="glyph" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="925">boss key</text>
-<g transform="translate(1747,945)"><use href="#glyph-item" class="glyph" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="945">item</text>
-<g transform="translate(1747,965)"><use href="#glyph-switch" class="glyph" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="965">switch</text>
-<g transform="translate(1747,985)"><use href="#glyph-treasure" class="glyph" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="985">treasure</text>
-<g transform="translate(1747,1005)"><rect class="tag" x="0" y="-11" width="14" height="14"/></g>
-<text x="1775" y="1005">gate</text>
-<g transform="translate(1747,1025)"><polyline class="oneway" points="3,-8 7,-4 11,-8"/></g>
-<text x="1775" y="1025">one-way</text>
+<path class="edge both" data-edge="1-2" d="M364.5 125L364.5 189"/>
+<path class="edge both" data-edge="2-3" d="M364.5 215L364.5 279"/>
+<path class="edge lock" data-edge="3-4" data-gate="lock" d="M364.5 305L333.5 369"/>
+<path class="edge both" data-edge="3-5" d="M364.5 305L395.5 369"/>
+<path class="edge both" data-edge="4-6" d="M333.5 395L302.5 459"/>
+<path class="edge both" data-edge="4-7" d="M333.5 395L364.5 459"/>
+<path class="edge both" data-edge="5-8" d="M395.5 395L426.5 459"/>
+<path class="edge both" data-edge="6-9" d="M302.5 485L257.5 549"/>
+<path class="edge state" data-edge="7-9" data-gate="state" d="M364.5 485L257.5 549"/>
+<path class="edge both" data-edge="7-10" d="M364.5 485L323 549"/>
+<path class="edge both" data-edge="7-11" d="M364.5 485L392 549"/>
+<path class="edge both" data-edge="8-12" d="M426.5 485L464.5 549"/>
+<path class="edge both" data-edge="9-13" d="M257.5 575L56.5 639"/>
+<path class="edge both" data-edge="10-14" d="M323 575L191.5 639"/>
+<path class="edge both" data-edge="11-15" d="M392 575L392.5 639"/>
+<path class="edge both" data-edge="12-16" d="M464.5 575L600 639"/>
+<path class="edge both" data-edge="13-17" d="M56.5 665L364.5 729"/>
+<path class="edge lock" data-edge="17-18" data-gate="lock" d="M364.5 755L295.5 819"/>
+<path class="edge both" data-edge="17-19" d="M364.5 755L368 819"/>
+<path class="edge lock" data-edge="17-20" data-gate="lock" d="M364.5 755L437 819"/>
+<path class="edge both" data-edge="18-21" d="M295.5 845Q154.3 922 141 999"/>
+<path class="edge both" data-edge="19-22" d="M368 845L295.5 909"/>
+<path class="edge one" data-edge="20-23" d="M437 845L423.5 909"/>
+<polygon class="arrow" fill="#111" points="437,845 439.1,854.6 431.2,853"/>
+<path class="edge one" data-edge="20-24" d="M437 845L492.5 909"/>
+<polygon class="arrow" fill="#111" points="492.5,909 483.6,904.8 489.6,899.6"/>
+<path class="edge one" data-edge="23-24" d="M423.5 935Q458 976.3 492.5 935"/>
+<polygon class="arrow" fill="#111" points="423.5,935 432.3,939.3 426.2,944.5"/>
+<path class="edge both" data-edge="23-25" d="M423.5 935L313.5 999"/>
+<path class="edge both" data-edge="24-26" d="M492.5 935L537 999"/>
+<rect class="g-special" x="330.5" y="99" width="68" height="26" rx="6"/>
+<text class="g-node" data-room="1" x="364.5" y="116" fill="#000"><tspan class="g-number">1</tspan> START</text>
+<rect class="g-room" fill="#b8a9e3" x="344.5" y="189" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="2" x="364.5" y="206" fill="#000"><tspan class="g-number">2</tspan> p</text>
+<rect class="g-room" fill="#e3e6ea" x="344.5" y="279" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="3" x="364.5" y="296" fill="#000"><tspan class="g-number">3</tspan> n</text>
+<rect class="g-room" fill="#d7c49e" x="313.5" y="369" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="4" x="333.5" y="386" fill="#000"><tspan class="g-number">4</tspan> c</text>
+<rect class="g-room" fill="#f4b6a6" x="375.5" y="369" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="5" x="395.5" y="386" fill="#000"><tspan class="g-number">5</tspan> e</text>
+<rect class="g-room" fill="#b8a9e3" x="282.5" y="459" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="6" x="302.5" y="476" fill="#000"><tspan class="g-number">6</tspan> p</text>
+<rect class="g-room" fill="#e3e6ea" x="344.5" y="459" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="7" x="364.5" y="476" fill="#000"><tspan class="g-number">7</tspan> n</text>
+<rect class="g-room" fill="#f5c07a" x="406.5" y="459" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="8" x="426.5" y="476" fill="#000"><tspan class="g-number">8</tspan> t</text>
+<rect class="g-room" fill="#e3e6ea" x="237.5" y="549" width="40" height="26" rx="6"/>
+<text class="g-node" data-room="9" x="257.5" y="566" fill="#000"><tspan class="g-number">9</tspan> n</text>
+<rect class="g-room" fill="#b8a9e3" x="299.5" y="549" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="10" x="323" y="566" fill="#000"><tspan class="g-number">10</tspan> p</text>
+<rect class="g-room" fill="#b8a9e3" x="368.5" y="549" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="11" x="392" y="566" fill="#000"><tspan class="g-number">11</tspan> p</text>
+<rect class="g-room" fill="#e8735a" x="437.5" y="549" width="54" height="26" rx="6"/>
+<text class="g-node" data-room="12" x="464.5" y="566" fill="#000"><tspan class="g-number">12</tspan> em</text>
+<rect class="g-room" fill="#b8a9e3" x="33" y="639" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="13" x="56.5" y="656" fill="#000"><tspan class="g-number">13</tspan> p</text>
+<polygon class="g-switch" points="102,652 114,639 269,639 281,652 269,665 114,665"/>
+<text class="g-node" data-room="14" x="191.5" y="656" fill="#000"><tspan class="g-number">14</tspan> gravestone catch 1</text>
+<polygon class="g-switch" points="303,652 315,639 470,639 482,652 470,665 315,665"/>
+<text class="g-node" data-room="15" x="392.5" y="656" fill="#000"><tspan class="g-number">15</tspan> gravestone catch 2</text>
+<ellipse class="g-item" cx="600" cy="652" rx="96" ry="13"/>
+<text class="g-node" data-room="16" x="600" y="656" fill="#000"><tspan class="g-number">16</tspan> Get blessed censer 1</text>
+<rect class="g-room" fill="#e3e6ea" x="341" y="729" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="17" x="364.5" y="746" fill="#000"><tspan class="g-number">17</tspan> n</text>
+<rect class="g-room" fill="#a93226" x="268.5" y="819" width="54" height="26" rx="6"/>
+<text class="g-node" data-room="18" x="295.5" y="836" fill="#fff"><tspan class="g-number">18</tspan> eb</text>
+<rect class="g-room" fill="#f5c07a" x="344.5" y="819" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="19" x="368" y="836" fill="#000"><tspan class="g-number">19</tspan> t</text>
+<rect class="g-room" fill="#f5c07a" x="413.5" y="819" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="20" x="437" y="836" fill="#000"><tspan class="g-number">20</tspan> t</text>
+<ellipse class="g-item" cx="295.5" cy="922" rx="82.5" ry="13"/>
+<text class="g-node" data-room="22" x="295.5" y="926" fill="#000"><tspan class="g-number">22</tspan> Get bronze key 1</text>
+<rect class="g-room" fill="#f4b6a6" x="400" y="909" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="23" x="423.5" y="926" fill="#000"><tspan class="g-number">23</tspan> e</text>
+<rect class="g-room" fill="#f5c07a" x="469" y="909" width="47" height="26" rx="6"/>
+<text class="g-node" data-room="24" x="492.5" y="926" fill="#000"><tspan class="g-number">24</tspan> t</text>
+<rect class="g-special" x="107" y="999" width="68" height="26" rx="6"/>
+<text class="g-node" data-room="21" x="141" y="1016" fill="#000"><tspan class="g-number">21</tspan> GOAL</text>
+<ellipse class="g-item" cx="313.5" cy="1012" rx="116.5" ry="13"/>
+<text class="g-node" data-room="25" x="313.5" y="1016" fill="#000"><tspan class="g-number">25</tspan> Get rune-inscribed sigil 1</text>
+<rect class="g-room" fill="#a8dba8" x="452" y="999" width="170" height="26" rx="6"/>
+<text class="g-node" data-room="26" x="537" y="1016" fill="#000"><tspan class="g-number">26</tspan> gb: treasure points</text>
+<text class="g-label" text-anchor="end" x="350.8" y="324" fill="#c0601a">[blessed censer 1]</text>
+<text class="g-label" text-anchor="end" x="331.8" y="504" fill="#b34d8f">[gravestone catch 1 + gravestone catch 2]</text>
+<text class="g-label" text-anchor="end" x="341.3" y="774" fill="#c0601a">[rune-inscribed sigil 1]</text>
+<text class="g-label" x="388.6" y="774" fill="#c0601a">[bronze key 1]</text>
+<text class="heading" x="762" y="112">rooms</text>
+<line class="rule" x1="762" y1="119" x2="1165" y2="119"/>
+<text class="muted" x="762" y="141">1</text>
+<text data-key="1" x="790" y="141">Grass-grown portal (START)</text>
+<text class="muted" x="762" y="161">2</text>
+<text data-key="2" x="790" y="161">Rhyming portal (Riddle, Lore)</text>
+<text class="muted" x="762" y="181">3</text>
+<text data-key="3" x="790" y="181">Silent crypt (Explore, Scan)</text>
+<text class="muted" x="762" y="201">4</text>
+<text data-key="4" x="790" y="201">Oath-rune seal (Lore, Song)</text>
+<text class="muted" x="762" y="221">5</text>
+<text data-key="5" x="790" y="221">Restless dead</text>
+<text class="muted" x="762" y="241">6</text>
+<text data-key="6" x="790" y="241">Rhyming portal (Riddle, Lore)</text>
+<text class="muted" x="762" y="261">7</text>
+<text data-key="7" x="790" y="261">Silent crypt (Explore, Scan)</text>
+<text class="muted" x="762" y="281">8</text>
+<text data-key="8" x="790" y="281">Sorcerous mist (Endurance loss)</text>
+<text class="muted" x="762" y="301">9</text>
+<text data-key="9" x="790" y="301">Silent crypt (Explore, Scan)</text>
+<text class="muted" x="762" y="321">10</text>
+<text data-key="10" x="790" y="321">Rhyming portal (Riddle, Lore)</text>
+<text class="muted" x="762" y="341">11</text>
+<text data-key="11" x="790" y="341">Rhyming portal (Riddle, Lore)</text>
+<text class="muted" x="762" y="361">12</text>
+<text data-key="12" x="790" y="361">Tomb sentinel</text>
+<text class="muted" x="762" y="381">13</text>
+<text data-key="13" x="790" y="381">Rhyming portal (Riddle, Lore)</text>
+<text class="muted" x="762" y="401">14</text>
+<text data-key="14" x="790" y="401">Switch: gravestone catch 1</text>
+<text class="muted" x="762" y="421">15</text>
+<text data-key="15" x="790" y="421">Switch: gravestone catch 2</text>
+<text class="muted" x="762" y="441">16</text>
+<text data-key="16" x="790" y="441">Pickup: blessed censer 1</text>
+<text class="muted" x="762" y="461">17</text>
+<text data-key="17" x="790" y="461">Silent crypt (Explore, Scan)</text>
+<text class="muted" x="762" y="481">18</text>
+<text data-key="18" x="790" y="481">Barrow-wight lord</text>
+<text class="muted" x="762" y="501">19</text>
+<text data-key="19" x="790" y="501">Sorcerous mist (Endurance loss)</text>
+<text class="muted" x="762" y="521">20</text>
+<text data-key="20" x="790" y="521">Sorcerous mist (Endurance loss)</text>
+<text class="muted" x="762" y="541">21</text>
+<text data-key="21" x="790" y="541">Burial vault of the prince (GOAL)</text>
+<text class="muted" x="762" y="561">22</text>
+<text data-key="22" x="790" y="561">Pickup: bronze key 1</text>
+<text class="muted" x="762" y="581">23</text>
+<text data-key="23" x="790" y="581">Restless dead</text>
+<text class="muted" x="762" y="601">24</text>
+<text data-key="24" x="790" y="601">Sorcerous mist (Endurance loss)</text>
+<text class="muted" x="762" y="621">25</text>
+<text data-key="25" x="790" y="621">Pickup: rune-inscribed sigil 1</text>
+<text class="muted" x="762" y="641">26</text>
+<text data-key="26" x="790" y="641">Royal grave-goods (Shadow: Greed): treasure points</text>
+<text class="heading" x="762" y="694">legend</text>
+<line class="rule" x1="762" y1="701" x2="1165" y2="701"/>
+<g transform="translate(762,723)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#e3e6ea"/></g>
+<text x="790" y="723">n  nothing / explore</text>
+<g transform="translate(762,743)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#f4b6a6"/></g>
+<text x="790" y="743">e  enemy</text>
+<g transform="translate(762,763)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#e8735a"/></g>
+<text x="790" y="763">em  mini-boss</text>
+<g transform="translate(762,783)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#a93226"/></g>
+<text x="790" y="783">eb  boss</text>
+<g transform="translate(762,803)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#f5c07a"/></g>
+<text x="790" y="803">t  trap</text>
+<g transform="translate(762,823)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#b8a9e3"/></g>
+<text x="790" y="823">p  puzzle</text>
+<g transform="translate(762,843)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#d7c49e"/></g>
+<text x="790" y="843">c  challenge (skill check)</text>
+<g transform="translate(762,863)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#a8dba8"/></g>
+<text x="790" y="863">gb  bonus goal</text>
+<g transform="translate(762,883)"><rect x="0" y="-11" width="14" height="14" rx="3" fill="#f0d24a" stroke="#000"/></g>
+<text x="790" y="883">START  start, goal</text>
+<g transform="translate(762,903)"><ellipse cx="7" cy="-4" rx="7" ry="5" fill="#56b4e9"/></g>
+<text x="790" y="903">Get  pickup: key, boss key, item</text>
+<g transform="translate(762,923)"><polygon points="0,-4 4,-9 10,-9 14,-4 10,1 4,1" fill="#e39ac8"/></g>
+<text x="790" y="923">switch  switch / lever (sets a state)</text>
+<g transform="translate(762,943)"><path class="edge both" d="M0 -4H14"/></g>
+<text x="790" y="943">two-way path</text>
+<g transform="translate(762,963)"><path class="edge one" d="M0 -4H14"/><polygon class="arrow" fill="#111" points="14,-4 5,0 5,-8"/></g>
+<text x="790" y="963">one-way path (drop, ledge)</text>
+<g transform="translate(762,983)"><path class="edge lock" d="M0 -4H14"/></g>
+<text x="790" y="983">[key]  locked: needs that object</text>
+<g transform="translate(762,1003)"><path class="edge state" d="M0 -4H14"/></g>
+<text x="790" y="1003">[switch]  state gate: open when all switches hit</text>
 </svg>"
 `;
