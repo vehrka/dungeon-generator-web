@@ -13,6 +13,13 @@ export type Painter = { css: string; page: string; pad: number; paint: (s: Scene
 export const unit = 24; // px per grid unit, both styles
 export const tagBox = 14; // px, a gate tag's square; scene.ts keeps tags this far apart
 
+export const doorAcross = 8; // px, the door rectangle across the wall
+const barLength = 12; // px, a lock's bar along the door's normal, past the rectangle
+const dots = 3; // a portcullis's dots along the gap
+const dotRadius = 1.5; // px
+
+export const round = (v: number) => Math.round(v * 10) / 10;
+
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export const useGlyph = (id: string, x: number, y: number) =>
@@ -81,4 +88,88 @@ export function doorMark(
   if (tag) parts.push(tagMark(mid.x, mid.y, tag, gate));
   if (d) parts.push(chevron(mid, horizontal, d, !!tag));
   return `<g class="door${tag ? " gated" : ""}${secret ? " secret" : ""}">${parts.join("")}</g>`;
+}
+
+// Door symbols of the Dyson and neon styles (docs/dyson-style.md § Doors): fixed px sizes but for
+// wallRect, which takes the style's wall width.
+
+// Room a's end: the door symbol. A corridor's room b end: an archway, or an S for a secret door, so
+// the corridor does not give it away. Gaps only at archways and portcullis. Tags and chevrons at
+// the scene's tagAt and onewayAt, painted over every symbol: a tag beside one door can reach
+// another's at a corner. Legend only what is drawn; the portcullis's sample in a gap or between two
+// wall stubs, as the style paints the gap.
+export function doorSymbols(s: Scene, px: (p: Point) => Point, wall: number, portcullis: "gap" | "wall"): { gaps: string[]; symbols: string[]; marks: string[]; legend: LegendEntry[] } {
+  const gaps = s.doors
+    .flatMap((door) => [...(door.symbol === "portcullis" ? [door.segment] : []), ...(door.corridor && !door.secret ? [door.corridor.segment] : [])])
+    .map((g) => wallRect(g, px, wall / 2 + 1, "gap", wall));
+  const symbols = s.doors.flatMap((door) => {
+    switch (door.symbol) {
+      case "secret":
+        return [door.segment, ...(door.corridor ? [door.corridor.segment] : [])].map((e) => secretMark(e, px));
+      case "door":
+        return [wallRect(door.segment, px, doorAcross / 2, "door", wall)];
+      case "lock":
+        return [wallRect(door.segment, px, doorAcross / 2, "door", wall), barMark(door.segment, px)];
+      case "portcullis":
+        return dotMarks(door.segment, px);
+    }
+  });
+  const marks = s.doors.flatMap((door) => {
+    const horizontal = door.segment.from.y === door.segment.to.y;
+    const at = (p: Point) => ({ x: round(px(p).x), y: round(px(p).y) });
+    return [
+      ...(door.tagAt ? [tagMark(at(door.tagAt).x, at(door.tagAt).y, door.tag!, door.gates.map((g) => g.kind).join(" "))] : []),
+      ...(door.onewayAt ? [chevron(at(door.onewayAt), horizontal, door.oneway!, false)] : []),
+    ];
+  });
+  const drawn = (symbol: string) => s.doors.some((door) => door.symbol === symbol);
+  // Through the map's own marks, on a 14 px door half a wall past each end.
+  const sample: Segment = { from: { x: -wall / 2, y: -4 }, to: { x: 14 + wall / 2, y: -4 } };
+  const same = (p: Point) => p;
+  const gap = portcullis === "gap" ? wallRect(sample, same, wall / 2 + 1, "gap", wall) : `<path class="wall" d="M0 -4H2M12 -4H14"/>`;
+  const legend = [
+    ...(drawn("door") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall), text: "door" }] : []),
+    ...(drawn("lock") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall) + barMark(sample, same), text: "locked door" }] : []),
+    ...(drawn("portcullis") ? [{ mark: gap + dotMarks({ from: { x: 0, y: -4 }, to: { x: 14, y: -4 } }, same).join(""), text: "portcullis" }] : []),
+    ...(drawn("secret") ? [{ mark: `<text class="secret" x="7" y="0">S</text>`, text: "secret door" }] : []),
+    ...(s.doors.some((door) => door.onewayAt) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
+    ...(s.doors.some((door) => door.tagAt) ? [{ mark: tagMark(7, -4, ""), text: "gate" }] : []),
+  ];
+  return { gaps, symbols, marks, legend };
+}
+
+// A secret door: the wall unbroken, an S across its middle.
+export function secretMark(s: Segment, px: (p: Point) => Point): string {
+  const [a, b] = [px(s.from), px(s.to)];
+  return `<text class="secret" x="${(a.x + b.x) / 2}" y="${(a.y + b.y) / 2 + 4.5}">S</text>`;
+}
+
+// A rectangle over the wall along the door, h px each side of it and half a wall short at each end,
+// so a door flush with a corner leaves the other wall whole: a gap (a pixel wider than the wall) or
+// a door.
+export function wallRect(s: Segment, px: (p: Point) => Point, h: number, cls: string, wall: number): string {
+  const [a, b] = [px(s.from), px(s.to)];
+  const r = a.y === b.y
+    ? { x: Math.min(a.x, b.x) + wall / 2, y: a.y - h, w: Math.abs(b.x - a.x) - wall, h: 2 * h }
+    : { x: a.x - h, y: Math.min(a.y, b.y) + wall / 2, w: 2 * h, h: Math.abs(b.y - a.y) - wall };
+  return `<rect class="${cls}" x="${round(r.x)}" y="${round(r.y)}" width="${round(r.w)}" height="${round(r.h)}"/>`;
+}
+
+// A lock: a bar across the door rectangle's middle, along the normal.
+export function barMark(s: Segment, px: (p: Point) => Point): string {
+  const [a, b] = [px(s.from), px(s.to)];
+  const m = { x: round((a.x + b.x) / 2), y: round((a.y + b.y) / 2) };
+  const h = barLength / 2;
+  return a.y === b.y
+    ? `<line class="bar" x1="${m.x}" y1="${m.y - h}" x2="${m.x}" y2="${m.y + h}"/>`
+    : `<line class="bar" x1="${m.x - h}" y1="${m.y}" x2="${m.x + h}" y2="${m.y}"/>`;
+}
+
+// A portcullis: dots evenly along the gap, on the wall line.
+export function dotMarks(s: Segment, px: (p: Point) => Point): string[] {
+  const [a, b] = [px(s.from), px(s.to)];
+  return Array.from({ length: dots }, (_, i) => {
+    const f = (i + 1) / (dots + 1);
+    return `<circle class="dot" cx="${round(a.x + (b.x - a.x) * f)}" cy="${round(a.y + (b.y - a.y) * f)}" r="${dotRadius}"/>`;
+  });
 }

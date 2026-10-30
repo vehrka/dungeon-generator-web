@@ -97,7 +97,7 @@ share (`mix(page, colour, share)`); contrast is the number ink on that fill (WCA
 | page | `#0b0814` | the reference's indigo-black, darker |
 | corridor fill | `#141a2a` | |
 | corridor outline | `#2b3550` | 1 px |
-| ink | `#eef2ff` | numbers, glyphs, jambs, key text |
+| ink | `#eef2ff` | numbers, glyphs, door outlines, bars, dots, S, chevrons, key text |
 | muted | `#7d86a8` | key numbers, meta line |
 | rule | `#232a40` | key column rules |
 | gate | `#ffd23f` | tag outline and letter, on the page colour |
@@ -123,9 +123,23 @@ accepted for now, open point.
 ### Doors and gates
 
 Same symbol set as Dyson (door, archway, secret, lock bar, portcullis, gate tag, one-way chevron),
-geometry from `scene.ts`, drawn in neon: ink strokes, gaps in the corridor fill, gate tags as
-gate-yellow outlined boxes with a yellow letter on the page colour. The mock-up only restyles the
-the plain style's gaps and jambs; symbol sizes are the doors step's.
+geometry and tag/chevron positions from `scene.ts`, symbols from `marks.ts` (shared with Dyson, wall
+width an argument), drawn in neon over the 2 px wall:
+
+| symbol | room a end | corridor's room b end |
+|--------|------------|-----------------------|
+| door | rectangle, page fill, ink 1.5 px outline, 8 px across, segment − wall long | archway |
+| lock | door rectangle + ink bar along the normal, 12 px | archway |
+| portcullis | gap + 3 ink dots (r 1.5 px) on the wall line | archway |
+| secret | ink S, 13 px bold, page-colour halo, on the unbroken wall | S |
+
+Gap (archway, portcullis): the corridor fill, a pixel wider than the wall each side, so a
+room-to-room portcullis is a dark doorway between two fills. Gate tags as gate-yellow outlined boxes
+with a yellow letter on the page colour, beside the door in room a; one-way chevrons ink, on room
+b's side. Paint order: glows, corridors, fills, walls, gaps, symbols, tags and chevrons, numbers
+and glyphs. Tuned by eye (l-1, m-1, generated cyber M 1 and L 2): Dyson's 8 px rectangle reads
+well against the 2 px wall, page fill keeps it a hole in the glow; bar and dots in ink, the tag
+alone carries the gate yellow.
 
 ### Type
 
@@ -137,8 +151,9 @@ painter sets 12 px.
 
 ### Legend
 
-Gate, corridor, secret and one-way as in Dyson, plus one swatch per role used on the map (start,
-goal, boss, pickup, treasure), so the colours read without the key. Not in the mock-up.
+One swatch per role used on the map (start, goal, boss, pickup, treasure), so the colours read
+without the key, then corridor, then Dyson's door entries, each only when drawn: door, locked
+door, portcullis, secret door, one-way, gate. Not in the mock-up.
 
 ## Testing
 
@@ -152,7 +167,8 @@ PNG of m-1 and l-1 and a generated cyber L; time and SVG size of l-1 noted here 
 
 Core step, l-1, layout seed 1, render only (layout excluded), mean of 20: plain 0.8 ms, 31.0 kB;
 neon 0.9 ms, 38.8 kB (Dyson 102 ms, 421 kB). Each outline once in `<defs>`, its five passes
-(3 glows, fill, wall) as `<use>`.
+(3 glows, fill, wall) as `<use>`. Doors step: neon 0.7–0.9 ms, 29.0 kB (the plain gaps' `<g>`
+groups with jambs gone).
 
 ## Steps
 

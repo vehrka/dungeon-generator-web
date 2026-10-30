@@ -421,10 +421,99 @@ describe("neon", () => {
     expect(neon).toContain(".r-goal{fill:#6d1662;stroke:#ff2bd6}");
   });
 
-  it("keeps the plain style's door gaps, jambs and gate tags for now", () => {
-    expect(n(/<g class="door/g)).toBe(s.doors.length + s.doors.filter((d) => d.corridor).length);
-    const tags = [...neon.matchAll(/<rect class="tag" data-gate="[^"]+"[^>]*\/><text class="tag-letter" [^>]*>([A-Z]+)<\/text>/g)].map((m) => m[1]);
+  const map = neon.slice(0, neon.indexOf('<text class="heading"')); // the key draws tags and the legend symbols too
+  const m = (re: RegExp) => map.match(re)?.length ?? 0;
+
+  it("draws each door group's symbol at room a's end, an archway at a corridor's room b end", () => {
+    const by = (symbol: string) => s.doors.filter((d) => d.symbol === symbol).length;
+    expect(by("lock")).toBe(3);
+    expect(by("portcullis")).toBe(1);
+    expect(m(/<rect class="door"/g)).toBe(by("door") + by("lock"));
+    expect(m(/<line class="bar"/g)).toBe(by("lock"));
+    expect(m(/<circle class="dot"/g)).toBe(3 * by("portcullis"));
+    expect(m(/<text class="secret"/g)).toBe(s.doors.filter((d) => d.secret).reduce((k, d) => k + (d.corridor ? 2 : 1), 0));
+    expect(m(/<rect class="gap"/g)).toBe(s.doors.filter((d) => d.corridor && !d.secret).length + by("portcullis"));
+    expect(neon).not.toMatch(/class="(jamb|dash)"|gap-corridor/);
+    for (const text of ["door", "locked door", "portcullis", "gate"]) expect(neon).toMatch(new RegExp(`<text[^>]*>${text}</text>`));
+  });
+
+  it("tags every gate beside its door, as in the key", () => {
+    const tags = [...map.matchAll(/<rect class="tag" data-gate="[^"]+"[^>]*\/><text class="tag-letter" [^>]*>([A-Z]+)<\/text>/g)].map((t) => t[1]);
     expect(tags).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("paints walls, gaps, symbols, tags and chevrons, then numbers, in that order", () => {
+    const first = (re: RegExp) => map.search(re);
+    const last = (re: RegExp) => {
+      const at = [...map.matchAll(new RegExp(re, "g"))].map((x) => x.index!);
+      expect(at.length).toBeGreaterThan(0); // else -Infinity passes every comparison
+      return Math.max(...at);
+    };
+    const symbol = /<rect class="door"|<line class="bar"|<circle class="dot"|<text class="secret"/;
+    expect(last(/<use href="#room-\d+" class="wall/)).toBeLessThan(first(/<rect class="gap"/));
+    expect(last(/<rect class="gap"/)).toBeLessThan(first(symbol));
+    expect(last(symbol)).toBeLessThan(first(/<rect class="tag"/));
+    expect(last(/<rect class="tag"/)).toBeLessThan(first(/<text class="number"/));
+  });
+
+  // Room 0 above room 1, every door on the shared wall y 3, x 1–2: 81–105 px at 195 px, middle 93.
+  const shape = { id: "rect-3x3", outline: rectangle(3, 3) };
+  const two = (doors: RoomGraph["doors"]) =>
+    render(
+      { rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])), doors, start: 0, goal: 1 },
+      { placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 3 } }], doors: doors.map((door) => ({ door, segment: { from: { x: 1, y: 3 }, to: { x: 2, y: 3 } } })) },
+      { ...meta, style: "neon" },
+    );
+  const legend = (out: string) => [...out.matchAll(/<g transform="translate\([^)]*\)">.*?<\/g>\n<text [^>]*>([^<]+)<\/text>/g)].map((x) => x[1]);
+
+  it("draws a plain door as a rectangle across the 2 px wall, a wall short of the segment", () => {
+    const out = two([{ a: 0, b: 1, oneway: false }]);
+    expect(out).toContain('<rect class="door" x="82" y="191" width="22" height="8"/>');
+    expect(out).not.toMatch(/class="(gap|bar|dot|secret|oneway|tag)"/);
+    expect(legend(out)).toEqual(["start", "goal", "start room", "goal room", "door"]);
+  });
+
+  it("bars a locked door, dots a portcullis in a gap, both tagged 0.6 unit into room a, off the door", () => {
+    const lock = two([{ a: 0, b: 1, oneway: false, gate: { kind: "lock", requires: [] } }]);
+    expect(lock).toContain('<rect class="door" x="82" y="191"');
+    expect(lock).toContain('<line class="bar" x1="93" y1="189" x2="93" y2="201"/>');
+    expect(lock).toContain('<rect class="tag" data-gate="lock" x="86" y="173.6" width="14" height="14"/>'); // 93, 180.6
+    expect(legend(lock)).toEqual(["start", "goal", "start room", "goal room", "locked door", "gate"]);
+    const portcullis = two([{ a: 1, b: 0, oneway: false, gate: { kind: "on", requires: [] } }]);
+    expect(portcullis).not.toContain('<rect class="door"');
+    expect(portcullis).toContain('<rect class="gap" x="82" y="193" width="22" height="4"/>');
+    expect(portcullis.match(/<circle class="dot" cx="(87|93|99)" cy="195"/g)).toHaveLength(3);
+    expect(portcullis).toContain('<rect class="tag" data-gate="on" x="86" y="202.4" width="14" height="14"/>'); // room a below
+    expect(legend(portcullis)).toEqual(["start", "goal", "start room", "goal room", "portcullis", "gate"]);
+  });
+
+  it("draws a secret door as an S on the unbroken wall, a one-way door with a chevron on room b's side", () => {
+    const secret = two([{ a: 0, b: 1, oneway: false, gate: { kind: "secret", requires: [] } }]);
+    expect(secret).not.toMatch(/<rect class="(gap|door)"/);
+    expect(secret).toContain('<text class="secret" x="93" y="199.5">S</text>');
+    expect(legend(secret)).toEqual(["start", "goal", "start room", "goal room", "secret door"]);
+    const oneway = two([{ a: 0, b: 1, oneway: true }]);
+    expect(oneway).toContain('<polyline class="oneway" points="89,207.4 93,211.4 97,207.4"/>'); // down, 0.6 unit below the door
+    expect(two([{ a: 1, b: 0, oneway: true }])).toContain('<polyline class="oneway" points="89,182.6 93,178.6 97,182.6"/>'); // up
+    expect(legend(oneway)).toEqual(["start", "goal", "start room", "goal room", "door", "one-way"]);
+  });
+
+  it("puts a corridor's door symbol and tag at room a's end, an archway and the chevron at room b's", () => {
+    const g: RoomGraph = { rooms: new Map([0, 1].map((id) => [id, { id, type: "n", number: id + 1, label: `R${id}`, objects: [] }])), doors: [{ a: 0, b: 1, oneway: true, gate: { kind: "lock", requires: [] } }], start: 0, goal: 1 };
+    const l: Layout = {
+      placements: [{ room: 0, shape, at: { x: 0, y: 0 } }, { room: 1, shape, at: { x: 0, y: 4 } }],
+      doors: [{ door: g.doors[0]!, segment: { from: { x: 1, y: 3 }, to: { x: 2, y: 3 } }, corridor: { shape: { id: "corridor-v1", outline: rectangle(1, 1) }, at: { x: 1, y: 3 }, segment: { from: { x: 1, y: 4 }, to: { x: 2, y: 4 } } } }],
+    };
+    const out = render(g, l, { ...meta, style: "neon" });
+    expect(out.match(/<rect class="door" x="82" y="191"/g)).toHaveLength(1); // room a's end, y 3
+    expect(out.match(/<rect class="gap" x="82" y="217"/g)).toHaveLength(1); // room b's end, y 4
+    expect(out).toContain('<rect class="tag" data-gate="lock" x="86" y="173.6"');
+    expect(out).toContain('<polyline class="oneway" points="89,207.4 93,211.4 97,207.4"/>'); // in the corridor
+    expect(legend(out)).toEqual(["start", "goal", "start room", "goal room", "corridor", "locked door", "one-way", "gate"]);
+  });
+
+  it("lists no door symbol in the legend without doors", () => {
+    expect(legend(two([]))).toEqual(["start", "goal", "start room", "goal room"]);
   });
 
   it("lists the roles drawn in the legend, not the other tones", () => {
@@ -452,6 +541,7 @@ describe("neon", () => {
     expect(neon).not.toMatch(/#f0a000|#e5e5e5|#f6f8f7|#b2b2b2|#ffffff|#000000|#999999/i);
     expect(neon).toMatch(/text\{font-family:'DejaVu Sans Mono'.*monospace;font-size:12px;fill:#eef2ff\}/);
     expect(neon).toContain(".tag{fill:#0b0814;stroke:#ffd23f;stroke-width:1}");
+    expect(neon).toContain(".door{fill:#0b0814;stroke:#eef2ff;stroke-width:1.5}");
   });
 
   it("is deterministic", () => {

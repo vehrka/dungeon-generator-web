@@ -52,7 +52,10 @@ Design in [docs/neon-style.md](docs/neon-style.md).
   `styleFor("cyber")` → neon. Done: catalogue renamed plain; style by theme cyber → neon, zelda →
   Dyson, other or none → plain; role legend; doors as plain gaps meanwhile; neon in the viewer
   select; l-1 0.9 ms, 38.8 kB; plain and Dyson dumps byte-identical (`docs/plans/21-neon-core.md`).
-- [ ] 3. **doors and gates**: Dyson's symbol set from `scene.ts`, in neon.
+- [x] 3. **doors and gates** (`feature/neon-doors`): Dyson's symbol set from `scene.ts`, in neon.
+  Done: symbols moved to `marks.ts`, wall width an argument; 8 px page-fill rectangles, ink bar,
+  dots and S, archways in the corridor fill; cyber L 2's E and F apart; l-1 0.7–0.9 ms, 29.0 kB;
+  plain and Dyson dumps byte-identical (`docs/plans/23-neon-doors.md`).
 - [ ] 4. **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
   clear of numbers and glyphs.
 - [x] 5. **viewer**: done in step 2 and `feature/one-theme-select`: one theme select (zelda, cyber,
@@ -77,8 +80,9 @@ Design in [docs/neon-style.md](docs/neon-style.md).
   graph, seed and config without labels would skip it. Revisit if either bites.
 - `normalize` does not check `theme` is a string: a loaded `"theme": 5` fails in the render with
   `s.replace is not a function` instead of a schema error.
-- Render (plain, applies to Dyson too): key column width estimated from character counts; 4+
+- Render (plain, applies to Dyson and neon too): key column width estimated from character counts; 4+
   glyphs spill out of a 3-unit room. Plain: gate tags and chevrons can touch on short walls with
-  several doors. Dyson: tags beside the door, pushed apart from other tags unless the room is too
-  shallow; not checked against other doors' chevrons (0 overlaps on 286 maps); a tag can touch the
-  other door's rectangle at an L/T corner.
+  several doors; its chevron sits past its own tag (`chevron`'s `tag` flag), not at the scene's
+  `onewayAt` as in Dyson and neon. Dyson and neon (same `scene.ts` positions): tags beside the door, pushed apart from other
+  tags unless the room is too shallow; not checked against other doors' chevrons (0 overlaps on
+  286 maps); a tag can touch the other door's rectangle at an L/T corner.
