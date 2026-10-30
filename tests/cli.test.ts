@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { main, parseCli } from "../src/cli/main";
+import { main, parseCli, parseGrammar } from "../src/cli/main";
 import { drawGraph } from "../src/render/graph";
 
 const fixture = join(import.meta.dirname, "fixtures", "ruin.json");
@@ -177,6 +177,21 @@ describe("main", () => {
     expect(await main([bad, "-o", badMap, "--graph", badGraph], quiet)).toBe(1);
     expect(readFileSync(badGraph, "utf8")).toMatch(/^<svg /);
     expect(existsSync(badMap)).toBe(false);
+  });
+
+  it("takes a grammar sheet output alone, rejects one that is not .svg", () => {
+    expect(parseGrammar(["--grammar", "docs/grammar.svg"])).toBe("docs/grammar.svg");
+    expect(parseGrammar(["a.json"])).toBeUndefined();
+    expect(() => parseGrammar(["--grammar", "g.png"])).toThrow("--grammar must end in .svg: g.png");
+    expect(() => parseGrammar(["--grammar", "g.svg", "--size", "M"])).toThrow(/size/);
+    expect(() => parseGrammar(["a.json", "--grammar", "g.svg"])).toThrow("--grammar takes no other option: a.json");
+    expect(() => parseGrammar(["--dungeon-seed", "7", "--key", "--grammar"])).toThrow(/'--key' argument is ambiguous/); // not grammar mode
+  });
+
+  it("writes the grammar sheet", async () => {
+    const sheet = join(tmp(), "grammar.svg");
+    expect(await main(["--grammar", sheet], quiet)).toBe(0);
+    expect(readFileSync(sheet, "utf8")).toMatch(/^<svg [^]*Combined dungeon grammar/);
   });
 
   it("takes the theme in any case", () => {

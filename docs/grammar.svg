@@ -1,0 +1,916 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2225" height="1596" viewBox="0 0 2225 1596">
+<style>
+text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-serif;font-size:13px;font-weight:100;fill:#000}
+.room{fill:#fff;stroke:#000;stroke-width:1}
+.corridor{fill:#e5e5e5;stroke:#000;stroke-width:1}
+.number{font-size:19px;font-weight:300;text-anchor:middle}
+.gap{fill:#fff}
+.gap-corridor{fill:#e5e5e5}
+.jamb,.dash{stroke:#000;stroke-width:1}
+.dash{stroke-dasharray:2 2}
+.oneway{fill:none;stroke:#000;stroke-width:1.5}
+.tag{fill:#f0a000}
+.tag-letter{font-size:10px;font-weight:300;text-anchor:middle}
+.glyph{fill:none;stroke:#000;stroke-width:1}
+.title{font-size:19px;font-weight:300}
+.muted{fill:#b2b2b2}
+.heading{font-weight:300}
+.rule{stroke:#e5e5e5;stroke-width:1}
+</style>
+<style>
+.g-node{font-size:12px;font-weight:400;text-anchor:middle}
+.g-node tspan.g-number{font-weight:700}
+.g-room{stroke:none}
+.g-special{fill:#f0d24a;stroke:#000;stroke-width:1.5}
+.g-item{fill:#56b4e9;stroke:none}
+.g-switch{fill:#e39ac8;stroke:none}
+.edge{fill:none;stroke:#555;stroke-width:1}
+.edge.one{stroke:#111;stroke-width:2}
+.edge.lock{stroke:#c0601a;stroke-width:2}
+.edge.state,.edge.on,.edge.off{stroke:#b34d8f;stroke-width:2}
+.edge.off,.edge.secret{stroke-dasharray:5 3}
+.edge.secret{stroke:#888}
+.g-label{font-size:10px;font-weight:400;paint-order:stroke;stroke:#eef0f3;stroke-width:3px;stroke-linejoin:round}
+</style>
+<style>
+.s-title{font-size:26px;font-weight:700}
+.s-sub{font-size:13px;font-weight:400;fill:#555}
+.card{fill:#fff;stroke:#d0d0d0;stroke-width:1}
+.head{fill:#2f343c}
+.head-title{font-size:14px;font-weight:700;fill:#fff}
+.head-sub{font-size:11px;font-weight:400;fill:#c9ced6}
+.col{font-size:9px;font-weight:400;fill:#777;text-anchor:middle}
+.range{font-size:11px;font-weight:400;text-anchor:middle}
+.name{font-size:9px;font-weight:400;fill:#555}
+.body{font-size:11px;font-weight:400}
+.note{font-size:9px;font-weight:400;fill:#555}
+.cell{font-size:11px;font-weight:400;text-anchor:middle}
+.key{font-size:11px;font-weight:700}
+.g-label{stroke:#fff}
+.tint .g-label{stroke:#f6f7f9}
+</style>
+<rect width="2225" height="1596" fill="#eef0f3"/>
+<text class="s-title" x="40" y="64">Combined dungeon grammar</text>
+<text class="s-sub" x="455.4" y="64">sizes XS / S / M / L · one d20 per rule</text>
+<g data-card="how-to">
+<rect class="card" x="40" y="90" width="727" height="246"/>
+<rect class="head" x="40" y="90" width="727" height="28"/>
+<text class="head-title" x="50" y="109">How to use</text>
+<text class="head-sub" x="149.6" y="109"></text>
+<text class="body" x="50" y="139.2">1. Pick a size preset: XS, S, M or L. Its column gives the d20 ranges.</text>
+<text class="body" x="50" y="155.2">2. Start with Start(): START and GOAL are its anchors.</text>
+<text class="body" x="50" y="171.2">3. While red nodes remain: pick one, roll d20, replace it with the diagram of its range.</text>
+<text class="body" x="75.5" y="187.2">Blue = node before it, teal = node after it. Edges keep their direction.</text>
+<text class="body" x="50" y="203.2">4. R() last, on its tier: early, middle or late by progress to the boss; late near a boss.</text>
+<text class="body" x="50" y="219.2">5. GB() on the theme's rewards. Objects (keys, switches, levers, item) are new per rule.</text>
+<text class="body" x="50" y="235.2">6. Finally merge neighbouring n / e / t / p / c rooms of one type on plain two-way paths.</text>
+<text class="body" x="50" y="251.2"></text>
+<text class="body" x="50" y="267.2">Why it stays small and solvable:</text>
+<text class="body" x="50" y="283.2">• Only L() and S() recurse. Every other rule expands once into a fixed shape.</text>
+<text class="body" x="50" y="299.2">• Each lock rule places its key on a branch that forks before the lock.</text>
+<text class="body" x="50" y="315.2">• Odds keep the expected size finite (ρ below 1). As a cap, past</text>
+<text class="body" x="69.1" y="331.2">300 nodes or 200 expansions L() and S() take room and end.</text>
+</g>
+<g data-card="legend">
+<rect class="card" x="40" y="354" width="727" height="344"/>
+<rect class="head" x="40" y="354" width="727" height="28"/>
+<text class="head-title" x="50" y="373">Legend</text>
+<text class="head-sub" x="113.8" y="373"></text>
+<g data-legend="prev" transform="translate(50 407)"><rect x="0" y="-11" width="22" height="14" rx="4" fill="#7b8cde"/></g>
+<text class="body" x="164" y="407">previous node (incoming anchor)</text>
+<g data-legend="next" transform="translate(50 427)"><rect x="0" y="-11" width="22" height="14" rx="4" fill="#7fd6d6"/></g>
+<text class="body" x="164" y="427">next node (outgoing anchor)</text>
+<g data-legend="nt" transform="translate(50 447)"><rect x="0" y="-11" width="22" height="14" rx="4" fill="#e8735a"/></g>
+<text class="body" x="164" y="447">non-terminal: expand with its rule</text>
+<g data-legend="room" transform="translate(50 467)"><rect x="0" y="-11" width="22" height="14" rx="4" fill="#7cc98f"/></g>
+<text class="body" x="164" y="467">room (terminal): n e t p c em eb gb</text>
+<g data-legend="item" transform="translate(50 487)"><ellipse cx="11" cy="-4" rx="11" ry="7" fill="#56b4e9"/></g>
+<text class="body" x="164" y="487">pickup: small key, boss key, dungeon item</text>
+<g data-legend="switch" transform="translate(50 507)"><polygon points="0,-4 5,-11 17,-11 22,-4 17,3 5,3" fill="#e39ac8"/></g>
+<text class="body" x="164" y="507">switch / lever (sets a state)</text>
+<g data-legend="special" transform="translate(50 527)"><rect x="0" y="-11" width="22" height="14" rx="4" fill="#f0d24a" stroke="#000" stroke-width="1.5"/></g>
+<text class="body" x="164" y="527">START, GOAL, extra entrance</text>
+<g data-legend="both" transform="translate(50 547)"><path class="edge both" d="M0 -4H22"/></g>
+<text class="body" x="164" y="547">two-way path</text>
+<g data-legend="one" transform="translate(50 567)"><path class="edge one" d="M0 -4H22"/><polygon class="arrow" fill="#111" points="22,-4 13,0 13,-8"/></g>
+<text class="body" x="164" y="567">one-way path (drop, ledge)</text>
+<g data-legend="lock" transform="translate(50 587)"><path class="edge lock" d="M0 -4H22"/></g>
+<text class="key" x="84" y="587" fill="#c0601a">[key]</text>
+<text class="body" x="164" y="587">locked: needs that object</text>
+<g data-legend="state" transform="translate(50 607)"><path class="edge state" d="M0 -4H22"/></g>
+<text class="key" x="84" y="607" fill="#b34d8f">[switch]</text>
+<text class="body" x="164" y="607">state gate: open when all switches hit</text>
+<g data-legend="on" transform="translate(50 627)"><path class="edge on" d="M0 -4H22"/></g>
+<text class="key" x="84" y="627" fill="#b34d8f">[lever ON]</text>
+<text class="body" x="164" y="627">toggle gate: open with the lever ON</text>
+<g data-legend="off" transform="translate(50 647)"><path class="edge off" d="M0 -4H22"/></g>
+<text class="key" x="84" y="647" fill="#b34d8f">[lever OFF]</text>
+<text class="body" x="164" y="647">toggle gate: open with the lever OFF</text>
+<g data-legend="secret" transform="translate(50 667)"><path class="edge secret" d="M0 -4H22"/></g>
+<text class="key" x="84" y="667" fill="#666">secret</text>
+<text class="body" x="164" y="667">hidden path (bombable wall)</text>
+<text class="note" x="50" y="684">n nothing · e enemy · t trap · p puzzle · c challenge · em mini-boss · eb boss · gb bonus goal</text>
+</g>
+<g data-rule="Start">
+<rect class="card" x="40" y="716" width="727" height="216"/>
+<rect class="head" x="40" y="716" width="727" height="28"/>
+<text class="head-title" x="50" y="735">Start()</text>
+<text class="head-sub" x="122.7" y="735">Dungeon start (prev = START, next = GOAL)</text>
+<text class="col" x="63" y="758">XS</text>
+<text class="col" x="109" y="758">S</text>
+<text class="col" x="155" y="758">M</text>
+<text class="col" x="201" y="758">L</text>
+<g data-variant="Start boss only">
+<text class="range" x="63" y="789">1-20</text>
+<text class="range" x="109" y="789">—</text>
+<text class="range" x="155" y="789">—</text>
+<text class="range" x="201" y="789">—</text>
+<text class="name" x="234" y="788">boss only</text>
+<path class="edge both" data-edge="1-2" d="M356 785L392 785"/>
+<path class="edge both" data-edge="2-3" d="M439 785L475 785"/>
+<rect class="g-special" x="302" y="772" width="54" height="26" rx="6"/>
+<text class="g-node" x="329" y="789" fill="#000">START</text>
+<rect class="g-room" fill="#e8735a" x="392" y="772" width="47" height="26" rx="6"/>
+<text class="g-node" x="415.5" y="789" fill="#000">BK()</text>
+<rect class="g-special" x="475" y="772" width="47" height="26" rx="6"/>
+<text class="g-node" x="498.5" y="789" fill="#000">GOAL</text>
+</g>
+<g class="tint" data-variant="Start key wing">
+<rect x="40.5" y="806" width="726" height="42" fill="#f6f7f9"/>
+<text class="range" x="63" y="831">—</text>
+<text class="range" x="109" y="831">1-12</text>
+<text class="range" x="155" y="831">1-4</text>
+<text class="range" x="201" y="831">—</text>
+<text class="name" x="234" y="830">key wing</text>
+<path class="edge both" data-edge="1-2" d="M356 827L392 827"/>
+<path class="edge both" data-edge="2-3" d="M432 827L468 827"/>
+<path class="edge both" data-edge="3-4" d="M515 827L551 827"/>
+<rect class="g-special" x="302" y="814" width="54" height="26" rx="6"/>
+<text class="g-node" x="329" y="831" fill="#000">START</text>
+<rect class="g-room" fill="#e8735a" x="392" y="814" width="40" height="26" rx="6"/>
+<text class="g-node" x="412" y="831" fill="#000">K()</text>
+<rect class="g-room" fill="#e8735a" x="468" y="814" width="47" height="26" rx="6"/>
+<text class="g-node" x="491.5" y="831" fill="#000">BK()</text>
+<rect class="g-special" x="551" y="814" width="47" height="26" rx="6"/>
+<text class="g-node" x="574.5" y="831" fill="#000">GOAL</text>
+</g>
+<g data-variant="Start item">
+<text class="range" x="63" y="873">—</text>
+<text class="range" x="109" y="873">13-20</text>
+<text class="range" x="155" y="873">5-16</text>
+<text class="range" x="201" y="873">1-8</text>
+<text class="name" x="234" y="872">item</text>
+<path class="edge both" data-edge="1-2" d="M356 869L392 869"/>
+<path class="edge both" data-edge="2-3" d="M432 869L468 869"/>
+<path class="edge both" data-edge="3-4" d="M515 869L551 869"/>
+<path class="edge both" data-edge="4-5" d="M598 869L634 869"/>
+<rect class="g-special" x="302" y="856" width="54" height="26" rx="6"/>
+<text class="g-node" x="329" y="873" fill="#000">START</text>
+<rect class="g-room" fill="#e8735a" x="392" y="856" width="40" height="26" rx="6"/>
+<text class="g-node" x="412" y="873" fill="#000">E()</text>
+<rect class="g-room" fill="#e8735a" x="468" y="856" width="47" height="26" rx="6"/>
+<text class="g-node" x="491.5" y="873" fill="#000">IG()</text>
+<rect class="g-room" fill="#e8735a" x="551" y="856" width="47" height="26" rx="6"/>
+<text class="g-node" x="574.5" y="873" fill="#000">BK()</text>
+<rect class="g-special" x="634" y="856" width="47" height="26" rx="6"/>
+<text class="g-node" x="657.5" y="873" fill="#000">GOAL</text>
+</g>
+<g class="tint" data-variant="Start item + wing">
+<rect x="40.5" y="890" width="726" height="42" fill="#f6f7f9"/>
+<text class="range" x="63" y="915">—</text>
+<text class="range" x="109" y="915">—</text>
+<text class="range" x="155" y="915">17-20</text>
+<text class="range" x="201" y="915">9-20</text>
+<text class="name" x="234" y="914">item + wing</text>
+<path class="edge both" data-edge="1-2" d="M356 911L392 911"/>
+<path class="edge both" data-edge="2-3" d="M432 911L468 911"/>
+<path class="edge both" data-edge="3-4" d="M515 911L551 911"/>
+<path class="edge both" data-edge="4-5" d="M591 911L627 911"/>
+<path class="edge both" data-edge="5-6" d="M674 911L710 911"/>
+<rect class="g-special" x="302" y="898" width="54" height="26" rx="6"/>
+<text class="g-node" x="329" y="915" fill="#000">START</text>
+<rect class="g-room" fill="#e8735a" x="392" y="898" width="40" height="26" rx="6"/>
+<text class="g-node" x="412" y="915" fill="#000">E()</text>
+<rect class="g-room" fill="#e8735a" x="468" y="898" width="47" height="26" rx="6"/>
+<text class="g-node" x="491.5" y="915" fill="#000">IG()</text>
+<rect class="g-room" fill="#e8735a" x="551" y="898" width="40" height="26" rx="6"/>
+<text class="g-node" x="571" y="915" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="627" y="898" width="47" height="26" rx="6"/>
+<text class="g-node" x="650.5" y="915" fill="#000">BK()</text>
+<rect class="g-special" x="710" y="898" width="47" height="26" rx="6"/>
+<text class="g-node" x="733.5" y="915" fill="#000">GOAL</text>
+</g>
+</g>
+<g data-rule="E">
+<rect class="card" x="40" y="950" width="727" height="180"/>
+<rect class="head" x="40" y="950" width="727" height="28"/>
+<text class="head-title" x="50" y="969">E()</text>
+<text class="head-sub" x="86.9" y="969">Entrance</text>
+<text class="col" x="63" y="992">XS</text>
+<text class="col" x="109" y="992">S</text>
+<text class="col" x="155" y="992">M</text>
+<text class="col" x="201" y="992">L</text>
+<g data-variant="E single">
+<text class="range" x="63" y="1023">1-20</text>
+<text class="range" x="109" y="1023">1-18</text>
+<text class="range" x="155" y="1023">1-15</text>
+<text class="range" x="201" y="1023">1-12</text>
+<text class="name" x="234" y="1022">single</text>
+<path class="edge both" data-edge="1-2" d="M338 1019L374 1019"/>
+<path class="edge both" data-edge="2-3" d="M414 1019L450 1019"/>
+<rect class="g-room" fill="#7b8cde" x="318" y="1006" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="374" y="1006" width="40" height="26" rx="6"/>
+<text class="g-node" x="394" y="1023" fill="#000">L()</text>
+<rect class="g-room" fill="#7fd6d6" x="450" y="1006" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="E extra entrance">
+<rect x="40.5" y="1040" width="726" height="90" fill="#f6f7f9"/>
+<text class="range" x="63" y="1089">—</text>
+<text class="range" x="109" y="1089">19-20</text>
+<text class="range" x="155" y="1089">16-20</text>
+<text class="range" x="201" y="1089">13-20</text>
+<text class="name" x="234" y="1088">extra entrance</text>
+<path class="edge both" data-edge="1-2" d="M338 1085L374 1085"/>
+<path class="edge both" data-edge="2-3" d="M414 1085L450 1085"/>
+<path class="edge both" data-edge="3-4" d="M490 1085L526 1085"/>
+<path class="edge both" data-edge="3-6" d="M490 1085Q552.8 1129 615.5 1109"/>
+<path class="edge both" data-edge="4-5" d="M566 1085L602 1061"/>
+<rect class="g-room" fill="#7b8cde" x="318" y="1072" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="374" y="1072" width="40" height="26" rx="6"/>
+<text class="g-node" x="394" y="1089" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="450" y="1072" width="40" height="26" rx="6"/>
+<text class="g-node" x="470" y="1089" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="526" y="1072" width="40" height="26" rx="6"/>
+<text class="g-node" x="546" y="1089" fill="#000">L()</text>
+<rect class="g-special" x="602" y="1048" width="47" height="26" rx="6"/>
+<text class="g-node" x="625.5" y="1065" fill="#000">EXIT</text>
+<rect class="g-room" fill="#7fd6d6" x="615.5" y="1096" width="20" height="26" rx="6"/>
+</g>
+</g>
+<g data-rule="R">
+<rect class="card" x="40" y="1148" width="727" height="258"/>
+<rect class="head" x="40" y="1148" width="727" height="28"/>
+<text class="head-title" x="50" y="1167">R()</text>
+<text class="head-sub" x="86.9" y="1167">Room chooser (terminal content) · rolled by progress to the boss, not by size</text>
+<text class="col" x="63" y="1190">early</text>
+<text class="col" x="109" y="1190">middle</text>
+<text class="col" x="155" y="1190">late</text>
+<g data-variant="R nothing">
+<text class="range" x="63" y="1221">1-5</text>
+<text class="range" x="109" y="1221">1-3</text>
+<text class="range" x="155" y="1221">1</text>
+<text class="name" x="188" y="1220">nothing</text>
+<path class="edge both" data-edge="1-2" d="M265 1217L301 1217"/>
+<path class="edge both" data-edge="2-3" d="M328 1217L364 1217"/>
+<rect class="g-room" fill="#7b8cde" x="245" y="1204" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="301" y="1204" width="27" height="26" rx="6"/>
+<text class="g-node" x="314.5" y="1221" fill="#000">n</text>
+<rect class="g-room" fill="#7fd6d6" x="364" y="1204" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="R enemy">
+<rect x="40.5" y="1238" width="726" height="42" fill="#f6f7f9"/>
+<text class="range" x="63" y="1263">6-11</text>
+<text class="range" x="109" y="1263">4-8</text>
+<text class="range" x="155" y="1263">2-6</text>
+<text class="name" x="188" y="1262">enemy</text>
+<path class="edge both" data-edge="1-2" d="M265 1259L301 1259"/>
+<path class="edge both" data-edge="2-3" d="M328 1259L364 1259"/>
+<rect class="g-room" fill="#7b8cde" x="245" y="1246" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="301" y="1246" width="27" height="26" rx="6"/>
+<text class="g-node" x="314.5" y="1263" fill="#000">e</text>
+<rect class="g-room" fill="#7fd6d6" x="364" y="1246" width="20" height="26" rx="6"/>
+</g>
+<g data-variant="R trap">
+<text class="range" x="63" y="1305">12</text>
+<text class="range" x="109" y="1305">9-11</text>
+<text class="range" x="155" y="1305">7-11</text>
+<text class="name" x="188" y="1304">trap</text>
+<path class="edge both" data-edge="1-2" d="M265 1301L301 1301"/>
+<path class="edge both" data-edge="2-3" d="M328 1301L364 1301"/>
+<rect class="g-room" fill="#7b8cde" x="245" y="1288" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="301" y="1288" width="27" height="26" rx="6"/>
+<text class="g-node" x="314.5" y="1305" fill="#000">t</text>
+<rect class="g-room" fill="#7fd6d6" x="364" y="1288" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="R puzzle">
+<rect x="40.5" y="1322" width="726" height="42" fill="#f6f7f9"/>
+<text class="range" x="63" y="1347">13-18</text>
+<text class="range" x="109" y="1347">12-16</text>
+<text class="range" x="155" y="1347">12-13</text>
+<text class="name" x="188" y="1346">puzzle</text>
+<path class="edge both" data-edge="1-2" d="M265 1343L301 1343"/>
+<path class="edge both" data-edge="2-3" d="M328 1343L364 1343"/>
+<rect class="g-room" fill="#7b8cde" x="245" y="1330" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="301" y="1330" width="27" height="26" rx="6"/>
+<text class="g-node" x="314.5" y="1347" fill="#000">p</text>
+<rect class="g-room" fill="#7fd6d6" x="364" y="1330" width="20" height="26" rx="6"/>
+</g>
+<g data-variant="R challenge">
+<text class="range" x="63" y="1389">19-20</text>
+<text class="range" x="109" y="1389">17-20</text>
+<text class="range" x="155" y="1389">14-20</text>
+<text class="name" x="188" y="1388">challenge</text>
+<path class="edge both" data-edge="1-2" d="M265 1385L301 1385"/>
+<path class="edge both" data-edge="2-3" d="M328 1385L364 1385"/>
+<rect class="g-room" fill="#7b8cde" x="245" y="1372" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="301" y="1372" width="27" height="26" rx="6"/>
+<text class="g-node" x="314.5" y="1389" fill="#000">c</text>
+<rect class="g-room" fill="#7fd6d6" x="364" y="1372" width="20" height="26" rx="6"/>
+</g>
+</g>
+<g data-rule="S">
+<rect class="card" x="40" y="1424" width="727" height="132"/>
+<rect class="head" x="40" y="1424" width="727" height="28"/>
+<text class="head-title" x="50" y="1443">S()</text>
+<text class="head-sub" x="86.9" y="1443">Linear sequence</text>
+<text class="col" x="63" y="1466">XS</text>
+<text class="col" x="109" y="1466">S</text>
+<text class="col" x="155" y="1466">M</text>
+<text class="col" x="201" y="1466">L</text>
+<g data-variant="S end">
+<text class="range" x="63" y="1497">1-18</text>
+<text class="range" x="109" y="1497">1-17</text>
+<text class="range" x="155" y="1497">1-16</text>
+<text class="range" x="201" y="1497">1-15</text>
+<text class="name" x="234" y="1496">end</text>
+<path class="edge both" data-edge="1-2" d="M306 1493L342 1493"/>
+<path class="edge both" data-edge="2-3" d="M382 1493L418 1493"/>
+<rect class="g-room" fill="#7b8cde" x="286" y="1480" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="342" y="1480" width="40" height="26" rx="6"/>
+<text class="g-node" x="362" y="1497" fill="#000">R()</text>
+<rect class="g-room" fill="#7fd6d6" x="418" y="1480" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="S continue">
+<rect x="40.5" y="1514" width="726" height="42" fill="#f6f7f9"/>
+<text class="range" x="63" y="1539">19-20</text>
+<text class="range" x="109" y="1539">18-20</text>
+<text class="range" x="155" y="1539">17-20</text>
+<text class="range" x="201" y="1539">16-20</text>
+<text class="name" x="234" y="1538">continue</text>
+<path class="edge both" data-edge="1-2" d="M306 1535L342 1535"/>
+<path class="edge both" data-edge="2-3" d="M382 1535L418 1535"/>
+<path class="edge both" data-edge="3-4" d="M458 1535L494 1535"/>
+<rect class="g-room" fill="#7b8cde" x="286" y="1522" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="342" y="1522" width="40" height="26" rx="6"/>
+<text class="g-node" x="362" y="1539" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="418" y="1522" width="40" height="26" rx="6"/>
+<text class="g-node" x="438" y="1539" fill="#000">S()</text>
+<rect class="g-room" fill="#7fd6d6" x="494" y="1522" width="20" height="26" rx="6"/>
+</g>
+</g>
+<g data-rule="L">
+<rect class="card" x="795" y="90" width="581" height="480"/>
+<rect class="head" x="795" y="90" width="581" height="28"/>
+<text class="head-title" x="805" y="109">L()</text>
+<text class="head-sub" x="841.9" y="109">Layout chooser (only recursive structure)</text>
+<text class="col" x="818" y="132">XS</text>
+<text class="col" x="864" y="132">S</text>
+<text class="col" x="910" y="132">M</text>
+<text class="col" x="956" y="132">L</text>
+<g data-variant="L room">
+<text class="range" x="818" y="163">1-14</text>
+<text class="range" x="864" y="163">1-12</text>
+<text class="range" x="910" y="163">1-9</text>
+<text class="range" x="956" y="163">1-7</text>
+<text class="name" x="989" y="162">room</text>
+<path class="edge both" data-edge="1-2" d="M1082 159L1118 159"/>
+<path class="edge both" data-edge="2-3" d="M1158 159L1194 159"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="146" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="146" width="40" height="26" rx="6"/>
+<text class="g-node" x="1138" y="163" fill="#000">R()</text>
+<rect class="g-room" fill="#7fd6d6" x="1194" y="146" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="L linear">
+<rect x="795.5" y="180" width="580" height="42" fill="#f6f7f9"/>
+<text class="range" x="818" y="205">15-17</text>
+<text class="range" x="864" y="205">13-15</text>
+<text class="range" x="910" y="205">10-12</text>
+<text class="range" x="956" y="205">8-10</text>
+<text class="name" x="989" y="204">linear</text>
+<path class="edge both" data-edge="1-2" d="M1082 201L1118 201"/>
+<path class="edge both" data-edge="2-3" d="M1158 201L1194 201"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="188" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="188" width="40" height="26" rx="6"/>
+<text class="g-node" x="1138" y="205" fill="#000">S()</text>
+<rect class="g-room" fill="#7fd6d6" x="1194" y="188" width="20" height="26" rx="6"/>
+</g>
+<g data-variant="L small key">
+<text class="range" x="818" y="247">—</text>
+<text class="range" x="864" y="247">16-17</text>
+<text class="range" x="910" y="247">13-14</text>
+<text class="range" x="956" y="247">11-12</text>
+<text class="name" x="989" y="246">small key</text>
+<path class="edge both" data-edge="1-2" d="M1082 243L1118 243"/>
+<path class="edge both" data-edge="2-3" d="M1158 243L1194 243"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="230" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="230" width="40" height="26" rx="6"/>
+<text class="g-node" x="1138" y="247" fill="#000">K()</text>
+<rect class="g-room" fill="#7fd6d6" x="1194" y="230" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="L switch">
+<rect x="795.5" y="264" width="580" height="42" fill="#f6f7f9"/>
+<text class="range" x="818" y="289">18</text>
+<text class="range" x="864" y="289">18</text>
+<text class="range" x="910" y="289">15</text>
+<text class="range" x="956" y="289">13-14</text>
+<text class="name" x="989" y="288">switch</text>
+<path class="edge both" data-edge="1-2" d="M1082 285L1118 285"/>
+<path class="edge both" data-edge="2-3" d="M1165 285L1201 285"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="272" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="272" width="47" height="26" rx="6"/>
+<text class="g-node" x="1141.5" y="289" fill="#000">SW()</text>
+<rect class="g-room" fill="#7fd6d6" x="1201" y="272" width="20" height="26" rx="6"/>
+</g>
+<g data-variant="L toggle">
+<text class="range" x="818" y="331">—</text>
+<text class="range" x="864" y="331">—</text>
+<text class="range" x="910" y="331">16</text>
+<text class="range" x="956" y="331">15</text>
+<text class="name" x="989" y="330">toggle</text>
+<path class="edge both" data-edge="1-2" d="M1082 327L1118 327"/>
+<path class="edge both" data-edge="2-3" d="M1165 327L1201 327"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="314" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="314" width="47" height="26" rx="6"/>
+<text class="g-node" x="1141.5" y="331" fill="#000">TG()</text>
+<rect class="g-room" fill="#7fd6d6" x="1201" y="314" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="L hook">
+<rect x="795.5" y="348" width="580" height="42" fill="#f6f7f9"/>
+<text class="range" x="818" y="373">19-20</text>
+<text class="range" x="864" y="373">19</text>
+<text class="range" x="910" y="373">17</text>
+<text class="range" x="956" y="373">16</text>
+<text class="name" x="989" y="372">hook</text>
+<path class="edge both" data-edge="1-2" d="M1082 369L1118 369"/>
+<path class="edge both" data-edge="2-3" d="M1158 369L1194 369"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="356" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="356" width="40" height="26" rx="6"/>
+<text class="g-node" x="1138" y="373" fill="#000">H()</text>
+<rect class="g-room" fill="#7fd6d6" x="1194" y="356" width="20" height="26" rx="6"/>
+</g>
+<g data-variant="L loop">
+<text class="range" x="818" y="439">—</text>
+<text class="range" x="864" y="439">20</text>
+<text class="range" x="910" y="439">18-19</text>
+<text class="range" x="956" y="439">17-18</text>
+<text class="name" x="989" y="438">loop</text>
+<path class="edge both" data-edge="1-2" d="M1082 435L1118 435"/>
+<path class="edge both" data-edge="2-3" d="M1158 435L1194 411"/>
+<path class="edge both" data-edge="2-4" d="M1158 435L1194 459"/>
+<path class="edge both" data-edge="3-5" d="M1234 411L1270 435"/>
+<path class="edge both" data-edge="4-5" d="M1234 459L1270 435"/>
+<path class="edge both" data-edge="5-6" d="M1310 435L1346 435"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="422" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="422" width="40" height="26" rx="6"/>
+<text class="g-node" x="1138" y="439" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1194" y="398" width="40" height="26" rx="6"/>
+<text class="g-node" x="1214" y="415" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1194" y="446" width="40" height="26" rx="6"/>
+<text class="g-node" x="1214" y="463" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1270" y="422" width="40" height="26" rx="6"/>
+<text class="g-node" x="1290" y="439" fill="#000">R()</text>
+<rect class="g-room" fill="#7fd6d6" x="1346" y="422" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="L one-way loop">
+<rect x="795.5" y="480" width="580" height="90" fill="#f6f7f9"/>
+<text class="range" x="818" y="529">—</text>
+<text class="range" x="864" y="529">—</text>
+<text class="range" x="910" y="529">20</text>
+<text class="range" x="956" y="529">19-20</text>
+<text class="name" x="989" y="528">one-way loop</text>
+<path class="edge both" data-edge="1-2" d="M1082 525L1118 525"/>
+<path class="edge one" data-edge="2-3" d="M1158 525L1194 501"/>
+<polygon class="arrow" fill="#111" points="1194,501 1188.7,509.3 1184.3,502.7"/>
+<path class="edge one" data-edge="2-4" d="M1158 525L1194 549"/>
+<polygon class="arrow" fill="#111" points="1158,525 1167.7,526.7 1163.3,533.3"/>
+<path class="edge one" data-edge="3-4" d="M1234 501Q1266 525 1234 549"/>
+<polygon class="arrow" fill="#111" points="1234,549 1238.8,540.4 1243.6,546.8"/>
+<path class="edge both" data-edge="4-5" d="M1234 549L1270 525"/>
+<rect class="g-room" fill="#7b8cde" x="1062" y="512" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1118" y="512" width="40" height="26" rx="6"/>
+<text class="g-node" x="1138" y="529" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1194" y="488" width="40" height="26" rx="6"/>
+<text class="g-node" x="1214" y="505" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1194" y="536" width="40" height="26" rx="6"/>
+<text class="g-node" x="1214" y="553" fill="#000">R()</text>
+<rect class="g-room" fill="#7fd6d6" x="1270" y="512" width="20" height="26" rx="6"/>
+</g>
+</g>
+<g data-card="size">
+<rect class="card" x="795" y="588" width="581" height="154"/>
+<rect class="head" x="795" y="588" width="581" height="28"/>
+<text class="head-title" x="805" y="607">Expected size</text>
+<text class="head-sub" x="931.5" y="607">rooms after merge, seeds 1-1000</text>
+<text class="col" x="822" y="630">preset</text>
+<text class="col" x="876" y="630">ρ</text>
+<text class="col" x="930" y="630">mean</text>
+<text class="col" x="984" y="630">p10</text>
+<text class="col" x="1038" y="630">median</text>
+<text class="col" x="1092" y="630">p90</text>
+<text class="col" x="1146" y="630">max</text>
+<text class="cell" x="822" y="650">XS</text>
+<text class="cell" x="876" y="650">0.20</text>
+<text class="cell" x="930" y="650">6.5</text>
+<text class="cell" x="984" y="650">6</text>
+<text class="cell" x="1038" y="650">6</text>
+<text class="cell" x="1092" y="650">8</text>
+<text class="cell" x="1146" y="650">11</text>
+<text class="cell" x="822" y="670">S</text>
+<text class="cell" x="876" y="670">0.46</text>
+<text class="cell" x="930" y="670">13.7</text>
+<text class="cell" x="984" y="670">10</text>
+<text class="cell" x="1038" y="670">13</text>
+<text class="cell" x="1092" y="670">19</text>
+<text class="cell" x="1146" y="670">31</text>
+<text class="cell" x="822" y="690">M</text>
+<text class="cell" x="876" y="690">0.61</text>
+<text class="cell" x="930" y="690">20.2</text>
+<text class="cell" x="984" y="690">13</text>
+<text class="cell" x="1038" y="690">18</text>
+<text class="cell" x="1092" y="690">30</text>
+<text class="cell" x="1146" y="690">61</text>
+<text class="cell" x="822" y="710">L</text>
+<text class="cell" x="876" y="710">0.71</text>
+<text class="cell" x="930" y="710">28.9</text>
+<text class="cell" x="984" y="710">17</text>
+<text class="cell" x="1038" y="710">26</text>
+<text class="cell" x="1092" y="710">45</text>
+<text class="cell" x="1146" y="710">91</text>
+<text class="note" x="805" y="728">ρ: spectral radius of the expected-offspring matrix. Below 1 = finite expected size.</text>
+</g>
+<g data-rule="GB">
+<rect class="card" x="795" y="760" width="581" height="216"/>
+<rect class="head" x="795" y="760" width="581" height="28"/>
+<text class="head-title" x="805" y="779">GB()</text>
+<text class="head-sub" x="850.8" y="779">Bonus goal · dead end · the theme's rewards (zelda shown)</text>
+<text class="col" x="818" y="802">XS</text>
+<text class="col" x="864" y="802">S</text>
+<text class="col" x="910" y="802">M</text>
+<text class="col" x="956" y="802">L</text>
+<g data-variant="GB heart piece">
+<text class="range" x="818" y="833">1-4</text>
+<text class="range" x="864" y="833">1-4</text>
+<text class="range" x="910" y="833">1-4</text>
+<text class="range" x="956" y="833">1-4</text>
+<text class="name" x="989" y="832">heart piece</text>
+<path class="edge both" data-edge="1-2" d="M1077 829L1113 829"/>
+<rect class="g-room" fill="#7b8cde" x="1057" y="816" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1113" y="816" width="122" height="26" rx="6"/>
+<text class="g-node" x="1174" y="833" fill="#000">gb: heart piece</text>
+</g>
+<g class="tint" data-variant="GB rupees">
+<rect x="795.5" y="850" width="580" height="42" fill="#f6f7f9"/>
+<text class="range" x="818" y="875">5-12</text>
+<text class="range" x="864" y="875">5-12</text>
+<text class="range" x="910" y="875">5-12</text>
+<text class="range" x="956" y="875">5-12</text>
+<text class="name" x="989" y="874">rupees</text>
+<path class="edge both" data-edge="1-2" d="M1077 871L1113 871"/>
+<rect class="g-room" fill="#7b8cde" x="1057" y="858" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1113" y="858" width="88" height="26" rx="6"/>
+<text class="g-node" x="1157" y="875" fill="#000">gb: rupees</text>
+</g>
+<g data-variant="GB bombs">
+<text class="range" x="818" y="917">13-16</text>
+<text class="range" x="864" y="917">13-16</text>
+<text class="range" x="910" y="917">13-16</text>
+<text class="range" x="956" y="917">13-16</text>
+<text class="name" x="989" y="916">bombs</text>
+<path class="edge both" data-edge="1-2" d="M1077 913L1113 913"/>
+<rect class="g-room" fill="#7b8cde" x="1057" y="900" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1113" y="900" width="81" height="26" rx="6"/>
+<text class="g-node" x="1153.5" y="917" fill="#000">gb: bombs</text>
+</g>
+<g class="tint" data-variant="GB arrows">
+<rect x="795.5" y="934" width="580" height="42" fill="#f6f7f9"/>
+<text class="range" x="818" y="959">17-20</text>
+<text class="range" x="864" y="959">17-20</text>
+<text class="range" x="910" y="959">17-20</text>
+<text class="range" x="956" y="959">17-20</text>
+<text class="name" x="989" y="958">arrows</text>
+<path class="edge both" data-edge="1-2" d="M1077 955L1113 955"/>
+<rect class="g-room" fill="#7b8cde" x="1057" y="942" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1113" y="942" width="88" height="26" rx="6"/>
+<text class="g-node" x="1157" y="959" fill="#000">gb: arrows</text>
+</g>
+</g>
+<g data-rule="H">
+<rect class="card" x="795" y="994" width="581" height="228"/>
+<rect class="head" x="795" y="994" width="581" height="28"/>
+<text class="head-title" x="805" y="1013">H()</text>
+<text class="head-sub" x="841.9" y="1013">Hook: side bonus goal</text>
+<text class="col" x="818" y="1036">XS</text>
+<text class="col" x="864" y="1036">S</text>
+<text class="col" x="910" y="1036">M</text>
+<text class="col" x="956" y="1036">L</text>
+<g data-variant="H open">
+<text class="range" x="818" y="1091">1-12</text>
+<text class="range" x="864" y="1091">1-12</text>
+<text class="range" x="910" y="1091">1-12</text>
+<text class="range" x="956" y="1091">1-12</text>
+<text class="name" x="989" y="1090">open</text>
+<path class="edge both" data-edge="1-2" d="M1051 1087L1087 1087"/>
+<path class="edge both" data-edge="2-3" d="M1127 1087L1163 1063"/>
+<path class="edge both" data-edge="2-4" d="M1127 1087L1176.5 1111"/>
+<rect class="g-room" fill="#7b8cde" x="1031" y="1074" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1087" y="1074" width="40" height="26" rx="6"/>
+<text class="g-node" x="1107" y="1091" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1163" y="1050" width="47" height="26" rx="6"/>
+<text class="g-node" x="1186.5" y="1067" fill="#000">GB()</text>
+<rect class="g-room" fill="#7fd6d6" x="1176.5" y="1098" width="20" height="26" rx="6"/>
+</g>
+<g class="tint" data-variant="H secret">
+<rect x="795.5" y="1132" width="580" height="90" fill="#f6f7f9"/>
+<text class="range" x="818" y="1181">13-20</text>
+<text class="range" x="864" y="1181">13-20</text>
+<text class="range" x="910" y="1181">13-20</text>
+<text class="range" x="956" y="1181">13-20</text>
+<text class="name" x="989" y="1180">secret</text>
+<path class="edge both" data-edge="1-2" d="M1051 1177L1087 1177"/>
+<path class="edge secret" data-edge="2-3" d="M1127 1177L1178 1153"/>
+<path class="edge both" data-edge="2-4" d="M1127 1177L1191.5 1201"/>
+<rect class="g-room" fill="#7b8cde" x="1031" y="1164" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1087" y="1164" width="40" height="26" rx="6"/>
+<text class="g-node" x="1107" y="1181" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1178" y="1140" width="47" height="26" rx="6"/>
+<text class="g-node" x="1201.5" y="1157" fill="#000">GB()</text>
+<rect class="g-room" fill="#7fd6d6" x="1191.5" y="1188" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1152.5" y="1151.8" fill="#666">secret</text>
+</g>
+</g>
+<g data-rule="K">
+<rect class="card" x="1404" y="90" width="781" height="232"/>
+<rect class="head" x="1404" y="90" width="781" height="28"/>
+<text class="head-title" x="1414" y="109">K()</text>
+<text class="head-sub" x="1450.9" y="109">Small key lock</text>
+<text class="col" x="1427" y="132">XS</text>
+<text class="col" x="1473" y="132">S</text>
+<text class="col" x="1519" y="132">M</text>
+<text class="col" x="1565" y="132">L</text>
+<g data-variant="K key in wing">
+<text class="range" x="1427" y="188">1-12</text>
+<text class="range" x="1473" y="188">1-12</text>
+<text class="range" x="1519" y="188">1-12</text>
+<text class="range" x="1565" y="188">1-12</text>
+<text class="name" x="1598" y="187">key in wing</text>
+<path class="edge both" data-edge="1-2" d="M1686 183.2L1722 183.2"/>
+<path class="edge both" data-edge="2-3" d="M1749 183.2L1829 159.2"/>
+<path class="edge lock" data-edge="2-5" data-gate="lock" d="M1749 183.2L1829 207.2"/>
+<path class="edge both" data-edge="3-4" d="M1869 159.2L1905 159.2"/>
+<path class="edge both" data-edge="5-6" d="M1869 207.2L1943.5 207.2"/>
+<rect class="g-room" fill="#7b8cde" x="1666" y="170.2" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1722" y="170.2" width="27" height="26" rx="6"/>
+<text class="g-node" x="1735.5" y="187.2" fill="#000">n</text>
+<rect class="g-room" fill="#e8735a" x="1829" y="146.2" width="40" height="26" rx="6"/>
+<text class="g-node" x="1849" y="163.2" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1829" y="194.2" width="40" height="26" rx="6"/>
+<text class="g-node" x="1849" y="211.2" fill="#000">R()</text>
+<ellipse class="g-item" cx="1953.5" cy="159.2" rx="48.5" ry="13"/>
+<text class="g-node" x="1953.5" y="163.2" fill="#000">small key</text>
+<rect class="g-room" fill="#7fd6d6" x="1943.5" y="194.2" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1789" y="217.8" fill="#c0601a">[small key]</text>
+</g>
+<g class="tint" data-variant="K guarded key">
+<rect x="1404.5" y="230" width="780" height="92" fill="#f6f7f9"/>
+<text class="range" x="1427" y="280">13-20</text>
+<text class="range" x="1473" y="280">13-20</text>
+<text class="range" x="1519" y="280">13-20</text>
+<text class="range" x="1565" y="280">13-20</text>
+<text class="name" x="1598" y="279">guarded key</text>
+<path class="edge both" data-edge="1-2" d="M1686 275.2L1722 275.2"/>
+<path class="edge both" data-edge="2-3" d="M1749 275.2L1829 251.2"/>
+<path class="edge lock" data-edge="2-5" data-gate="lock" d="M1749 275.2L1829 299.2"/>
+<path class="edge both" data-edge="3-4" d="M1869 251.2L1905 251.2"/>
+<path class="edge both" data-edge="5-6" d="M1869 299.2L1943.5 299.2"/>
+<rect class="g-room" fill="#7b8cde" x="1666" y="262.2" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1722" y="262.2" width="27" height="26" rx="6"/>
+<text class="g-node" x="1735.5" y="279.2" fill="#000">n</text>
+<rect class="g-room" fill="#e8735a" x="1829" y="238.2" width="40" height="26" rx="6"/>
+<text class="g-node" x="1849" y="255.2" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1829" y="286.2" width="40" height="26" rx="6"/>
+<text class="g-node" x="1849" y="303.2" fill="#000">L()</text>
+<ellipse class="g-item" cx="1953.5" cy="251.2" rx="48.5" ry="13"/>
+<text class="g-node" x="1953.5" y="255.2" fill="#000">small key</text>
+<rect class="g-room" fill="#7fd6d6" x="1943.5" y="286.2" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1789" y="309.8" fill="#c0601a">[small key]</text>
+</g>
+</g>
+<g data-rule="SW">
+<rect class="card" x="1404" y="340" width="781" height="289"/>
+<rect class="head" x="1404" y="340" width="781" height="28"/>
+<text class="head-title" x="1414" y="359">SW()</text>
+<text class="head-sub" x="1459.8" y="359">Switch lock</text>
+<text class="col" x="1427" y="382">XS</text>
+<text class="col" x="1473" y="382">S</text>
+<text class="col" x="1519" y="382">M</text>
+<text class="col" x="1565" y="382">L</text>
+<g data-variant="SW one switch">
+<text class="range" x="1427" y="439">1-20</text>
+<text class="range" x="1473" y="439">1-14</text>
+<text class="range" x="1519" y="439">1-13</text>
+<text class="range" x="1565" y="439">1-12</text>
+<text class="name" x="1598" y="438">one switch</text>
+<path class="edge both" data-edge="1-2" d="M1722 433.4L1758 433.4"/>
+<path class="edge both" data-edge="2-3" d="M1798 433.4L1861 433.4"/>
+<path class="edge state" data-edge="2-5" data-gate="state" d="M1798 433.4Q1881.8 477.4 1965.5 457.4"/>
+<path class="edge both" data-edge="3-4" d="M1901 433.4L1937 409.4"/>
+<rect class="g-room" fill="#7b8cde" x="1702" y="420.4" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1758" y="420.4" width="40" height="26" rx="6"/>
+<text class="g-node" x="1778" y="437.4" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1861" y="420.4" width="40" height="26" rx="6"/>
+<text class="g-node" x="1881" y="437.4" fill="#000">L()</text>
+<polygon class="g-switch" points="1937,409.4 1949,396.4 2002,396.4 2014,409.4 2002,422.4 1949,422.4"/>
+<text class="g-node" x="1975.5" y="413.4" fill="#000">switch</text>
+<rect class="g-room" fill="#7fd6d6" x="1965.5" y="444.4" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1829.5" y="469.6" fill="#b34d8f">[switch]</text>
+</g>
+<g class="tint" data-variant="SW two switches (and)">
+<rect x="1404.5" y="482" width="780" height="147" fill="#f6f7f9"/>
+<text class="range" x="1427" y="559.5">—</text>
+<text class="range" x="1473" y="559.5">15-20</text>
+<text class="range" x="1519" y="559.5">14-20</text>
+<text class="range" x="1565" y="559.5">13-20</text>
+<text class="name" x="1598" y="558.5">two switches (and)</text>
+<path class="edge both" data-edge="1-2" d="M1722 551.4L1758 551.4"/>
+<path class="edge both" data-edge="2-3" d="M1798 551.4L1913 527.4"/>
+<path class="edge both" data-edge="2-5" d="M1798 551.4L1913 575.4"/>
+<path class="edge state" data-edge="2-7" data-gate="state" d="M1798 551.4Q1907.8 623.4 2017.5 599.4"/>
+<path class="edge both" data-edge="3-4" d="M1953 527.4L1989 503.4"/>
+<path class="edge both" data-edge="5-6" d="M1953 575.4L1989 551.4"/>
+<rect class="g-room" fill="#7b8cde" x="1702" y="538.4" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#e8735a" x="1758" y="538.4" width="40" height="26" rx="6"/>
+<text class="g-node" x="1778" y="555.4" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1913" y="514.4" width="40" height="26" rx="6"/>
+<text class="g-node" x="1933" y="531.4" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1913" y="562.4" width="40" height="26" rx="6"/>
+<text class="g-node" x="1933" y="579.4" fill="#000">L()</text>
+<polygon class="g-switch" points="1989,503.4 2001,490.4 2054,490.4 2066,503.4 2054,516.4 2001,516.4"/>
+<text class="g-node" x="2027.5" y="507.4" fill="#000">switch</text>
+<polygon class="g-switch" points="1989,551.4 2001,538.4 2054,538.4 2066,551.4 2054,564.4 2001,564.4"/>
+<text class="g-node" x="2027.5" y="555.4" fill="#000">switch</text>
+<rect class="g-room" fill="#7fd6d6" x="2017.5" y="586.4" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1855.5" y="616.6" fill="#b34d8f">[switch + switch]</text>
+</g>
+</g>
+<g data-rule="TG">
+<rect class="card" x="1404" y="647" width="781" height="186"/>
+<rect class="head" x="1404" y="647" width="781" height="28"/>
+<text class="head-title" x="1414" y="666">TG()</text>
+<text class="head-sub" x="1459.8" y="666">Toggle lever: ON opens the way, OFF opens a bonus</text>
+<text class="col" x="1427" y="689">XS</text>
+<text class="col" x="1473" y="689">S</text>
+<text class="col" x="1519" y="689">M</text>
+<text class="col" x="1565" y="689">L</text>
+<g data-variant="TG toggle">
+<text class="range" x="1427" y="768">1-20</text>
+<text class="range" x="1473" y="768">1-20</text>
+<text class="range" x="1519" y="768">1-20</text>
+<text class="range" x="1565" y="768">1-20</text>
+<text class="name" x="1598" y="767">toggle</text>
+<path class="edge both" data-edge="1-2" d="M1660 764L1696 764"/>
+<path class="edge both" data-edge="2-3" d="M1723 764L1806.5 716"/>
+<path class="edge on" data-edge="2-5" data-gate="on" d="M1723 764L1806.5 764"/>
+<path class="edge off" data-edge="2-6" data-gate="off" d="M1723 764L1803 812"/>
+<path class="edge both" data-edge="3-4" d="M1846.5 716L1886 740"/>
+<path class="edge both" data-edge="5-7" d="M1846.5 764L1911 788"/>
+<rect class="g-room" fill="#7b8cde" x="1640" y="751" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1696" y="751" width="27" height="26" rx="6"/>
+<text class="g-node" x="1709.5" y="768" fill="#000">n</text>
+<rect class="g-room" fill="#e8735a" x="1806.5" y="703" width="40" height="26" rx="6"/>
+<text class="g-node" x="1826.5" y="720" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1806.5" y="751" width="40" height="26" rx="6"/>
+<text class="g-node" x="1826.5" y="768" fill="#000">R()</text>
+<rect class="g-room" fill="#e8735a" x="1803" y="799" width="47" height="26" rx="6"/>
+<text class="g-node" x="1826.5" y="816" fill="#000">GB()</text>
+<polygon class="g-switch" points="1886,740 1898,727 1944,727 1956,740 1944,753 1898,753"/>
+<text class="g-node" x="1921" y="744" fill="#000">lever</text>
+<rect class="g-room" fill="#7fd6d6" x="1911" y="775" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1763" y="767.5" fill="#b34d8f">[lever ON]</text>
+<text class="g-label" text-anchor="middle" x="1763" y="820.1" fill="#b34d8f">[lever OFF]</text>
+</g>
+</g>
+<g data-rule="IG">
+<rect class="card" x="1404" y="851" width="781" height="278"/>
+<rect class="head" x="1404" y="851" width="781" height="28"/>
+<text class="head-title" x="1414" y="870">IG()</text>
+<text class="head-sub" x="1459.8" y="870">Dungeon item gate: mini-boss guards the item that opens the way</text>
+<text class="col" x="1427" y="893">XS</text>
+<text class="col" x="1473" y="893">S</text>
+<text class="col" x="1519" y="893">M</text>
+<text class="col" x="1565" y="893">L</text>
+<g data-variant="IG item">
+<text class="range" x="1427" y="949">1-10</text>
+<text class="range" x="1473" y="949">1-10</text>
+<text class="range" x="1519" y="949">1-10</text>
+<text class="range" x="1565" y="949">1-10</text>
+<text class="name" x="1598" y="948">item</text>
+<path class="edge both" data-edge="1-2" d="M1743 944L1779 944"/>
+<path class="edge both" data-edge="2-3" d="M1806 944L1904 920"/>
+<path class="edge lock" data-edge="2-6" data-gate="lock" d="M1806 944L1904 968"/>
+<path class="edge both" data-edge="3-4" d="M1944 920L1980 944"/>
+<path class="edge both" data-edge="6-7" d="M1944 968L2099 968"/>
+<path class="edge both" data-edge="4-5" d="M2014 944L2050 920"/>
+<rect class="g-room" fill="#7b8cde" x="1723" y="931" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1779" y="931" width="27" height="26" rx="6"/>
+<text class="g-node" x="1792.5" y="948" fill="#000">n</text>
+<rect class="g-room" fill="#e8735a" x="1904" y="907" width="40" height="26" rx="6"/>
+<text class="g-node" x="1924" y="924" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1904" y="955" width="40" height="26" rx="6"/>
+<text class="g-node" x="1924" y="972" fill="#000">L()</text>
+<rect class="g-room" fill="#7cc98f" x="1980" y="931" width="34" height="26" rx="6"/>
+<text class="g-node" x="1997" y="948" fill="#000">em</text>
+<ellipse class="g-item" cx="2109" cy="920" rx="59" ry="13"/>
+<text class="g-node" x="2109" y="924" fill="#000">dungeon item</text>
+<rect class="g-room" fill="#7fd6d6" x="2099" y="955" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1855" y="979" fill="#c0601a">[dungeon item]</text>
+</g>
+<g class="tint" data-variant="IG item + backtrack bonus">
+<rect x="1404.5" y="991" width="780" height="138" fill="#f6f7f9"/>
+<text class="range" x="1427" y="1064">11-20</text>
+<text class="range" x="1473" y="1064">11-20</text>
+<text class="range" x="1519" y="1064">11-20</text>
+<text class="range" x="1565" y="1064">11-20</text>
+<text class="name" x="1598" y="1063">item + backtrack bonus</text>
+<path class="edge both" data-edge="1-2" d="M1743 1060L1779 1060"/>
+<path class="edge both" data-edge="2-3" d="M1806 1060L1907.5 1012"/>
+<path class="edge lock" data-edge="2-6" data-gate="lock" d="M1806 1060L1907.5 1060"/>
+<path class="edge lock" data-edge="2-7" data-gate="lock" d="M1806 1060L1904 1108"/>
+<path class="edge both" data-edge="3-4" d="M1947.5 1012L1987 1060"/>
+<path class="edge both" data-edge="6-8" d="M1947.5 1060Q2026.8 1120 2106 1084"/>
+<path class="edge both" data-edge="4-5" d="M2021 1060L2057 1036"/>
+<rect class="g-room" fill="#7b8cde" x="1723" y="1047" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1779" y="1047" width="27" height="26" rx="6"/>
+<text class="g-node" x="1792.5" y="1064" fill="#000">n</text>
+<rect class="g-room" fill="#e8735a" x="1907.5" y="999" width="40" height="26" rx="6"/>
+<text class="g-node" x="1927.5" y="1016" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1907.5" y="1047" width="40" height="26" rx="6"/>
+<text class="g-node" x="1927.5" y="1064" fill="#000">L()</text>
+<rect class="g-room" fill="#e8735a" x="1904" y="1095" width="47" height="26" rx="6"/>
+<text class="g-node" x="1927.5" y="1112" fill="#000">GB()</text>
+<rect class="g-room" fill="#7cc98f" x="1987" y="1047" width="34" height="26" rx="6"/>
+<text class="g-node" x="2004" y="1064" fill="#000">em</text>
+<ellipse class="g-item" cx="2116" cy="1036" rx="59" ry="13"/>
+<text class="g-node" x="2116" y="1040" fill="#000">dungeon item</text>
+<rect class="g-room" fill="#7fd6d6" x="2106" y="1071" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1855" y="1063.5" fill="#c0601a">[dungeon item]</text>
+<text class="g-label" text-anchor="middle" x="1855" y="1116.9" fill="#c0601a">[dungeon item]</text>
+</g>
+</g>
+<g data-rule="BK">
+<rect class="card" x="1404" y="1147" width="781" height="230"/>
+<rect class="head" x="1404" y="1147" width="781" height="28"/>
+<text class="head-title" x="1414" y="1166">BK()</text>
+<text class="head-sub" x="1459.8" y="1166">Boss key: opens the boss room</text>
+<text class="col" x="1427" y="1189">XS</text>
+<text class="col" x="1473" y="1189">S</text>
+<text class="col" x="1519" y="1189">M</text>
+<text class="col" x="1565" y="1189">L</text>
+<g data-variant="BK boss key in wing">
+<text class="range" x="1427" y="1244.5">1-17</text>
+<text class="range" x="1473" y="1244.5">1-12</text>
+<text class="range" x="1519" y="1244.5">1-12</text>
+<text class="range" x="1565" y="1244.5">1-12</text>
+<text class="name" x="1598" y="1243.5">boss key in wing</text>
+<path class="edge both" data-edge="1-2" d="M1759 1240.2L1795 1240.2"/>
+<path class="edge both" data-edge="2-3" d="M1822 1240.2L1896 1216.2"/>
+<path class="edge lock" data-edge="2-5" data-gate="lock" d="M1822 1240.2L1899 1264.2"/>
+<path class="edge both" data-edge="3-4" d="M1936 1216.2L1972 1216.2"/>
+<path class="edge both" data-edge="5-6" d="M1933 1264.2L2007 1264.2"/>
+<rect class="g-room" fill="#7b8cde" x="1739" y="1227.2" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1795" y="1227.2" width="27" height="26" rx="6"/>
+<text class="g-node" x="1808.5" y="1244.2" fill="#000">n</text>
+<rect class="g-room" fill="#e8735a" x="1896" y="1203.2" width="40" height="26" rx="6"/>
+<text class="g-node" x="1916" y="1220.2" fill="#000">L()</text>
+<rect class="g-room" fill="#7cc98f" x="1899" y="1251.2" width="34" height="26" rx="6"/>
+<text class="g-node" x="1916" y="1268.2" fill="#000">eb</text>
+<ellipse class="g-item" cx="2017" cy="1216.2" rx="45" ry="13"/>
+<text class="g-node" x="2017" y="1220.2" fill="#000">boss key</text>
+<rect class="g-room" fill="#7fd6d6" x="2007" y="1251.2" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1859" y="1273.8" fill="#c0601a">[boss key]</text>
+</g>
+<g class="tint" data-variant="BK boss key behind small key">
+<rect x="1404.5" y="1286" width="780" height="91" fill="#f6f7f9"/>
+<text class="range" x="1427" y="1335.5">18-20</text>
+<text class="range" x="1473" y="1335.5">13-20</text>
+<text class="range" x="1519" y="1335.5">13-20</text>
+<text class="range" x="1565" y="1335.5">13-20</text>
+<text class="name" x="1598" y="1334.5">boss key behind small key</text>
+<path class="edge both" data-edge="1-2" d="M1759 1331.2L1795 1331.2"/>
+<path class="edge both" data-edge="2-3" d="M1822 1331.2L1896 1307.2"/>
+<path class="edge lock" data-edge="2-5" data-gate="lock" d="M1822 1331.2L1899 1355.2"/>
+<path class="edge both" data-edge="3-4" d="M1936 1307.2L1972 1307.2"/>
+<path class="edge both" data-edge="5-6" d="M1933 1355.2L2007 1355.2"/>
+<rect class="g-room" fill="#7b8cde" x="1739" y="1318.2" width="20" height="26" rx="6"/>
+<rect class="g-room" fill="#7cc98f" x="1795" y="1318.2" width="27" height="26" rx="6"/>
+<text class="g-node" x="1808.5" y="1335.2" fill="#000">n</text>
+<rect class="g-room" fill="#e8735a" x="1896" y="1294.2" width="40" height="26" rx="6"/>
+<text class="g-node" x="1916" y="1311.2" fill="#000">K()</text>
+<rect class="g-room" fill="#7cc98f" x="1899" y="1342.2" width="34" height="26" rx="6"/>
+<text class="g-node" x="1916" y="1359.2" fill="#000">eb</text>
+<ellipse class="g-item" cx="2017" cy="1307.2" rx="45" ry="13"/>
+<text class="g-node" x="2017" y="1311.2" fill="#000">boss key</text>
+<rect class="g-room" fill="#7fd6d6" x="2007" y="1342.2" width="20" height="26" rx="6"/>
+<text class="g-label" text-anchor="middle" x="1859" y="1364.8" fill="#c0601a">[boss key]</text>
+</g>
+</g>
+</svg>

@@ -357,7 +357,8 @@ JSON loads a file; `--dungeon-seed N [--size M] [--theme zelda]` generates one (
 an error; the seed is required). `--json` (generating only) and `--key` write the JSON and key
 before layout, so a dungeon that fails to lay out can still be inspected. Generated output defaults
 to `<size>-<seed>-<theme>-map.svg`, size lower case. `--graph <file.svg>` (step 24) writes the graph
-view, also before layout; SVG only.
+view, also before layout; SVG only. `--grammar <file.svg>` (step 25) writes the grammar sheet and
+exits; no other option. SVG only.
 
 Graph view (`render/graph.ts`, step 24, plan `docs/plans/24-graph-view.md`, decided 2026-10-30):
 the room graph as a layered drawing, for dungeons that are not places underground and for a
@@ -475,6 +476,24 @@ Seeds 1–500 per size: 0 unsolvable, all accepted by `normalize` and planar, ro
 p90) XS 6/6/8, S 10/13/19, M 13/18/31, L 17/26/44 against Python 6/6/8, 10/13/19, 12/18/29,
 16/26/44. ~2 s for all 2000.
 
+Grammar sheet (`render/grammar.ts`, step 25, plan `docs/plans/25-grammar-sheet.md`): `GRAMMAR` drawn
+as one SVG, `docs/grammar.svg`, after Python's `grammar/render.py` PNG (Graphviz). Rule cards in
+Python's columns ([how to use, legend, Start, E, R, S], [L, expected size, GB, H], [K, SW, TG, IG,
+BK]), each column as wide as its widest card: d20 range per preset (`a-b`, `a`, `—`), variant name,
+diagram. R's columns are the `PACING` tiers early / middle / late (it rolls by progress, not by
+size); GB names the theme's `rewards` table (zelda shown). Diagrams: `variantGraph(symbol, variant)`
+builds a `RoomGraph` (prev as start, next as goal, a branch rule's goal its start; gates from the
+object ids) laid out by the graph view's `graphLayout` with `across` (laid out with each box's w
+and h swapped, rows as tall as their tallest box, then mirrored across the diagonal; layers left to
+right as Python's `rankdir=LR`) and painted by `graphBody`. Look: Python's (anchors blue and teal,
+non-terminals red, rooms green, no numbers); edge labels in the gap after the edge's first box,
+above or below as far as the slope needs, on a flat edge over the line. Gaps across: 36 px, or a
+label's width + 16. Expected size: `sizeStats` generates seeds 1–1000 per preset and counts rooms
+after merge (what the map shows; Python counted before merge): means XS 6.5, S 13.7, M 20.2, L
+28.9, ~1.7 s for all four. `tests/grammar.test.ts` fails when `docs/grammar.svg` is stale
+(regenerate with `npm run cli -- --grammar docs/grammar.svg`), so a grammar, colour or generator
+change that moves the sheet is regenerated on purpose.
+
 ## Seeds
 
 - The dungeon seed (with size and theme) gives one dungeon; required to generate, no random seed.
@@ -501,9 +520,10 @@ src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, 
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/engine/generator/   graph.ts, grammar.ts, themes.ts, types.ts, config.ts, expand.ts, reduce.ts,
                solve.ts, json.ts, index.ts
-src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts, graph.ts
+src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts, graph.ts, grammar.ts
 src/cli/       main.ts     ruin.json | --dungeon-seed [--size] [--theme] → map.svg / .png
                            [-o] [--json] [--key] [--layout-seed] [--no-corridors] [--style]
+                           | --grammar sheet.svg
 src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   generate or load JSON, seeds, reroll, corridors, export
 tests/         one test file per engine module, fixture ruin.json; tests/generator/ likewise
 ```

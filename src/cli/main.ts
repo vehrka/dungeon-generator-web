@@ -2,6 +2,7 @@
 //
 //   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--style plain|dyson|neon] [--key ruin.md] [--graph ruin-graph.svg]
 //   npm run cli -- --dungeon-seed 7 [--size M] [--theme zelda] [--json m-7-zelda.json] [--key m-7-zelda.md] [...]
+//   npm run cli -- --grammar docs/grammar.svg
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -12,6 +13,7 @@ import { DEFAULT_THEME, THEMES, type ThemeName } from "../engine/generator/theme
 import { normalize } from "../engine/normalize";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
+import { renderGrammar } from "../render/grammar";
 import { drawGraph } from "../render/graph";
 import { dungeonKey } from "../render/key";
 import { draw, mapStyles, type MapStyle } from "../render/svg";
@@ -34,22 +36,25 @@ const parseSeed = (flag: string, text: string | undefined): number | undefined =
   return seed;
 };
 
+const options = {
+  output: { type: "string", short: "o" },
+  "layout-seed": { type: "string" },
+  "no-corridors": { type: "boolean" },
+  "dungeon-seed": { type: "string" },
+  size: { type: "string" },
+  theme: { type: "string" },
+  json: { type: "string" },
+  key: { type: "string" },
+  graph: { type: "string" },
+  style: { type: "string" },
+  grammar: { type: "string" }, // parseGrammar's; main routes it there first
+} as const;
+
 export function parseCli(argv: string[]): CliArgs {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
-    options: {
-      output: { type: "string", short: "o" },
-      "layout-seed": { type: "string" },
-      "no-corridors": { type: "boolean" },
-      "dungeon-seed": { type: "string" },
-      size: { type: "string" },
-      theme: { type: "string" },
-      json: { type: "string" },
-      key: { type: "string" },
-      graph: { type: "string" },
-      style: { type: "string" },
-    },
+    options,
   });
   if (positionals.length > 1) throw new Error(`Expected one input JSON, got ${positionals.length}`);
   const dungeonSeed = parseSeed("dungeon-seed", values["dungeon-seed"]);
@@ -78,11 +83,28 @@ export function parseCli(argv: string[]): CliArgs {
   return { source, output, json: values.json, key: values.key, graph: values.graph, layoutSeed, corridors: !values["no-corridors"], style };
 }
 
+// --grammar out.svg: the grammar sheet alone, no dungeon, so no other option. Parsed with every
+// option, so a "--grammar" that is another option's value is not taken for it.
+export function parseGrammar(argv: string[]): string | undefined {
+  const { values, positionals, tokens } = parseArgs({ args: argv, allowPositionals: true, options, tokens: true });
+  if (values.grammar === undefined) return undefined;
+  const others = [...tokens.flatMap((t) => (t.kind === "option" && t.name !== "grammar" ? [`--${t.name}`] : [])), ...positionals];
+  if (others.length) throw new Error(`--grammar takes no other option: ${others.join(" ")}`);
+  if (!/\.svg$/i.test(values.grammar)) throw new Error(`--grammar must end in .svg: ${values.grammar}`);
+  return values.grammar;
+}
+
 type Out = { log: (m: string) => void; error: (m: string) => void };
 
 // Every failure (arguments, schema, non-planar, no layout) prints its message and returns 1.
 export async function main(argv: string[], out: Out = console): Promise<number> {
   try {
+    const grammar = parseGrammar(argv);
+    if (grammar !== undefined) {
+      writeFileSync(grammar, renderGrammar());
+      out.log(grammar);
+      return 0;
+    }
     const args = parseCli(argv);
     const { source } = args;
     const json: DungeonJson = "input" in source ? JSON.parse(readFileSync(source.input, "utf8")) : generateDungeon(source.generate);
