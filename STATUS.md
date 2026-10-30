@@ -67,9 +67,10 @@ Not every dungeon is a place underground: show the graph itself, the grammar tha
 the story of the project. Decided 2026-10-30: own drawing code, no new dependency.
 
 - [ ] 1. **graph view** (`feature/graph-view`): `render/graph.ts` draws the dungeon graph as SVG,
-  layered from START to GOAL, gates as styled and labelled edges (lock, state, lever, secret,
-  one-way), rooms coloured by role, numbered as in the key. Viewer switch map | graph over the same
-  dungeon (graph needs no layout, so it shows even when layout fails); CLI `--graph out.svg`.
+  layered from START, plain look, rooms numbered with the map's glyphs, gates as tagged edges,
+  one-way and secret marked as on the map. Viewer switch map | graph over the same dungeon (graph
+  needs no layout, so it shows even when layout fails); CLI `--graph out.svg`. Plan
+  `docs/plans/24-graph-view.md`.
 - [ ] 2. **grammar sheet** (`feature/grammar-sheet`): `render/grammar.ts` draws the Combined grammar
   from `GRAMMAR` data as one SVG sheet (rule cards, d20 ranges per size, legend; after Python's
   `grammar/render.py` sheet). CLI writes `docs/grammar.svg`; a test fails when the committed sheet is
