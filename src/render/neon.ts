@@ -1,5 +1,5 @@
-import type { Point, Polygon, Segment } from "../engine/geometry";
-import { barMark, chevron, dotMarks, round, roomMarks, secretMark, tagMark, wallRect, type Painter } from "./marks";
+import type { Polygon } from "../engine/geometry";
+import { doorSymbols, roomMarks, type Painter } from "./marks";
 import type { Scene, SceneRoom } from "./scene";
 
 // Neon look (docs/neon-style.md): an indigo-black page, dark corridors like streets, rooms as blocks
@@ -13,7 +13,6 @@ const muted = "#7d86a8";
 const rule = "#232a40";
 const gate = "#ffd23f";
 const wall = 2; // px
-const doorAcross = 8; // px, the door rectangle across the wall, Dyson's
 const glow: [number, number][] = [[16, 0.1], [9, 0.22], [4, 0.45]]; // stroke px, opacity; widest first
 const mono = `'DejaVu Sans Mono','Noto Sans Mono','Liberation Mono',Menlo,Consolas,monospace`; // resvg needs named fonts first
 
@@ -81,34 +80,7 @@ export const neon: Painter = {
     const points = (outline: Polygon) => outline.map((q) => px(q)).map((p) => `${p.x},${p.y}`).join(" ");
     const rooms = s.rooms.map((room, i) => ({ room, i, role: role(room, s) }));
     const use = (pass: string) => rooms.map(({ i, role }) => `<use href="#room-${i}" class="${pass} r-${role}"/>`);
-    // Room a's end: the door symbol; a corridor's room b end: an archway, or an S for a secret door.
-    const gaps = s.doors
-      .flatMap((door) => [...(door.symbol === "portcullis" ? [door.segment] : []), ...(door.corridor && !door.secret ? [door.corridor.segment] : [])])
-      .map((g) => wallRect(g, px, wall / 2 + 1, "gap", wall));
-    const symbols = s.doors.flatMap((door) => {
-      switch (door.symbol) {
-        case "secret":
-          return [door.segment, ...(door.corridor ? [door.corridor.segment] : [])].map((e) => secretMark(e, px));
-        case "door":
-          return [wallRect(door.segment, px, doorAcross / 2, "door", wall)];
-        case "lock":
-          return [wallRect(door.segment, px, doorAcross / 2, "door", wall), barMark(door.segment, px)];
-        case "portcullis":
-          return dotMarks(door.segment, px);
-      }
-    });
-    const marks = s.doors.flatMap((door) => {
-      const horizontal = door.segment.from.y === door.segment.to.y;
-      const at = (p: Point) => ({ x: round(px(p).x), y: round(px(p).y) });
-      return [
-        ...(door.tagAt ? [tagMark(at(door.tagAt).x, at(door.tagAt).y, door.tag!, door.gates.map((g) => g.kind).join(" "))] : []),
-        ...(door.onewayAt ? [chevron(at(door.onewayAt), horizontal, door.oneway!, false)] : []),
-      ];
-    });
-    const drawn = (symbol: string) => s.doors.some((door) => door.symbol === symbol);
-    // Legend symbols through the map's own marks, on a 14 px door half a wall past each end.
-    const sample: Segment = { from: { x: -wall / 2, y: -4 }, to: { x: 14 + wall / 2, y: -4 } };
-    const same = (p: Point) => p;
+    const { gaps, symbols, marks, legend } = doorSymbols(s, px, wall, "gap");
     const used = new Set(rooms.map((r) => r.role));
     return {
       defs: rooms.map(({ room, i }) => `<polygon id="room-${i}" points="${points(room.outline)}"/>`).join(""),
@@ -125,12 +97,7 @@ export const neon: Painter = {
       legend: [
         ...legendRoles.filter((r) => used.has(r)).map((r) => ({ mark: `<rect class="swatch r-${r}" x="1" y="-10" width="12" height="12"/>`, text: `${r} room` })),
         ...(s.corridors.length ? [{ mark: `<rect class="corridor" x="0" y="-8" width="14" height="8"/>`, text: "corridor" }] : []),
-        ...(drawn("door") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall), text: "door" }] : []),
-        ...(drawn("lock") ? [{ mark: wallRect(sample, same, doorAcross / 2, "door", wall) + barMark(sample, same), text: "locked door" }] : []),
-        ...(drawn("portcullis") ? [{ mark: `<rect class="gap" x="0" y="-6" width="14" height="4"/>${dotMarks({ from: { x: 0, y: -4 }, to: { x: 14, y: -4 } }, same).join("")}`, text: "portcullis" }] : []),
-        ...(drawn("secret") ? [{ mark: `<text class="secret" x="7" y="0">S</text>`, text: "secret door" }] : []),
-        ...(s.doors.some((door) => door.onewayAt) ? [{ mark: `<polyline class="oneway" points="3,-8 7,-4 11,-8"/>`, text: "one-way" }] : []),
-        ...(s.doors.some((door) => door.tagAt) ? [{ mark: tagMark(7, -4, ""), text: "gate" }] : []),
+        ...legend,
       ],
     };
   },

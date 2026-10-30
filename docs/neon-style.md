@@ -97,7 +97,7 @@ share (`mix(page, colour, share)`); contrast is the number ink on that fill (WCA
 | page | `#0b0814` | the reference's indigo-black, darker |
 | corridor fill | `#141a2a` | |
 | corridor outline | `#2b3550` | 1 px |
-| ink | `#eef2ff` | numbers, glyphs, jambs, key text |
+| ink | `#eef2ff` | numbers, glyphs, door outlines, bars, dots, S, chevrons, key text |
 | muted | `#7d86a8` | key numbers, meta line |
 | rule | `#232a40` | key column rules |
 | gate | `#ffd23f` | tag outline and letter, on the page colour |

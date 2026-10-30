@@ -444,7 +444,11 @@ describe("neon", () => {
 
   it("paints walls, gaps, symbols, tags and chevrons, then numbers, in that order", () => {
     const first = (re: RegExp) => map.search(re);
-    const last = (re: RegExp) => Math.max(...[...map.matchAll(new RegExp(re, "g"))].map((x) => x.index!));
+    const last = (re: RegExp) => {
+      const at = [...map.matchAll(new RegExp(re, "g"))].map((x) => x.index!);
+      expect(at.length).toBeGreaterThan(0); // else -Infinity passes every comparison
+      return Math.max(...at);
+    };
     const symbol = /<rect class="door"|<line class="bar"|<circle class="dot"|<text class="secret"/;
     expect(last(/<use href="#room-\d+" class="wall/)).toBeLessThan(first(/<rect class="gap"/));
     expect(last(/<rect class="gap"/)).toBeLessThan(first(symbol));

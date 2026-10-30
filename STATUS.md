@@ -82,6 +82,7 @@ Design in [docs/neon-style.md](docs/neon-style.md).
   `s.replace is not a function` instead of a schema error.
 - Render (plain, applies to Dyson and neon too): key column width estimated from character counts; 4+
   glyphs spill out of a 3-unit room. Plain: gate tags and chevrons can touch on short walls with
-  several doors. Dyson and neon (same `scene.ts` positions): tags beside the door, pushed apart from other
+  several doors; its chevron sits past its own tag (`chevron`'s `tag` flag), not at the scene's
+  `onewayAt` as in Dyson and neon. Dyson and neon (same `scene.ts` positions): tags beside the door, pushed apart from other
   tags unless the room is too shallow; not checked against other doors' chevrons (0 overlaps on
   286 maps); a tag can touch the other door's rectangle at an L/T corner.
