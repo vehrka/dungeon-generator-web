@@ -426,8 +426,9 @@ plan `docs/plans/10-viewer.md`.
 - Logic in `state.ts` (no DOM, tested); `main.ts` only wires the DOM. A file that is not a JSON
   object is rejected by name; the rest is `normalize`'s schema check. The map goes in with
   `innerHTML`, safe because `render` escapes the JSON's values. No PNG export (resvg is Node-only).
-- View switch (step 24): `view map graph` text actions in the result band, above export, the one
-  shown not underlined. Kept across generate, load and reroll; not in the URL or storage. The
+- View switch (step 24): `view map graph` in the result band, above export, as a toggle, not a
+  link: two joined boxes in the inputs' black border, the view shown filled black as the primary
+  button (text links read as one row of actions with the exports). Kept across generate, load and reroll; not in the URL or storage. The
   worker's `DrawRequest` carries `view`; the graph skips layout, so it shows a dungeon whose layout
   fails. Reroll and corridors stay enabled (they change the map). Export svg saves what is shown:
   `<name>-graph.svg` (`graphName`). The result band of the graph has no layout seed.
