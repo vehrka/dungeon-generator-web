@@ -103,11 +103,11 @@ describe("parseTheme", () => {
 
 describe("parseStyle", () => {
   it("accepts the map styles", () => {
-    for (const s of ["plain", "dyson"]) expect(parseStyle(s)).toBe(s);
+    for (const s of ["plain", "dyson", "neon"]) expect(parseStyle(s)).toBe(s);
   });
 
   it("rejects anything else", () => {
-    for (const s of ["", "Dyson", "toString", "__proto__"]) expect(() => parseStyle(s)).toThrow(/^Unknown style .*, expected one of plain dyson$/);
+    for (const s of ["", "Dyson", "toString", "__proto__"]) expect(() => parseStyle(s)).toThrow(/^Unknown style .*, expected one of plain dyson neon$/);
   });
 });
 
@@ -133,6 +133,7 @@ describe("exportName", () => {
 
   it("names any style but plain", () => {
     expect(exportName("m-7-zelda", 7, "dyson")).toBe("m-7-zelda-map-7-dyson.svg");
+    expect(exportName("m-7-cyber", 7, "neon")).toBe("m-7-cyber-map-7-neon.svg");
   });
 });
 

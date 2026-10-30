@@ -13,8 +13,8 @@ This file is the source of truth for the neon style. `docs/design.md` covers the
 ## Decisions (2026-10-28)
 
 - Third style `neon`, beside `plain` and `dyson`. The plain style stays as it is.
-  `styleFor("cyber")` → `neon` once the style is ready; plain until then, and by `--style`
-  after.
+  `styleFor("cyber")` → `neon`, zelda → `dyson`, any other theme or none → `plain` (decided
+  2026-10-30, in the core step).
 - Screen only: built for the viewer and VTT (FoundryVTT), not for print. A black page and
   saturated colour are fine. PNG export at Foundry's grid scale: not in scope, add later if needed.
 - Glow from stacked strokes (3 wider copies of the outline at falling opacity), no SVG filters:
@@ -142,9 +142,15 @@ goal, boss, pickup, treasure), so the colours read without the key. Not in the m
 
 As Dyson: standalone SVG, one floor polygon per room and corridor, every number and label once and
 escaped, door symbol counts on the fixture, snapshot, same input same string, no `<filter>`.
-`styleFor("cyber")` → `neon` once switched. Plain and Dyson snapshots unchanged. By hand: CLI
+`styleFor("cyber")` → `neon`. Plain and Dyson snapshots unchanged. By hand: CLI
 PNG of m-1 and l-1 and a generated cyber L; time and SVG size of l-1 noted here (target < 100 ms,
 < 1 MB).
+
+## Measurements
+
+Core step, l-1, layout seed 1, render only (layout excluded), mean of 20: plain 0.8 ms, 31.0 kB;
+neon 0.9 ms, 38.8 kB (Dyson 102 ms, 421 kB). Each outline once in `<defs>`, its five passes
+(3 glows, fill, wall) as `<use>`.
 
 ## Steps
 
@@ -153,11 +159,6 @@ room detail → viewer. Each step its own branch off `dev`, test first, `/code-r
 
 ## Open points
 
-- Glow cost on L maps: 3 copies per room outline, ~280 B per room on the mock (4.4 kB on 16
-  rooms). l-1 has 28 rooms, plain SVG 31 kB, so ~40 kB before room detail. Measure in the core
-  step.
 - Shared walls lose the glow and show one room's colour (§ Tokens). If it reads badly on L maps:
   stroke each room's wall clipped to its own inside, so a shared seam shows both colours.
 - Detail density vs room shapes and numbers: room detail step.
-- Plain keeps no default theme once cyber moves to neon: reachable by `--style` and the
-  viewer select only. Decided 2026-10-30.

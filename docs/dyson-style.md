@@ -78,7 +78,8 @@ most of the bbox stays white, as in Dyson's maps.
   when none is given, so its tests and snapshot stay as they are.
 - Default by theme, decided 2026-10-27: `styleFor(theme)` → `"plain"` for `cyber`, `"dyson"`
   for any other theme or none (a loaded JSON may lack one). `draw(json, layoutSeed, config,
-  style = styleFor(json.theme))`, so CLI and viewer share the rule.
+  style = styleFor(json.theme))`, so CLI and viewer share the rule. Changed 2026-10-30 with
+  neon: cyber → neon, zelda → Dyson, any other theme or none → plain (`docs/design.md` §7).
 - CLI: `--style plain|dyson` overrides the theme's default; unknown value → error listing the
   options (same pattern as `--size`, `--theme`). Output name unchanged unless `-o` is given.
 - Viewer: a `style` select in the layout section under corridors, preset from the theme
@@ -299,7 +300,7 @@ byte-identical.
   label once, escaped (same hostile-input test as plain); no amber, no `#e5e5e5`; door symbol
   counts by kind on the fixture (3 lock, 1 state); one-way chevrons point a → b; snapshot of the
   fixture; same input same string.
-- `styleFor`: cyber → plain; zelda, any other string, undefined → dyson.
+- `styleFor`: cyber → plain; zelda, any other string, undefined → dyson (until neon, see above).
 - CLI: `--style dyson` writes SVG and PNG; default follows the theme; bad style exits 1 with the
   options listed. Existing CLI tests that render a non-cyber dungeon now get Dyson: pass
   `--style plain` where they check plain output.

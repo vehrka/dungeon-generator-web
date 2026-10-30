@@ -7,15 +7,19 @@ import type { DungeonJson, Gate, RoomGraph } from "../engine/types";
 import { dyson } from "./dyson";
 import { defs, glyphs } from "./icons";
 import { doorMark, esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
+import { neon } from "./neon";
 import { scene } from "./scene";
 
-export type MapStyle = "plain" | "dyson";
-export const mapStyles: MapStyle[] = ["plain", "dyson"];
+export type MapStyle = "plain" | "dyson" | "neon";
+export const mapStyles: MapStyle[] = ["plain", "dyson", "neon"];
 export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string; style?: MapStyle };
 
-// Cyber keeps the plain look; every other theme, or none (a loaded JSON may lack one), is Dyson
-// (docs/dyson-style.md, style selection).
-export const styleFor = (theme?: string): MapStyle => (theme?.toLowerCase() === "cyber" ? "plain" : "dyson");
+// Cyber is neon, zelda Dyson; any other theme, or none (a loaded JSON may lack one), plain
+// (docs/design.md §7).
+export const styleFor = (theme?: string): MapStyle => {
+  const t = theme?.toLowerCase();
+  return t === "cyber" ? "neon" : t === "zelda" ? "dyson" : "plain";
+};
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no
 // radius or shadow. Amber is the one chromatic note, kept for gates (docs/plans/09-render-cli.md).
@@ -73,7 +77,7 @@ const plain: Painter = {
   },
 };
 
-const painters: Record<MapStyle, Painter> = { plain, dyson };
+const painters: Record<MapStyle, Painter> = { plain, dyson, neon };
 
 // Graph + layout → standalone SVG: map on the left, key column (rooms, gates, legend) on the right,
 // in the style of meta.style (plain when absent).

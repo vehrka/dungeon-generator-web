@@ -6,7 +6,8 @@ import type { DungeonJson } from "../src/engine/types";
 import { polygon, rectangle, type Segment } from "../src/engine/geometry";
 import type { Layout } from "../src/engine/layout";
 import type { RoomGraph } from "../src/engine/types";
-import { scene } from "../src/render/scene";
+import { role } from "../src/render/neon";
+import { scene, type Scene, type SceneRoom } from "../src/render/scene";
 import { draw, render, styleFor } from "../src/render/svg";
 
 const json = ruin as DungeonJson;
@@ -213,8 +214,9 @@ describe("draw", () => {
 
   it("picks the style from the theme unless given", () => {
     const { graph, layout } = generate(json, 3, defaultConfig);
-    expect(draw(json, 3, defaultConfig).svg).toBe(render(graph, layout, { ...meta, layoutSeed: 3, style: "dyson" }));
-    expect(draw({ ...json, theme: "cyber" }, 3, defaultConfig).svg).toContain('class="room"');
+    expect(draw(json, 3, defaultConfig).svg).toBe(render(graph, layout, { ...meta, layoutSeed: 3, style: "plain" }));
+    expect(draw({ ...json, theme: "cyber" }, 3, defaultConfig).svg).toContain('fill="#0b0814"');
+    expect(draw({ ...json, theme: "zelda" }, 3, defaultConfig).svg).toContain('class="hatch"');
   });
 
   it("leaves an unusable dungeon seed out of the title", () => {
@@ -235,10 +237,10 @@ describe("draw", () => {
 });
 
 describe("styleFor", () => {
-  it("draws cyber plain, any other theme or none Dyson", () => {
-    expect(styleFor("cyber")).toBe("plain");
-    expect(styleFor("Cyber")).toBe("plain");
-    for (const theme of ["zelda", "tor-barrow", "", undefined]) expect(styleFor(theme)).toBe("dyson");
+  it("draws cyber neon, zelda Dyson, any other theme or none plain", () => {
+    for (const theme of ["cyber", "Cyber"]) expect(styleFor(theme)).toBe("neon");
+    for (const theme of ["zelda", "Zelda"]) expect(styleFor(theme)).toBe("dyson");
+    for (const theme of ["tor-barrow", "", "constructor", "__proto__", undefined]) expect(styleFor(theme)).toBe("plain");
   });
 });
 
@@ -395,5 +397,96 @@ describe("dyson", () => {
     expect(render(graph, layout, { ...meta, style: "dyson" })).toBe(dyson);
     expect(render(graph, layout, { ...meta, style: "dyson", layoutSeed: 1 })).not.toBe(dyson);
     expect(dyson).toMatchSnapshot();
+  });
+});
+
+describe("neon", () => {
+  const neon = render(graph, layout, { ...meta, style: "neon" });
+  const n = (re: RegExp) => neon.match(re)?.length ?? 0;
+  const corridors = new Set(layout.doors.flatMap(({ corridor: c }) => (c ? [`${c.shape.id}@${c.at.x},${c.at.y}`] : [])));
+  const s = scene(graph, layout);
+
+  it("is a standalone svg on the indigo-black page, without filters", () => {
+    expect(neon).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" [^>]*viewBox="0 0 \d+ \d+"/);
+    expect(neon.endsWith("</svg>")).toBe(true);
+    expect(neon).toMatch(/<rect width="\d+" height="\d+" fill="#0b0814"\/>/);
+    expect(neon).not.toContain("<filter");
+  });
+
+  it("draws one outline per room, used for three glows, then a fill, then a wall; every glow under every fill", () => {
+    expect(n(/<polygon id="room-\d+"/g)).toBe(graph.rooms.size);
+    expect(n(/<polygon class="corridor"/g)).toBe(corridors.size);
+    const uses = [...neon.matchAll(/<use href="#room-\d+" class="(\w+) r-[\w-]+"/g)].map((m) => m[1]);
+    const r = graph.rooms.size;
+    expect(uses).toEqual(["glow0", "glow1", "glow2", "fill", "wall"].flatMap((c) => Array(r).fill(c)));
+    expect(neon.lastIndexOf('<polygon class="corridor"')).toBeLessThan(neon.indexOf('<use href="#room-'));
+  });
+
+  it("colours each room by its role", () => {
+    for (const [i, room] of s.rooms.entries()) expect(n(new RegExp(`<use href="#room-${i}" class="\\w+ r-${role(room, s)}"`, "g"))).toBe(5);
+    expect(neon).toContain(".r-start{fill:#0f4a5a;stroke:#19e3ff}");
+    expect(neon).toContain(".r-goal{fill:#6d1662;stroke:#ff2bd6}");
+  });
+
+  it("keeps the plain style's door gaps, jambs and gate tags for now", () => {
+    expect(n(/<g class="door/g)).toBe(s.doors.length + s.doors.filter((d) => d.corridor).length);
+    const tags = [...neon.matchAll(/<rect class="tag" data-gate="[^"]+"[^>]*\/><text class="tag-letter" [^>]*>([A-Z]+)<\/text>/g)].map((m) => m[1]);
+    expect(tags).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("lists the roles drawn in the legend, not the other tones", () => {
+    const legend = [...neon.matchAll(/<g transform="translate\([^)]*\)">.*?<\/g>\n<text [^>]*>([^<]+)<\/text>/g)].map((m) => m[1]);
+    const order = ["start", "goal", "boss", "pickup", "treasure"];
+    const drawn = order.filter((r) => s.rooms.some((room) => role(room, s) === r)).map((r) => `${r} room`);
+    expect(drawn.length).toBeGreaterThan(2);
+    expect(legend.filter((l) => l!.endsWith(" room"))).toEqual(drawn);
+    expect(legend).toContain("corridor");
+  });
+
+  it("numbers every room and lists every label once, escaped", () => {
+    for (const room of graph.rooms.values()) {
+      expect(n(new RegExp(`<text class="number" data-room="${room.number}"`, "g"))).toBe(1);
+      expect(n(new RegExp(`data-key="${room.number}"`, "g"))).toBe(1);
+    }
+    const hostile = '"><img src=x onerror=alert(1)>';
+    const rooms = new Map([...graph.rooms].map(([id, r]) => [id, { ...r, type: hostile, number: hostile as unknown as number, label: hostile }]));
+    const doors = layout.doors.map((d) => (d.door.gate ? { ...d, door: { ...d.door, gate: { ...d.door.gate, kind: hostile as never } } } : d));
+    const out = render({ ...graph, rooms }, { ...layout, doors }, { ...meta, style: "neon" });
+    expect(out).not.toContain("<img");
+  });
+
+  it("uses the neon tokens in a monospace, none of the other styles' colours", () => {
+    expect(neon).not.toMatch(/#f0a000|#e5e5e5|#f6f8f7|#b2b2b2|#ffffff|#000000|#999999/i);
+    expect(neon).toMatch(/text\{font-family:'DejaVu Sans Mono'.*monospace;font-size:12px;fill:#eef2ff\}/);
+    expect(neon).toContain(".tag{fill:#0b0814;stroke:#ffd23f;stroke-width:1}");
+  });
+
+  it("is deterministic", () => {
+    expect(render(graph, layout, { ...meta, style: "neon" })).toBe(neon);
+    expect(neon).toMatchSnapshot();
+  });
+});
+
+describe("role", () => {
+  const room = (type: string, number = 1, id = 5): SceneRoom => ({ id, number, type, outline: [], anchor: { x: 0, y: 0 }, glyphs: [] });
+  const s = { start: 0, goal: 1 } as Scene;
+
+  it("follows the role table of docs/neon-style.md", () => {
+    const cases: [string, string][] = [
+      ["st", "start"], ["exit", "start"], ["gl", "goal"], ["eb", "boss"], ["em", "boss"],
+      ["key", "pickup"], ["bosskey", "pickup"], ["item", "pickup"], ["switch", "pickup"], ["lever", "pickup"],
+      ["gb: bombs", "treasure"], ["gb:x", "treasure"],
+    ];
+    for (const [type, r] of cases) expect(role(room(type), s)).toBe(r);
+  });
+
+  it("makes the start and goal rooms start and goal whatever their type", () => {
+    expect(role(room("n", 1, 0), s)).toBe("start");
+    expect(role(room("em", 1, 1), s)).toBe("goal");
+  });
+
+  it("spreads every other room over three tones by number", () => {
+    for (const type of ["n", "p", "c", "e", "t", "gb", "toString", ""]) expect(role(room(type, 7), s)).toBe("other-1");
+    expect([3, 4, 5].map((k) => role(room("n", k), s))).toEqual(["other-0", "other-1", "other-2"]);
   });
 });

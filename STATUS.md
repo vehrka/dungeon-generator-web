@@ -3,9 +3,9 @@
 **updated:** 2026-10-30
 
 Generator, layout, plain render, CLI and viewer done (`docs/design.md`; history in git and
-`docs/plans/`). Current work: a second map style, after Dyson Logos, design in
-[docs/dyson-style.md](docs/dyson-style.md). Next: a third style, neon, for the cyber theme, design
-in [docs/neon-style.md](docs/neon-style.md).
+`docs/plans/`). Map styles: plain, Dyson Logos
+([docs/dyson-style.md](docs/dyson-style.md)) and, in progress, neon for the cyber theme
+([docs/neon-style.md](docs/neon-style.md)).
 
 ## Steps: Dyson map style
 
@@ -47,13 +47,15 @@ Design in [docs/neon-style.md](docs/neon-style.md).
   role colours, type, legend). Done: mock-up on generated cyber M seed 1 (`ref/neon/`, a script
   restyling the plain SVG); boss red and pickups amber, not the draft's dim magenta and coral;
   role from room type; plain loses its default theme (`docs/plans/20-neon-design.md`).
-- [ ] 2. **neon core** (`feature/neon-core`): `MapStyle` `neon`, `render/neon.ts`, black page,
+- [x] 2. **neon core** (`feature/neon-core`): `MapStyle` `neon`, `render/neon.ts`, black page,
   dark corridors, role fills, stacked-stroke glow, walls, type, `--style neon`;
-  `styleFor("cyber")` → neon. Measure time and size on l-1.
+  `styleFor("cyber")` → neon. Done: catalogue renamed plain; style by theme cyber → neon, zelda →
+  Dyson, other or none → plain; role legend; doors as plain gaps meanwhile; neon in the viewer
+  select; l-1 0.9 ms, 38.8 kB; plain and Dyson dumps byte-identical (`docs/plans/21-neon-core.md`).
 - [ ] 3. **doors and gates**: Dyson's symbol set from `scene.ts`, in neon.
 - [ ] 4. **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
   clear of numbers and glyphs.
-- [ ] 5. **viewer**: neon in the style select, export name `-neon` suffix.
+- [ ] 5. **viewer**: check by hand in the viewer (select and `-neon` export done in step 2).
 
 ## Open points
 
