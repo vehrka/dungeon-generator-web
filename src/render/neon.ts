@@ -38,7 +38,7 @@ export function role(room: SceneRoom, s: Scene): Role {
   if (room.id === s.goal || t === "gl") return "goal";
   if (t === "eb" || t === "em") return "boss";
   if (pickups.includes(t)) return "pickup";
-  if (t.startsWith("gb:")) return "treasure";
+  if (t.split(":")[0] === "gb") return "treasure"; // the family, as shapeRules and the scene's glyphs read it
   return `other-${Number.isInteger(room.number) ? ((room.number % 3) + 3) % 3 : 0}` as Role; // numbers are untyped at runtime, like the labels
 }
 
@@ -65,15 +65,16 @@ ${glow.map(([w, o], i) => `.glow${i}{fill:none;stroke-width:${w};stroke-opacity:
 .rule{stroke:${rule};stroke-width:1}
 </style>`;
 
-// Paint order (docs/neon-style.md): corridors, every room's glows widest first, fills (covering the
-// glows' inner half and the neighbours' outer glow), walls, doors, numbers and glyphs. Each outline
+// Paint order (docs/neon-style.md): every room's glows widest first, corridors (over the glows, so
+// none crosses a doorway), fills (covering the glows' inner half and the neighbours' outer glow),
+// walls, doors, numbers and glyphs. Each outline
 // once in defs, its passes as <use>, the role class inherited.
 export const neon: Painter = {
   css,
   page,
   pad: 1, // room for the widest glow, 8 px past the wall
   paint(s, px) {
-    const points = (outline: Polygon) => outline.map((q) => `${px(q).x},${px(q).y}`).join(" ");
+    const points = (outline: Polygon) => outline.map((q) => px(q)).map((p) => `${p.x},${p.y}`).join(" ");
     const rooms = s.rooms.map((room, i) => ({ room, i, role: role(room, s) }));
     const use = (pass: string) => rooms.map(({ i, role }) => `<use href="#room-${i}" class="${pass} r-${role}"/>`);
     const doors = s.doors.flatMap((d) => [
@@ -84,8 +85,8 @@ export const neon: Painter = {
     return {
       defs: rooms.map(({ room, i }) => `<polygon id="room-${i}" points="${points(room.outline)}"/>`).join(""),
       map: [
-        ...s.corridors.map((c) => `<polygon class="corridor" points="${points(c)}"/>`),
         ...glow.flatMap((_, k) => use(`glow${k}`)),
+        ...s.corridors.map((c) => `<polygon class="corridor" points="${points(c)}"/>`),
         ...use("fill"),
         ...use("wall"),
         ...doors,

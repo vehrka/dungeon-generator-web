@@ -52,9 +52,10 @@ style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
 ### Paint order
 
 1. Page indigo-black. Title and key column in light text.
-2. Corridors: dark fill, a thin dim outline (streets between blocks).
-3. Glow: each room outline stroked 3 times, widest and faintest first, in the room's colour, all
+2. Glow: each room outline stroked 3 times, widest and faintest first, in the room's colour, all
    rooms before any fill: the fill covers the inner half, so the glow shows outside only.
+3. Corridors: dark fill, a thin dim outline (streets between blocks). Over the glows, so no glow
+   band crosses a doorway (core step review).
 4. Room fills: the role colour mixed into the page, dark enough that numbers stay readable.
 5. Room detail (own step): small panels, vents, stripes inside each room, seeded, kept away from
    the number anchor and glyphs.
@@ -77,7 +78,7 @@ Colour marks the rooms that matter to the run; everything else recedes in three 
 | goal | `id === goal`, type `gl` | magenta, brightest fill |
 | boss | type `eb`, `em` | red |
 | pickup | type `key`, `bosskey`, `item`, `switch`, `lever` | amber |
-| treasure | type starting `gb:` (`gb: bombs`) | violet |
+| treasure | type `gb` or `gb: <reward>`, as the layout's `shapeRules` reads it | violet |
 | other | everything else (`n`, `p`, `c`, `e`, `t`, unknown) | teal, blue, steel by `number % 3` |
 
 Changed from the draft on the mock-up: boss in a dimmer magenta read as a second goal (m-1 cyber

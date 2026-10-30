@@ -237,31 +237,6 @@ text{font-family:'DejaVu Sans Mono','Noto Sans Mono','Liberation Mono',Menlo,Con
 <rect width="1903" height="1524" fill="#0b0814"/>
 <text class="title" x="33" y="52">tor-barrow</text>
 <text class="muted" x="33" y="73">size L · seed 444 · layout 444 · Combined</text>
-<polygon class="corridor" points="633,291 753,291 753,315 633,315"/>
-<polygon class="corridor" points="417,507 489,507 489,531 417,531"/>
-<polygon class="corridor" points="129,219 153,219 153,243 129,243"/>
-<polygon class="corridor" points="1041,723 1065,723 1065,747 1041,747"/>
-<polygon class="corridor" points="753,555 873,555 873,579 753,579"/>
-<polygon class="corridor" points="705,891 825,891 825,915 705,915"/>
-<polygon class="corridor" points="633,915 657,915 657,939 633,939"/>
-<polygon class="corridor" points="945,867 969,867 969,987 945,987"/>
-<polygon class="corridor" points="969,747 993,747 993,771 969,771"/>
-<polygon class="corridor" points="1185,651 1209,651 1209,723 1185,723"/>
-<polygon class="corridor" points="513,387 537,387 537,507 513,507"/>
-<polygon class="corridor" points="825,963 849,963 849,987 825,987"/>
-<polygon class="corridor" points="1089,987 1113,987 1113,1107 1089,1107"/>
-<polygon class="corridor" points="1017,1227 1041,1227 1041,1347 1017,1347"/>
-<polygon class="corridor" points="993,987 1017,987 1017,1059 993,1059"/>
-<polygon class="corridor" points="225,459 249,459 249,531 225,531"/>
-<polygon class="corridor" points="465,963 537,963 537,987 465,987"/>
-<polygon class="corridor" points="537,1203 561,1203 561,1275 537,1275"/>
-<polygon class="corridor" points="321,867 345,867 345,939 321,939"/>
-<polygon class="corridor" points="1161,1083 1185,1083 1185,1107 1161,1107"/>
-<polygon class="corridor" points="1017,1107 1089,1107 1089,1131 1017,1131"/>
-<polygon class="corridor" points="633,627 657,627 657,747 633,747"/>
-<polygon class="corridor" points="945,579 969,579 969,651 945,651"/>
-<polygon class="corridor" points="1017,795 1041,795 1041,915 1017,915"/>
-<polygon class="corridor" points="705,1035 825,1035 825,1059 705,1059"/>
 <use href="#room-0" class="glow0 r-start"/>
 <use href="#room-1" class="glow0 r-goal"/>
 <use href="#room-2" class="glow0 r-other-0"/>
@@ -340,6 +315,31 @@ text{font-family:'DejaVu Sans Mono','Noto Sans Mono','Liberation Mono',Menlo,Con
 <use href="#room-23" class="glow2 r-other-1"/>
 <use href="#room-24" class="glow2 r-other-2"/>
 <use href="#room-25" class="glow2 r-other-0"/>
+<polygon class="corridor" points="633,291 753,291 753,315 633,315"/>
+<polygon class="corridor" points="417,507 489,507 489,531 417,531"/>
+<polygon class="corridor" points="129,219 153,219 153,243 129,243"/>
+<polygon class="corridor" points="1041,723 1065,723 1065,747 1041,747"/>
+<polygon class="corridor" points="753,555 873,555 873,579 753,579"/>
+<polygon class="corridor" points="705,891 825,891 825,915 705,915"/>
+<polygon class="corridor" points="633,915 657,915 657,939 633,939"/>
+<polygon class="corridor" points="945,867 969,867 969,987 945,987"/>
+<polygon class="corridor" points="969,747 993,747 993,771 969,771"/>
+<polygon class="corridor" points="1185,651 1209,651 1209,723 1185,723"/>
+<polygon class="corridor" points="513,387 537,387 537,507 513,507"/>
+<polygon class="corridor" points="825,963 849,963 849,987 825,987"/>
+<polygon class="corridor" points="1089,987 1113,987 1113,1107 1089,1107"/>
+<polygon class="corridor" points="1017,1227 1041,1227 1041,1347 1017,1347"/>
+<polygon class="corridor" points="993,987 1017,987 1017,1059 993,1059"/>
+<polygon class="corridor" points="225,459 249,459 249,531 225,531"/>
+<polygon class="corridor" points="465,963 537,963 537,987 465,987"/>
+<polygon class="corridor" points="537,1203 561,1203 561,1275 537,1275"/>
+<polygon class="corridor" points="321,867 345,867 345,939 321,939"/>
+<polygon class="corridor" points="1161,1083 1185,1083 1185,1107 1161,1107"/>
+<polygon class="corridor" points="1017,1107 1089,1107 1089,1131 1017,1131"/>
+<polygon class="corridor" points="633,627 657,627 657,747 633,747"/>
+<polygon class="corridor" points="945,579 969,579 969,651 945,651"/>
+<polygon class="corridor" points="1017,795 1041,795 1041,915 1017,915"/>
+<polygon class="corridor" points="705,1035 825,1035 825,1059 705,1059"/>
 <use href="#room-0" class="fill r-start"/>
 <use href="#room-1" class="fill r-goal"/>
 <use href="#room-2" class="fill r-other-0"/>

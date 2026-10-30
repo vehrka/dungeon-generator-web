@@ -413,13 +413,14 @@ describe("neon", () => {
     expect(neon).not.toContain("<filter");
   });
 
-  it("draws one outline per room, used for three glows, then a fill, then a wall; every glow under every fill", () => {
+  it("draws one outline per room, used for three glows, then a fill, then a wall; every glow under every corridor and fill", () => {
     expect(n(/<polygon id="room-\d+"/g)).toBe(graph.rooms.size);
     expect(n(/<polygon class="corridor"/g)).toBe(corridors.size);
     const uses = [...neon.matchAll(/<use href="#room-\d+" class="(\w+) r-[\w-]+"/g)].map((m) => m[1]);
     const r = graph.rooms.size;
     expect(uses).toEqual(["glow0", "glow1", "glow2", "fill", "wall"].flatMap((c) => Array(r).fill(c)));
-    expect(neon.lastIndexOf('<polygon class="corridor"')).toBeLessThan(neon.indexOf('<use href="#room-'));
+    expect(neon.lastIndexOf('<use href="#room-0" class="glow2')).toBeLessThan(neon.indexOf('<polygon class="corridor"'));
+    expect(neon.lastIndexOf('<polygon class="corridor"')).toBeLessThan(neon.indexOf('<use href="#room-0" class="fill'));
   });
 
   it("colours each room by its role", () => {
@@ -475,7 +476,7 @@ describe("role", () => {
     const cases: [string, string][] = [
       ["st", "start"], ["exit", "start"], ["gl", "goal"], ["eb", "boss"], ["em", "boss"],
       ["key", "pickup"], ["bosskey", "pickup"], ["item", "pickup"], ["switch", "pickup"], ["lever", "pickup"],
-      ["gb: bombs", "treasure"], ["gb:x", "treasure"],
+      ["gb: bombs", "treasure"], ["gb:x", "treasure"], ["gb", "treasure"],
     ];
     for (const [type, r] of cases) expect(role(room(type), s)).toBe(r);
   });
@@ -486,7 +487,7 @@ describe("role", () => {
   });
 
   it("spreads every other room over three tones by number", () => {
-    for (const type of ["n", "p", "c", "e", "t", "gb", "toString", ""]) expect(role(room(type, 7), s)).toBe("other-1");
+    for (const type of ["n", "p", "c", "e", "t", "gbx", "toString", ""]) expect(role(room(type, 7), s)).toBe("other-1");
     expect([3, 4, 5].map((k) => role(room("n", k), s))).toEqual(["other-0", "other-1", "other-2"]);
   });
 });

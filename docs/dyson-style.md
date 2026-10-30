@@ -80,7 +80,7 @@ most of the bbox stays white, as in Dyson's maps.
   for any other theme or none (a loaded JSON may lack one). `draw(json, layoutSeed, config,
   style = styleFor(json.theme))`, so CLI and viewer share the rule. Changed 2026-10-30 with
   neon: cyber → neon, zelda → Dyson, any other theme or none → plain (`docs/design.md` §7).
-- CLI: `--style plain|dyson` overrides the theme's default; unknown value → error listing the
+- CLI: `--style plain|dyson` (and `neon` since) overrides the theme's default; unknown value → error listing the
   options (same pattern as `--size`, `--theme`). Output name unchanged unless `-o` is given.
 - Viewer: a `style` select in the layout section under corridors, preset from the theme
   (generate) or the loaded JSON's theme, changeable by hand. A load always presets; generate

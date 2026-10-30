@@ -102,3 +102,12 @@ E and F), the plain style's placement until the doors step uses `tagAt`.
 Decided on the way: plain is the default for any theme but cyber and zelda (was Dyson); `styleFor`
 compares strings rather than indexing an object, so a `constructor` theme stays plain. Role tone
 for a non-integer room number is other-0, as numbers are untyped at runtime.
+
+Review, fixed: glows ran across corridor doorways (corridors now paint over the glows, under the
+fills); README still said `catalogue|dyson` and Dyson for every non-cyber theme; `role` read
+treasure as `gb:` prefix while `shapeRules` and the scene read the `gb` family, so a bare `gb` room
+was laid out as treasure but coloured other; `px` twice per vertex; Dyson doc's CLI line. Not
+fixed: the door loop and door legend copied from the plain painter, and the dead `gap-corridor`
+rect (same fill as `gap`, offset tuned for a 1 px wall), since the doors step replaces neon's
+doors with Dyson's symbol set; `role` does not guard a non-string `type`, as layout and scene
+already throw on one first (the `normalize` open point in `STATUS.md`).
