@@ -14,7 +14,8 @@ This file is the source of truth for the neon style. `docs/design.md` covers the
 
 - Third style `neon`, beside `plain` and `dyson`. The plain style stays as it is.
   `styleFor("cyber")` → `neon`, zelda → `dyson`, any other theme or none → `plain` (decided
-  2026-10-30, in the core step).
+  2026-10-30, in the core step). The viewer has no style select: its theme select picks the look
+  (`docs/plans/22-one-theme-select.md`).
 - Screen only: built for the viewer and VTT (FoundryVTT), not for print. A black page and
   saturated colour are fine. PNG export at Foundry's grid scale: not in scope, add later if needed.
 - Glow from stacked strokes (3 wider copies of the outline at falling opacity), no SVG filters:

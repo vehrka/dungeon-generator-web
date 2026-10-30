@@ -67,7 +67,7 @@ Full design, constants and trade-offs: [docs/design.md](docs/design.md); map sty
 
 ```bash
 # generate
-$ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber] \
+$ npm run cli -- --dungeon-seed 7 [--size XS|S|M|L] [--theme zelda|cyber|plain] \
     [--json m-7-zelda.json] [--key m-7-zelda.md] [-o m-7-zelda-map.svg | .png] \
     [--layout-seed N] [--no-corridors] [--style plain|dyson|neon]
 

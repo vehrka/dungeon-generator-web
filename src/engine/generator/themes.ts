@@ -5,12 +5,13 @@ import { REWARDS, rewardVariants, type Reward, type Variant } from "./grammar";
 // START, GOAL, EXIT), missing types use ROOM_STYLE and SPECIAL_ROOMS. objects: name per object type,
 // missing types keep the grammar name. rewards: bonus goal d20 table, covers 1–20.
 export type Theme = { rooms: Record<string, string>; objects: Record<string, string>; rewards: Reward[] };
-export type ThemeName = "zelda" | "cyber";
+export type ThemeName = "zelda" | "cyber" | "plain";
 
 export const DEFAULT_THEME: ThemeName = "zelda";
 
 export const THEMES: Record<ThemeName, Theme> = {
   zelda: { rooms: {}, objects: {}, rewards: REWARDS },
+  plain: { rooms: {}, objects: {}, rewards: REWARDS }, // TS only: zelda's text, drawn in the plain style (theme picks the look)
   cyber: {
     rooms: {
       st: "jack-in point (START)",

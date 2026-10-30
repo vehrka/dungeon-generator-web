@@ -55,7 +55,8 @@ Design in [docs/neon-style.md](docs/neon-style.md).
 - [ ] 3. **doors and gates**: Dyson's symbol set from `scene.ts`, in neon.
 - [ ] 4. **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
   clear of numbers and glyphs.
-- [ ] 5. **viewer**: check by hand in the viewer (select and `-neon` export done in step 2).
+- [x] 5. **viewer**: done in step 2 and `feature/one-theme-select`: one theme select (zelda, cyber,
+  plain) picks the look, the style select is gone (`docs/plans/22-one-theme-select.md`).
 
 ## Open points
 

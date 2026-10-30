@@ -88,6 +88,7 @@ describe("main", () => {
     expect(await svg(fixture, "--style", "dyson")).toContain('class="hatch"');
     expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "zelda")).toContain('class="hatch"');
     expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber")).toContain('fill="#0b0814"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "plain")).toContain('class="room"');
     expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber", "--style", "dyson")).toContain('class="hatch"');
   });
 

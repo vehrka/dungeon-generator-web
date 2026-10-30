@@ -227,13 +227,6 @@ describe("draw", () => {
     expect(() => draw({ ...json, schema_version: 3 }, 1, defaultConfig)).toThrow("Unsupported schema_version 3, expected 2");
   });
 
-  it("lays out through the function given", () => {
-    const laid = generate(json, 3, defaultConfig);
-    const calls: unknown[] = [];
-    const svg = draw(json, 3, defaultConfig, "dyson", (...args) => (calls.push(args), laid)).svg;
-    expect(calls).toEqual([[json, 3, defaultConfig]]);
-    expect(svg).toBe(draw(json, 3, defaultConfig, "dyson").svg);
-  });
 });
 
 describe("styleFor", () => {

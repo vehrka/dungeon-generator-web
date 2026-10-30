@@ -368,14 +368,17 @@ plan `docs/plans/10-viewer.md`.
   control. Panel: result band (name, rooms, seeds, ms; errors in amber, message only; exports svg,
   json for a generated dungeon, key `.md`; first so errors and exports stay in view), dungeon
   (seed, size, theme, generate), layout (seed, reroll, corridors), file (load JSON or drop on the
-  map). Opens with M, zelda, seed 1.
+  map). Opens with M, zelda, seed 1. One select for theme and look (decided 2026-10-30): the theme
+  picks the map style (`styleOf` in `state.ts`: zelda Dyson, cyber neon, plain plain; a loaded JSON's
+  other or missing theme plain); no style select, the CLI keeps `--style`.
 - Look of TE's product guides: all capitals, dark numbered section bands, underlined text actions.
   Font Jura (OFL, self-hosted Latin subset in `src/viewer/fonts/`) standing in for TE's TechnoType;
   the SVG map keeps its own font stack.
 - Generation runs in the worker with the layout. A generated dungeon comes back as JSON, also when
   its layout fails, so JSON and key export work for a dungeon that does not lay out (as the CLI
   writes them before layout); later layouts of it send that JSON and skip generation. A theme change
-  keeps the layout seed only if dungeon seed and size are unchanged (theme is text only); anything
+  keeps the layout seed only if dungeon seed and size are unchanged (theme is text and look, same
+  graph); anything
   else resets it to the dungeon seed. Size and theme select values are validated; on an error the
   selects go back to the dungeon shown. A failed load keeps the dungeon before it; generate drops a
   file read still pending.
@@ -398,7 +401,7 @@ the same that `normalize` reads; in the CLI since step 14a, in the viewer since 
 
 - `graph.ts`: directed multigraph, stable ids in insertion order (replaces igraph; order, not
   index parity, is what expansion and merging depend on). `simplify`, undirected Dijkstra.
-- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 2 themes (zelda, cyber; Python's tor-barrow and tor-dwarf dropped), `ROOM_STYLE`; data dumped from
+- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 3 themes (zelda, cyber; Python's tor-barrow and tor-dwarf dropped; plain, TS only, zelda's text for the plain map style), `ROOM_STYLE`; data dumped from
   Python into typed literals.
 - `expand.ts`: START, GOAL, the `Start` rule, then the first non-terminal in vertex order, R last
   (pacing by progress START → boss, last tier within `nearBoss` steps of `em`/`eb`). One d20 per

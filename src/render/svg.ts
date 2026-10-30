@@ -152,9 +152,8 @@ export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): stri
 }
 
 // JSON → SVG at a layout seed, titled from the JSON: the CLI and the viewer draw through this.
-// place: the viewer passes a cached generate, so a style change skips the layout.
-export function draw(json: DungeonJson, layoutSeed: number, config: LayoutConfig, style = styleFor(json.theme), place = generate): { svg: string; rooms: number } {
-  const { graph, layout } = place(json, layoutSeed, config);
+export function draw(json: DungeonJson, layoutSeed: number, config: LayoutConfig, style = styleFor(json.theme)): { svg: string; rooms: number } {
+  const { graph, layout } = generate(json, layoutSeed, config);
   const meta = { seed: isSeed(json.seed) ? json.seed : undefined, layoutSeed, theme: json.theme, size: json.size, grammar: json.grammar, style };
   return { svg: render(graph, layout, meta), rooms: graph.rooms.size };
 }

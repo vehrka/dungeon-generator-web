@@ -1,13 +1,10 @@
 import { defaultConfig, type LayoutConfig } from "../engine/config";
 import type { GenerateOptions } from "../engine/generator/index";
-import { generate } from "../engine/index";
-import { LayoutError } from "../engine/layout";
-import { NonPlanarError } from "../engine/planar";
 import { PRESETS, type Preset } from "../engine/generator/grammar";
 import { THEMES, type ThemeName } from "../engine/generator/themes";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
-import { mapStyles, type MapStyle } from "../render/svg";
+import { styleFor, type MapStyle } from "../render/svg";
 
 // Viewer logic without the DOM (docs/plans/10-viewer.md, 14b); main.ts wires it, worker.ts draws.
 
@@ -60,10 +57,9 @@ export function parseTheme(s: string): ThemeName {
   return s;
 }
 
-export function parseStyle(s: string): MapStyle {
-  if (!mapStyles.includes(s as MapStyle)) throw new Error(`Unknown style ${s}, expected one of ${mapStyles.join(" ")}`);
-  return s as MapStyle;
-}
+// The theme picks the look, one select for both. A loaded JSON's theme is unchecked: anything but
+// a string counts as none, so plain.
+export const styleOf = (theme: unknown): MapStyle => styleFor(typeof theme === "string" ? theme : undefined);
 
 // The engine's LayoutError reworded for the panel. A loaded file's dungeon is the file: another
 // dungeon seed or size would replace it, so only the layout seed is suggested.
@@ -81,24 +77,3 @@ export const jsonName = (name: string): string => `${name}.json`;
 export const keyName = (name: string): string => `${name}-key.md`;
 
 export const layoutConfig = (corridors: boolean): LayoutConfig => ({ ...defaultConfig, corridors });
-
-
-// The worker's last layout: a style change redraws the dungeon shown without laying it out again
-// (docs/plans/19-dyson-viewer.md). Keyed on the values, the worker gets a copy. Only the engine's
-// deterministic failures are kept; anything else is thrown and tried again next time.
-export function layoutCache(): typeof generate {
-  let last: { key: string; laid: ReturnType<typeof generate> } | { key: string; error: LayoutError | NonPlanarError } | undefined;
-  return (json, seed, config) => {
-    const key = JSON.stringify([json, seed, config]);
-    if (last?.key !== key) {
-      try {
-        last = { key, laid: generate(json, seed, config) };
-      } catch (error) {
-        if (!(error instanceof LayoutError || error instanceof NonPlanarError)) throw error;
-        last = { key, error };
-      }
-    }
-    if ("error" in last) throw last.error;
-    return last.laid;
-  };
-}
