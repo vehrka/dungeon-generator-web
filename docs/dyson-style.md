@@ -15,7 +15,7 @@ This file is the source of truth for the Dyson style. `docs/design.md` covers ev
   gives the same layout in both styles; only the drawing differs.
 - In: style selection (render, CLI, viewer), floors, grid, walls, rock hatching, doors and gate
   symbols, numbers, glyphs, key column and legend in the Dyson look, hand-drawn wobble.
-- Later (own step, ask first): dressing that is not in the JSON (stairs, columns, rubble, water).
+- Later (own step, postponed 2026-10-30, ask first): dressing that is not in the JSON (stairs, columns, rubble, water).
 - Out: copying Dyson's maps, symbols sheets or fonts. Emulate the look with our own drawing code;
   a style is free, his map files are not. No raster textures, no web font in the SVG, no new
   dependency.
@@ -317,7 +317,7 @@ No engine change, so no bench run, unless a step touches `engine/`.
 
 See `STATUS.md` for the checklist. Order: scene refactor → Dyson core (floors, grid, walls,
 hatching, numbers, key column, `--style`) → doors and gates → wobble and shadow → viewer →
-(later) dressing. Each step its own branch off `dev`, test first, `/code-review` before merge.
+(postponed) dressing. Each step its own branch off `dev`, test first, `/code-review` before merge.
 
 ## Risks and open points
 

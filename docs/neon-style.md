@@ -58,7 +58,7 @@ style constants at the top of `render/neon.ts`, not in `LayoutConfig`.
 3. Corridors: dark fill, a thin dim outline (streets between blocks). Over the glows, so no glow
    band crosses a doorway (core step review).
 4. Room fills: the role colour mixed into the page, dark enough that numbers stay readable.
-5. Room detail (own step): small panels, vents, stripes inside each room, seeded, kept away from
+5. Room detail (own step, postponed 2026-10-30, maybe later): small panels, vents, stripes inside each room, seeded, kept away from
    the number anchor and glyphs.
 6. Walls: thin bright outline in the role colour.
 7. Doors and gate symbols.
@@ -173,10 +173,10 @@ groups with jambs gone).
 ## Steps
 
 See `STATUS.md`. Order: design doc and mock-up (generated cyber M, `ref/neon/`) → core painter → doors and gates →
-room detail → viewer. Each step its own branch off `dev`, test first, `/code-review` before merge.
+room detail (postponed) → viewer. Each step its own branch off `dev`, test first, `/code-review` before merge.
 
 ## Open points
 
 - Shared walls lose the glow and show one room's colour (§ Tokens). If it reads badly on L maps:
   stroke each room's wall clipped to its own inside, so a shared seam shows both colours.
-- Detail density vs room shapes and numbers: room detail step.
+- Detail density vs room shapes and numbers: room detail step (postponed).

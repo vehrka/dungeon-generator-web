@@ -4,7 +4,7 @@
 
 Generator, layout, plain render, CLI and viewer done (`docs/design.md`; history in git and
 `docs/plans/`). Map styles: plain, Dyson Logos
-([docs/dyson-style.md](docs/dyson-style.md)) and, in progress, neon for the cyber theme
+([docs/dyson-style.md](docs/dyson-style.md)) and neon for the cyber theme
 ([docs/neon-style.md](docs/neon-style.md)).
 
 ## Steps: Dyson map style
@@ -34,7 +34,7 @@ One feature branch per step, off `dev`, test first, `/code-review` before mergin
 - [x] 5. **viewer** (`feature/dyson-viewer`): style select preset from the theme, export name
   `-dyson` suffix. Done: a hand-picked style stays until the theme changes; a style change reuses
   the worker's last layout; loading bar and a plain no-layout message (`docs/plans/19-dyson-viewer.md`).
-- [ ] 6. *(later, ask first)* **dressing**: stairs in the start room, rubble, columns; not in the
+- [ ] 6. *(postponed, maybe later; ask first)* **dressing**: stairs in the start room, rubble, columns; not in the
   JSON, so drawn from the layout seed.
 
 ## Steps: neon map style (after Dyson)
@@ -56,10 +56,27 @@ Design in [docs/neon-style.md](docs/neon-style.md).
   Done: symbols moved to `marks.ts`, wall width an argument; 8 px page-fill rectangles, ink bar,
   dots and S, archways in the corridor fill; cyber L 2's E and F apart; l-1 0.7–0.9 ms, 29.0 kB;
   plain and Dyson dumps byte-identical (`docs/plans/23-neon-doors.md`).
-- [ ] 4. **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
+- [ ] 4. *(postponed, maybe later)* **room detail**: panels, vents, stripes inside rooms, `rng(layoutSeed, "render/neon/…")`,
   clear of numbers and glyphs.
 - [x] 5. **viewer**: done in step 2 and `feature/one-theme-select`: one theme select (zelda, cyber,
   plain) picks the look, the style select is gone (`docs/plans/22-one-theme-select.md`).
+
+## Steps: graph, grammar sheet, help
+
+Not every dungeon is a place underground: show the graph itself, the grammar that grows it, and
+the story of the project. Decided 2026-10-30: own drawing code, no new dependency.
+
+- [ ] 1. **graph view** (`feature/graph-view`): `render/graph.ts` draws the dungeon graph as SVG,
+  layered from START to GOAL, gates as styled and labelled edges (lock, state, lever, secret,
+  one-way), rooms coloured by role, numbered as in the key. Viewer switch map | graph over the same
+  dungeon (graph needs no layout, so it shows even when layout fails); CLI `--graph out.svg`.
+- [ ] 2. **grammar sheet** (`feature/grammar-sheet`): `render/grammar.ts` draws the Combined grammar
+  from `GRAMMAR` data as one SVG sheet (rule cards, d20 ranges per size, legend; after Python's
+  `grammar/render.py` sheet). CLI writes `docs/grammar.svg`; a test fails when the committed sheet is
+  stale. Embedded in README.
+- [ ] 3. **help page** (`feature/help-page`): second viewer page `help.html`, linked from the header,
+  TE guide look: the project's story, how it is built (pipeline), the grammar sheet, references.
+  Hand-written HTML, no Markdown dependency.
 
 ## Open points
 
