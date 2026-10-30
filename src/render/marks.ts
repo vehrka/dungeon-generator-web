@@ -2,7 +2,7 @@ import type { Point } from "../engine/geometry";
 import { glyphSize } from "./icons";
 import type { Scene, SceneRoom } from "./scene";
 
-// Marks shared by the painters (catalogue in svg.ts, Dyson in dyson.ts); their look is in each
+// Marks shared by the painters (plain in svg.ts, Dyson in dyson.ts); their look is in each
 // style's CSS. Own module so dyson.ts and svg.ts do not import each other.
 export type LegendEntry = { mark: string; text: string };
 export type Painted = { defs: string; map: string[]; legend: LegendEntry[] };

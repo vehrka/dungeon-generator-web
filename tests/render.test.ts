@@ -208,7 +208,7 @@ describe("render", () => {
 describe("draw", () => {
   it("equals render over generate, titled from the JSON, with the room count", () => {
     const { graph, layout } = generate(json, 3, defaultConfig);
-    expect(draw(json, 3, defaultConfig, "catalogue")).toEqual({ svg: render(graph, layout, { ...meta, layoutSeed: 3 }), rooms: graph.rooms.size });
+    expect(draw(json, 3, defaultConfig, "plain")).toEqual({ svg: render(graph, layout, { ...meta, layoutSeed: 3 }), rooms: graph.rooms.size });
   });
 
   it("picks the style from the theme unless given", () => {
@@ -235,9 +235,9 @@ describe("draw", () => {
 });
 
 describe("styleFor", () => {
-  it("draws cyber as a catalogue, any other theme or none Dyson", () => {
-    expect(styleFor("cyber")).toBe("catalogue");
-    expect(styleFor("Cyber")).toBe("catalogue");
+  it("draws cyber plain, any other theme or none Dyson", () => {
+    expect(styleFor("cyber")).toBe("plain");
+    expect(styleFor("Cyber")).toBe("plain");
     for (const theme of ["zelda", "tor-barrow", "", undefined]) expect(styleFor(theme)).toBe("dyson");
   });
 });

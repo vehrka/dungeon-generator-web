@@ -9,13 +9,13 @@ import { defs, glyphs } from "./icons";
 import { chevron, esc, roomMarks, tagMark, unit, useGlyph, type Painter } from "./marks";
 import { scene } from "./scene";
 
-export type MapStyle = "catalogue" | "dyson";
-export const mapStyles: MapStyle[] = ["catalogue", "dyson"];
+export type MapStyle = "plain" | "dyson";
+export const mapStyles: MapStyle[] = ["plain", "dyson"];
 export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; size?: string; grammar?: string; style?: MapStyle };
 
-// Cyber keeps the catalogue look; every other theme, or none (a loaded JSON may lack one), is Dyson
+// Cyber keeps the plain look; every other theme, or none (a loaded JSON may lack one), is Dyson
 // (docs/dyson-style.md, style selection).
-export const styleFor = (theme?: string): MapStyle => (theme?.toLowerCase() === "cyber" ? "catalogue" : "dyson");
+export const styleFor = (theme?: string): MapStyle => (theme?.toLowerCase() === "cyber" ? "plain" : "dyson");
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no
 // radius or shadow. Amber is the one chromatic note, kept for gates (docs/plans/09-render-cli.md).
@@ -48,8 +48,8 @@ text{font-family:Inter,'Helvetica Neue',Arial,'Noto Sans','DejaVu Sans',sans-ser
 
 const gateText = (g: Gate) => [g.kind, g.requires.map((o) => o.name).join(", ")].filter(Boolean).join("  ");
 
-// The catalogue painter: rooms white, corridors grey, doors as gaps with jambs, amber gate tags.
-const catalogue: Painter = {
+// The plain painter: rooms white, corridors grey, doors as gaps with jambs, amber gate tags.
+const plain: Painter = {
   css: style,
   page: "#f6f8f7",
   pad: 0,
@@ -73,12 +73,12 @@ const catalogue: Painter = {
   },
 };
 
-const painters: Record<MapStyle, Painter> = { catalogue, dyson };
+const painters: Record<MapStyle, Painter> = { plain, dyson };
 
 // Graph + layout → standalone SVG: map on the left, key column (rooms, gates, legend) on the right,
-// in the style of meta.style (catalogue when absent).
+// in the style of meta.style (plain when absent).
 export function render(graph: RoomGraph, layout: Layout, meta: RenderMeta): string {
-  const painter = painters[meta.style ?? "catalogue"];
+  const painter = painters[meta.style ?? "plain"];
   const s = scene(graph, layout);
   const { bbox } = s;
   const pad = painter.pad * unit;

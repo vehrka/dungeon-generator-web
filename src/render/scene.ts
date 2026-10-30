@@ -4,7 +4,7 @@ import type { Gate, RoomGraph, RoomId } from "../engine/types";
 import { glyphs } from "./icons";
 import { tagBox, unit } from "./marks";
 
-// Style-free geometry of a map in grid units: every painter (catalogue, Dyson) draws from this.
+// Style-free geometry of a map in grid units: every painter (plain, Dyson) draws from this.
 export type SceneRoom = { id: RoomId; number: number; outline: Polygon; anchor: Point; glyphs: string[] };
 export type SceneDoor = {
   segment: Segment; // the door; through a corridor, the one on room a

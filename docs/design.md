@@ -319,14 +319,14 @@ one-way), so the renderer never re-derives geometry. The renderer draws corridor
 `render(graph, layout, meta) → string` (SVG). It depends only on the engine types, not on the DOM.
 `draw(json, layoutSeed, config, style = styleFor(json.theme)) → { svg, rooms }` runs `generate` and
 `render` with the title meta from the JSON; the CLI and the viewer both draw through it. `render`
-draws the catalogue style unless `meta.style` says `dyson`. Every value taken from the JSON is escaped
+draws the plain style unless `meta.style` says `dyson`. Every value taken from the JSON is escaped
 (labels, names, room numbers, gate kinds: the JSON is not type-checked at runtime).
 Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 `docs/plans/09-render-cli.md`.
 A second style after Dyson Logos (ink, hatching) is designed in `docs/dyson-style.md`, a third,
 neon, for the cyber theme in `docs/neon-style.md` (planned); this section
-describes the catalogue style, the default for the cyber theme (every other theme gets Dyson) until
-neon is ready; then no theme defaults to it, `--style catalogue` and the viewer select only.
+describes the plain style, the default for the cyber theme (every other theme gets Dyson) until
+neon is ready; then no theme defaults to it, `--style plain` and the viewer select only.
 
 - Map on the left, key column on the right (rooms, gates, legend), title on top: theme, size,
   dungeon seed, layout seed, grammar. Grid unit 24 px.
