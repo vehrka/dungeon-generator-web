@@ -1,15 +1,15 @@
 # Delve Generator
 
-**version:** 0.1.0
+**version:** 1.0.0
 
-**date:** 2026-10-28
+**date:** 2026-10-30
 
 Generates a dungeon from a seed and draws it as a map: rooms, doors, corridors, locks, secret doors
 and one-way paths, plus a GM key that names every room and what it holds. Runs as a CLI (SVG or PNG)
 and as a web viewer. The same seed always gives the same dungeon and the same map.
 
-Status: generator, layout, plain and Dyson map styles, GM key, CLI and viewer done; a third map
-style, neon, in progress. Plan: [STATUS.md](STATUS.md).
+Status: generator, layout, three map styles (plain, Dyson, neon), GM key, graph view, grammar
+sheet, CLI and viewer with a help page done. Plan: [STATUS.md](STATUS.md).
 
 ## Quick start
 
