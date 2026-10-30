@@ -46,6 +46,10 @@ describe("panelFor", () => {
     expect(panelFor({ ...json, seed: 7, size: "m", theme: "Classic" })).toEqual({ seed: 7, size: "M", theme: "classic" });
   });
 
+  it("shows a file saved before classic was renamed from zelda as classic", () => {
+    expect(panelFor({ ...json, seed: 7, size: "M", theme: "Zelda" })).toEqual({ seed: 7, size: "M", theme: "classic" });
+  });
+
   it("leaves out what the generator does not take", () => {
     expect(panelFor({ ...json, seed: -4, size: "XL", theme: "tor-barrow" })).toEqual({});
     expect(panelFor({ ...json, seed: 1.5, size: 3, theme: "toString" })).toEqual({});
@@ -96,7 +100,7 @@ describe("parseTheme", () => {
   });
 
   it("rejects anything else", () => {
-    for (const t of ["", "Classic", "toString", "__proto__"]) expect(() => parseTheme(t)).toThrow(/^Unknown theme/);
+    for (const t of ["", "Classic", "zelda", "toString", "__proto__"]) expect(() => parseTheme(t)).toThrow(/^Unknown theme/);
   });
 });
 

@@ -328,7 +328,8 @@ neon, for the cyber theme in `docs/neon-style.md`; this section describes the pl
 by theme (`styleFor`, decided 2026-10-30): cyber → neon, classic → Dyson, any other theme or none →
 plain; `--style` and the viewer select override it. Classic was `zelda` before 1.0.0 (renamed for the
 public repo, with the Zelda-flavoured rewards: coins, healing potion); a file saved with `zelda`
-still draws Dyson.
+still draws Dyson and shows classic in the viewer panel (`savedTheme`, `themes.ts`); the CLI
+`--theme` takes only today's names.
 
 - Map on the left, key column on the right (rooms, gates, legend), title on top: theme, size,
   dungeon seed, layout seed, grammar. Grid unit 24 px.

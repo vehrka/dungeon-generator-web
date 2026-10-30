@@ -1,4 +1,5 @@
 import type { LayoutConfig } from "../engine/config";
+import { savedTheme } from "../engine/generator/themes";
 import type { Point, Polygon } from "../engine/geometry";
 import { generate } from "../engine/index";
 import type { Layout } from "../engine/layout";
@@ -16,10 +17,10 @@ export type RenderMeta = { seed?: number; layoutSeed: number; theme?: string; si
 export type TitleMeta = Omit<RenderMeta, "layoutSeed" | "style">; // the map's and the graph's title
 
 // Cyber is neon, classic Dyson; any other theme, or none (a loaded JSON may lack one), plain
-// (docs/design.md §7). Zelda: classic's name before 1.0.0, so files saved then keep their look.
+// (docs/design.md §7); a file saved before 1.0.0 by its theme's name then (savedTheme).
 export const styleFor = (theme?: string): MapStyle => {
-  const t = theme?.toLowerCase();
-  return t === "cyber" ? "neon" : t === "classic" || t === "zelda" ? "dyson" : "plain";
+  const t = theme && savedTheme(theme.toLowerCase());
+  return t === "cyber" ? "neon" : t === "classic" ? "dyson" : "plain";
 };
 
 // Teenage engineering style (ref/webdesign/design.md): neutrals, hairlines, weight 100/300, no

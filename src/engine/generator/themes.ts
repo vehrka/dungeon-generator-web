@@ -9,6 +9,10 @@ export type ThemeName = "classic" | "cyber" | "plain";
 
 export const DEFAULT_THEME: ThemeName = "classic";
 
+// Names before 1.0.0, as saved files carry them: read, never generated (--theme takes today's).
+const RENAMED: Record<string, ThemeName> = { zelda: "classic" };
+export const savedTheme = (t: string): string => (Object.hasOwn(RENAMED, t) ? RENAMED[t]! : t);
+
 export const THEMES: Record<ThemeName, Theme> = {
   classic: { rooms: {}, objects: {}, rewards: REWARDS },
   cyber: {
