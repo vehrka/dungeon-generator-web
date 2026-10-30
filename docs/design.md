@@ -1,4 +1,4 @@
-# Dungeon Layout Helper: design
+# Delve Generator: design
 
 Generates a dungeon (port of the Combined grammar of `101.02_dungeon_generator`) as schema 2 JSON,
 or loads one, and turns it into a 2D map, laid out with Nepožitek's graph-based algorithm. Outputs
@@ -55,6 +55,8 @@ Edgar's room template repeat modes (thesis 2.2.2).
   ids are internal only.
 - Gate kinds: `lock`, `state`, `on`, `off`, `secret`.
 - Reject input with `schema_version` other than 2, with a clear error.
+- Why 2: the version comes from the Python generator, whose schema 1 had no room `number` or
+  `label`. This project never read schema 1.
 
 ## Pipeline
 
@@ -315,13 +317,16 @@ one-way), so the renderer never re-derives geometry. The renderer draws corridor
 ### 7. Render (`render/svg.ts`)
 
 `render(graph, layout, meta) → string` (SVG). It depends only on the engine types, not on the DOM.
-`draw(json, layoutSeed, config) → { svg, rooms }` runs `generate` and `render` with the title meta from
-the JSON; the CLI and the viewer both draw through it. Every value taken from the JSON is escaped
+`draw(json, layoutSeed, config, style = styleFor(json.theme)) → { svg, rooms }` runs `generate` and
+`render` with the title meta from the JSON; the CLI and the viewer both draw through it. `render`
+draws the plain style unless `meta.style` says `dyson` or `neon`. Every value taken from the JSON is escaped
 (labels, names, room numbers, gate kinds: the JSON is not type-checked at runtime).
 Style: teenage engineering (`ref/webdesign/design.md`). Decided 2026-10-27, plan
 `docs/plans/09-render-cli.md`.
-A second style after Dyson Logos (ink, hatching) is designed in `docs/dyson-style.md`; this section
-describes the catalogue style, the default for the cyber theme (every other theme gets Dyson).
+A second style after Dyson Logos (ink, hatching) is designed in `docs/dyson-style.md`, a third,
+neon, for the cyber theme in `docs/neon-style.md`; this section describes the plain style. Style
+by theme (`styleFor`, decided 2026-10-30): cyber → neon, zelda → Dyson, any other theme or none →
+plain; `--style` and the viewer select override it.
 
 - Map on the left, key column on the right (rooms, gates, legend), title on top: theme, size,
   dungeon seed, layout seed, grammar. Grid unit 24 px.
@@ -351,7 +356,45 @@ CLI (`cli/main.ts`, step 14a, plan `docs/plans/14a-generator-cli.md`): one comma
 JSON loads a file; `--dungeon-seed N [--size M] [--theme zelda]` generates one (both or neither is
 an error; the seed is required). `--json` (generating only) and `--key` write the JSON and key
 before layout, so a dungeon that fails to lay out can still be inspected. Generated output defaults
-to `<size>-<seed>-<theme>-map.svg`, size lower case.
+to `<size>-<seed>-<theme>-map.svg`, size lower case. `--graph <file.svg>` (step 24) writes the graph
+view, also before layout; SVG only. `--grammar <file.svg>` (step 25) writes the grammar sheet and
+exits; no other option. SVG only.
+
+Graph view (`render/graph.ts`, step 24, plan `docs/plans/24-graph-view.md`, decided 2026-10-30):
+the room graph as a layered drawing, for dungeons that are not places underground and for a
+dungeon that fails to lay out or is not planar. `drawGraph(json) → { svg, rooms }` needs only
+`normalize`: no planarity, no layout, no seed. Own code, no dependency (dagre, elk, Graphviz ruled
+out); deterministic, no randomness.
+
+- Edges: one per room pair, as the map's door groups (all the pair's gates on it; secret and
+  one-way only when every door of the pair is).
+- Layers: BFS distance from START over the undirected graph, top to bottom; GOAL in the deepest
+  layer (Graphviz `rank=max` in the Python plot), a layer it leaves empty dropped; unreachable
+  rooms in a last layer of their own.
+  BFS distances differ by at most 1 across an edge, so only GOAL's edges can skip layers. Adjacent
+  layers: straight, bottom middle to top middle. Within a layer: a quadratic curve out of the
+  bottoms, dipping into the gap below, never as far as the next row. Skipping layers: straight if
+  clear, else a quadratic bowed sideways, 16 px further each try (alternating sides) until no
+  sample is within 4 px of a box between (the bow grows without bound, so it always ends; past
+  10 000 tries an explicit error, a bug guard). One height per row, so straight edges stay in the gaps:
+  no edge runs through a box (tested on ruin, generated M and L 1–8, K5).
+- Order in a layer: by room number, then 8 barycenter sweeps (down, up), ties by room number; a
+  room without neighbours in the other layer keeps its place.
+- Look after the Python generator's Graphviz plot (`utils/dungeon_render.py`; changed 2026-10-30
+  from the plain TE look at the user's request): background `#eef0f3`; rooms rounded and coloured
+  by type with Python's `ROOM_STYLE` palette (n grey, e salmon, em, eb reds, t orange, p lavender,
+  c tan, gb green; unknown types white with a border), labelled number then type code; START and
+  GOAL yellow with a black border; pickups (item, key, boss key) blue ellipses `Get <objects>`;
+  switches and levers pink hexagons with their objects. Edges: two-way grey 1 px, one-way black
+  2 px with an arrowhead, lock orange, state, on, off magenta (off dashed), secret grey dashed; a
+  gated edge is labelled with what it needs (`[bronze key 1]`, `[a + b]`, `[breaker 1 ON]`) in its
+  colour, beside its middle on the side it leans to. The key column (`keyColumn` in `svg.ts`,
+  shared with the map) lists rooms by number and a legend of what is drawn (room types, nodes,
+  paths), no gate list. Title as the map's with `graph` in place of the layout seed.
+- Edge labels can overlap edges or each other in dense graphs (Graphviz places them, we do not):
+  cosmetic, accepted.
+- Cost: `drawGraph` on generated cyber L 7 (62 rooms) 6.7 ms (most of it the sideways search of
+  GOAL's edges), ruin 4 ms (first call), M 1 ms.
 
 ### 8. Viewer (`src/viewer/`)
 
@@ -363,14 +406,17 @@ plan `docs/plans/10-viewer.md`.
   control. Panel: result band (name, rooms, seeds, ms; errors in amber, message only; exports svg,
   json for a generated dungeon, key `.md`; first so errors and exports stay in view), dungeon
   (seed, size, theme, generate), layout (seed, reroll, corridors), file (load JSON or drop on the
-  map). Opens with M, zelda, seed 1.
+  map). Opens with M, zelda, seed 1. One select for theme and look (decided 2026-10-30): the theme
+  picks the map style (`styleOf` in `state.ts`: zelda Dyson, cyber neon, plain plain; a loaded JSON's
+  other or missing theme plain); no style select, the CLI keeps `--style`.
 - Look of TE's product guides: all capitals, dark numbered section bands, underlined text actions.
   Font Jura (OFL, self-hosted Latin subset in `src/viewer/fonts/`) standing in for TE's TechnoType;
   the SVG map keeps its own font stack.
 - Generation runs in the worker with the layout. A generated dungeon comes back as JSON, also when
   its layout fails, so JSON and key export work for a dungeon that does not lay out (as the CLI
   writes them before layout); later layouts of it send that JSON and skip generation. A theme change
-  keeps the layout seed only if dungeon seed and size are unchanged (theme is text only); anything
+  keeps the layout seed only if dungeon seed and size are unchanged (theme is text and look, same
+  graph); anything
   else resets it to the dungeon seed. Size and theme select values are validated; on an error the
   selects go back to the dungeon shown. A failed load keeps the dungeon before it; generate drops a
   file read still pending.
@@ -383,6 +429,22 @@ plan `docs/plans/10-viewer.md`.
 - Logic in `state.ts` (no DOM, tested); `main.ts` only wires the DOM. A file that is not a JSON
   object is rejected by name; the rest is `normalize`'s schema check. The map goes in with
   `innerHTML`, safe because `render` escapes the JSON's values. No PNG export (resvg is Node-only).
+- View switch (step 24): `view map graph` in the result band, above export, as a toggle, not a
+  link: two joined boxes in the inputs' black border, the view shown filled black as the primary
+  button (text links read as one row of actions with the exports). Kept across generate, load and reroll; not in the URL or storage. The
+  worker's `DrawRequest` carries `view`; the graph skips layout, so it shows a dungeon whose layout
+  fails, and needs no layout seed: a loaded file without one draws its graph, an empty or bad seed
+field does not stop the switch to the graph. The toggle follows the view drawn, so a seed error on
+the switch to the map leaves it on the graph. Reroll and corridors stay enabled (they change the
+map; in the graph they redraw the same sheet). Export svg saves what is shown:
+  `<name>-graph.svg` (`graphName`). The result band of the graph has no layout seed.
+- Help page (step 26, plan `docs/plans/26-help-page.md`): `help.html` beside `index.html`, both
+  build inputs (`build.rolldownOptions.input`); a `help` / `map` text action in each header. Static
+  HTML, same stylesheet: what it is, how it works, the grammar sheet, the story, references; prose
+  in sentence case. The sheet is `docs/grammar.svg` itself, not a copy (its staleness test guards
+  the page too), via a module `import "../../docs/grammar.svg?url"`: outside the Vite root, dev does
+  not rewrite an HTML `src` and the build never rewrites an `a href`. Links to the docs go to GitHub;
+  the built site has no `docs/`.
 
 ### 9. Generator (`engine/generator/`)
 
@@ -393,7 +455,7 @@ the same that `normalize` reads; in the CLI since step 14a, in the viewer since 
 
 - `graph.ts`: directed multigraph, stable ids in insertion order (replaces igraph; order, not
   index parity, is what expansion and merging depend on). `simplify`, undirected Dijkstra.
-- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 4 themes, `ROOM_STYLE`; data dumped from
+- `grammar.ts`, `themes.ts`: rules, `PACING`, `FINISH`, 3 themes (zelda, cyber; Python's tor-barrow and tor-dwarf dropped; plain, TS only, zelda's text for the plain map style), `ROOM_STYLE`; data dumped from
   Python into typed literals.
 - `expand.ts`: START, GOAL, the `Start` rule, then the first non-terminal in vertex order, R last
   (pacing by progress START → boss, last tier within `nearBoss` steps of `em`/`eb`). One d20 per
@@ -421,6 +483,24 @@ Seeds 1–500 per size: 0 unsolvable, all accepted by `normalize` and planar, ro
 p90) XS 6/6/8, S 10/13/19, M 13/18/31, L 17/26/44 against Python 6/6/8, 10/13/19, 12/18/29,
 16/26/44. ~2 s for all 2000.
 
+Grammar sheet (`render/grammar.ts`, step 25, plan `docs/plans/25-grammar-sheet.md`): `GRAMMAR` drawn
+as one SVG, `docs/grammar.svg`, after Python's `grammar/render.py` PNG (Graphviz). Rule cards in
+Python's columns ([how to use, legend, Start, E, R, S], [L, expected size, GB, H], [K, SW, TG, IG,
+BK]), each column as wide as its widest card: d20 range per preset (`a-b`, `a`, `—`), variant name,
+diagram. R's columns are the `PACING` tiers early / middle / late (it rolls by progress, not by
+size); GB names the theme's `rewards` table (zelda shown). Diagrams: `variantGraph(symbol, variant)`
+builds a `RoomGraph` (prev as start, next as goal, a branch rule's goal its start; gates from the
+object ids) laid out by the graph view's `graphLayout` with `across` (laid out with each box's w
+and h swapped, rows as tall as their tallest box, then mirrored across the diagonal; layers left to
+right as Python's `rankdir=LR`) and painted by `graphBody`. Look: Python's (anchors blue and teal,
+non-terminals red, rooms green, no numbers); edge labels in the gap after the edge's first box,
+above or below as far as the slope needs, on a flat edge over the line. Gaps across: 36 px, or a
+label's width + 16. Expected size: `sizeStats` generates seeds 1–1000 per preset and counts rooms
+after merge (what the map shows; Python counted before merge): means XS 6.5, S 13.7, M 20.2, L
+28.9, ~1.7 s for all four. `tests/grammar.test.ts` fails when `docs/grammar.svg` is stale
+(regenerate with `npm run cli -- --grammar docs/grammar.svg`), so a grammar, colour or generator
+change that moves the sheet is regenerated on purpose.
+
 ## Seeds
 
 - The dungeon seed (with size and theme) gives one dungeon; required to generate, no random seed.
@@ -447,10 +527,12 @@ src/engine/    types.ts, config.ts, rng.ts, normalize.ts, planar.ts, chains.ts, 
                shapeRules.ts, geometry.ts, doors.ts, configSpace.ts, energy.ts, layout.ts, index.ts
 src/engine/generator/   graph.ts, grammar.ts, themes.ts, types.ts, config.ts, expand.ts, reduce.ts,
                solve.ts, json.ts, index.ts
-src/render/    svg.ts, icons.ts, key.ts
+src/render/    scene.ts, svg.ts, marks.ts, dyson.ts, hatch.ts, icons.ts, key.ts, graph.ts, grammar.ts
 src/cli/       main.ts     ruin.json | --dungeon-seed [--size] [--theme] → map.svg / .png
-                           [-o] [--json] [--key] [--layout-seed] [--no-corridors]
+                           [-o] [--json] [--key] [--layout-seed] [--no-corridors] [--style]
+                           | --grammar sheet.svg
 src/viewer/    index.html, style.css, main.ts, state.ts, worker.ts   generate or load JSON, seeds, reroll, corridors, export
+               help.html   help page
 tests/         one test file per engine module, fixture ruin.json; tests/generator/ likewise
 ```
 

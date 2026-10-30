@@ -2,7 +2,8 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { main, parseCli } from "../src/cli/main";
+import { main, parseCli, parseGrammar } from "../src/cli/main";
+import { drawGraph } from "../src/render/graph";
 
 const fixture = join(import.meta.dirname, "fixtures", "ruin.json");
 const tmp = () => mkdtempSync(join(tmpdir(), "dlh-"));
@@ -71,11 +72,34 @@ describe("main", () => {
 
   it("writes a map without corridors", async () => {
     const [on, off] = [join(tmp(), "on.svg"), join(tmp(), "off.svg")];
-    expect(await main([fixture, "-o", on], quiet)).toBe(0);
-    expect(await main([fixture, "-o", off, "--no-corridors"], quiet)).toBe(0);
+    expect(await main([fixture, "-o", on, "--style", "plain"], quiet)).toBe(0);
+    expect(await main([fixture, "-o", off, "--no-corridors", "--style", "plain"], quiet)).toBe(0);
     expect(readFileSync(on, "utf8")).toContain('class="corridor"');
     expect(readFileSync(off, "utf8")).not.toContain('class="corridor"');
   });
+
+  it("draws neon for cyber, Dyson for zelda, plain for any other theme, unless --style says otherwise", async () => {
+    const dir = tmp();
+    const svg = async (...args: string[]) => {
+      const out = join(dir, "s.svg");
+      expect(await main([...args, "-o", out], quiet)).toBe(0);
+      return readFileSync(out, "utf8");
+    };
+    expect(await svg(fixture)).toContain('class="room"');
+    expect(await svg(fixture, "--style", "dyson")).toContain('class="hatch"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "zelda")).toContain('class="hatch"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber")).toContain('fill="#0b0814"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "plain")).toContain('class="room"');
+    expect(await svg("--dungeon-seed", "1", "--size", "s", "--theme", "cyber", "--style", "dyson")).toContain('class="hatch"');
+  });
+
+  it("writes a Dyson png and a neon png", async () => {
+    for (const style of ["dyson", "neon"]) {
+      const out = join(tmp(), `${style}.png`);
+      expect(await main([fixture, "-o", out, "--style", style], quiet)).toBe(0);
+      expect(readFileSync(out).subarray(1, 4).toString()).toBe("PNG");
+    }
+  }, 30_000);
 
   it("writes a png", async () => {
     const out = join(tmp(), "map.png");
@@ -124,8 +148,54 @@ describe("main", () => {
     expect(existsSync(key)).toBe(false);
   });
 
+  it("takes a style in any case, rejects others", () => {
+    expect(parseCli(["a.json", "--style", "Dyson"]).style).toBe("dyson");
+    expect(parseCli(["a.json", "--style", "plain"]).style).toBe("plain");
+    expect(parseCli(["a.json"]).style).toBeUndefined();
+    expect(parseCli(["a.json", "--style", "NEON"]).style).toBe("neon");
+    expect(() => parseCli(["a.json", "--style", "ink"])).toThrow("Unknown style ink, expected one of plain dyson neon");
+  });
+
+  it("takes a graph output, rejects one that is not .svg", () => {
+    expect(parseCli(["a.json", "--graph", "g.svg"]).graph).toBe("g.svg");
+    expect(parseCli(["--dungeon-seed", "1", "--graph", "G.SVG"]).graph).toBe("G.SVG");
+    expect(parseCli(["a.json"]).graph).toBeUndefined();
+    expect(() => parseCli(["a.json", "--graph", "g.png"])).toThrow("--graph must end in .svg: g.png");
+  });
+
+  it("writes the graph, also when the dungeon does not lay out", async () => {
+    const dir = tmp();
+    const graph = join(dir, "ruin-graph.svg");
+    expect(await main([fixture, "-o", join(dir, "m.svg"), "--graph", graph], quiet)).toBe(0);
+    expect(readFileSync(graph, "utf8")).toBe(drawGraph(JSON.parse(readFileSync(fixture, "utf8"))).svg);
+    // K5 of rooms: not planar, so no map.
+    const json = JSON.parse(readFileSync(fixture, "utf8"));
+    const ids = json.nodes.filter((n: { kind: string }) => n.kind === "room").slice(0, 5).map((n: { id: number }) => n.id);
+    for (const a of ids) for (const b of ids) if (a < b) json.edges.push({ source: a, target: b, oneway: false });
+    const [bad, badGraph, badMap] = [join(dir, "k5.json"), join(dir, "k5-graph.svg"), join(dir, "k5.svg")];
+    writeFileSync(bad, JSON.stringify(json));
+    expect(await main([bad, "-o", badMap, "--graph", badGraph], quiet)).toBe(1);
+    expect(readFileSync(badGraph, "utf8")).toMatch(/^<svg /);
+    expect(existsSync(badMap)).toBe(false);
+  });
+
+  it("takes a grammar sheet output alone, rejects one that is not .svg", () => {
+    expect(parseGrammar(["--grammar", "docs/grammar.svg"])).toBe("docs/grammar.svg");
+    expect(parseGrammar(["a.json"])).toBeUndefined();
+    expect(() => parseGrammar(["--grammar", "g.png"])).toThrow("--grammar must end in .svg: g.png");
+    expect(() => parseGrammar(["--grammar", "g.svg", "--size", "M"])).toThrow(/size/);
+    expect(() => parseGrammar(["a.json", "--grammar", "g.svg"])).toThrow("--grammar takes no other option: a.json");
+    expect(() => parseGrammar(["--dungeon-seed", "7", "--key", "--grammar"])).toThrow(/'--key' argument is ambiguous/); // not grammar mode
+  });
+
+  it("writes the grammar sheet", async () => {
+    const sheet = join(tmp(), "grammar.svg");
+    expect(await main(["--grammar", sheet], quiet)).toBe(0);
+    expect(readFileSync(sheet, "utf8")).toMatch(/^<svg [^]*Combined dungeon grammar/);
+  });
+
   it("takes the theme in any case", () => {
-    expect(parseCli(["--dungeon-seed", "1", "--theme", "Tor-Barrow"]).source).toEqual({ generate: { seed: 1, size: "M", theme: "tor-barrow" } });
+    expect(parseCli(["--dungeon-seed", "1", "--theme", "Cyber"]).source).toEqual({ generate: { seed: 1, size: "M", theme: "cyber" } });
   });
 
   it("prints the error and exits 1 without a stack", async () => {

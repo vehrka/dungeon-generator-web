@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { isSeed, maxSeed } from "../src/engine/rng";
 import { defaultConfig } from "../src/engine/config";
-import { dungeonName, exportName, jsonName, keyName, layoutConfig, load, parseSeed, randomSeed, parseSize, parseTheme } from "../src/viewer/state";
+import { panelFor, dungeonName, exportName, graphName, jsonName, keyName, layoutConfig, layoutFailed, load, parseSeed, randomSeed, parseSize, parseTheme, styleOf } from "../src/viewer/state";
 
 const text = readFileSync(join(import.meta.dirname, "fixtures", "ruin.json"), "utf8");
 
@@ -32,6 +32,25 @@ describe("load", () => {
 
   it("names the file when the JSON is not an object", () => {
     for (const t of ["null", "[]", "3", '"x"']) expect(() => load(t, "ruin.json")).toThrow(/^ruin\.json is not a dungeon JSON object$/);
+  });
+});
+
+describe("panelFor", () => {
+  const json = JSON.parse(text);
+
+  it("fills the dungeon panel from the file", () => {
+    expect(panelFor({ ...json, seed: 444, size: "L", theme: "cyber" })).toEqual({ seed: 444, size: "L", theme: "cyber" });
+  });
+
+  it("reads size and theme in any case", () => {
+    expect(panelFor({ ...json, seed: 7, size: "m", theme: "Zelda" })).toEqual({ seed: 7, size: "M", theme: "zelda" });
+  });
+
+  it("leaves out what the generator does not take", () => {
+    expect(panelFor({ ...json, seed: -4, size: "XL", theme: "tor-barrow" })).toEqual({});
+    expect(panelFor({ ...json, seed: 1.5, size: 3, theme: "toString" })).toEqual({});
+    const { size, theme, ...bare } = json;
+    expect(panelFor({ ...bare, seed: 0 })).toEqual({ seed: 0 });
   });
 });
 
@@ -73,7 +92,7 @@ describe("parseSize", () => {
 
 describe("parseTheme", () => {
   it("accepts the generator themes", () => {
-    for (const t of ["zelda", "cyber", "tor-barrow", "tor-dwarf"]) expect(parseTheme(t)).toBe(t);
+    for (const t of ["zelda", "cyber", "plain"]) expect(parseTheme(t)).toBe(t);
   });
 
   it("rejects anything else", () => {
@@ -81,10 +100,22 @@ describe("parseTheme", () => {
   });
 });
 
+describe("styleOf", () => {
+  it("draws a dungeon in its theme's style", () => {
+    expect(styleOf("zelda")).toBe("dyson");
+    expect(styleOf("Cyber")).toBe("neon");
+    expect(styleOf("plain")).toBe("plain");
+  });
+
+  it("draws any other theme, or one that is not a string, plain", () => {
+    for (const t of ["tor-barrow", "", undefined, 5, null, {}]) expect(styleOf(t)).toBe("plain");
+  });
+});
+
 describe("names", () => {
   it("names a generated dungeon as the CLI", () => {
     expect(dungeonName({ seed: 7, size: "M", theme: "zelda" })).toBe("m-7-zelda");
-    expect(dungeonName({ seed: 0, size: "XS", theme: "tor-dwarf" })).toBe("xs-0-tor-dwarf");
+    expect(dungeonName({ seed: 0, size: "XS", theme: "cyber" })).toBe("xs-0-cyber");
   });
 
   it("names the JSON and key exports", () => {
@@ -96,9 +127,35 @@ describe("names", () => {
 
 describe("exportName", () => {
   it("puts the seed in the name", () => {
-    expect(exportName("ruin", 12)).toBe("ruin-map-12.svg");
-    expect(exportName("m-7-zelda", 7)).toBe("m-7-zelda-map-7.svg");
-    expect(exportName("dungeon", 0)).toBe("dungeon-map-0.svg");
+    expect(exportName("ruin", 12, "plain")).toBe("ruin-map-12.svg");
+    expect(exportName("m-7-cyber", 7, "plain")).toBe("m-7-cyber-map-7.svg");
+    expect(exportName("dungeon", 0, "plain")).toBe("dungeon-map-0.svg");
+  });
+
+  it("names any style but plain", () => {
+    expect(exportName("m-7-zelda", 7, "dyson")).toBe("m-7-zelda-map-7-dyson.svg");
+    expect(exportName("m-7-cyber", 7, "neon")).toBe("m-7-cyber-map-7-neon.svg");
+  });
+});
+
+describe("graphName", () => {
+  it("names the graph without a layout seed or style", () => {
+    expect(graphName("m-7-zelda")).toBe("m-7-zelda-graph.svg");
+    expect(graphName("ruin")).toBe("ruin-graph.svg");
+  });
+});
+
+describe("layoutFailed", () => {
+  it("says no layout was found and what to change, then the stuck rooms", () => {
+    expect(layoutFailed([23, 18, 21], true)).toEqual([
+      "No layout could be completed for this dungeon.",
+      "Try another layout seed (reroll), or another dungeon seed or size.",
+      "Stuck on rooms 23, 18, 21.",
+    ]);
+  });
+
+  it("suggests only the layout seed for a loaded file", () => {
+    expect(layoutFailed([4], false)[1]).toBe("Try another layout seed (reroll).");
   });
 });
 

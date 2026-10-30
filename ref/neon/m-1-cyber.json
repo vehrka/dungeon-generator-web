@@ -1,0 +1,348 @@
+{
+  "schema_version": 2,
+  "grammar": "Combined",
+  "seed": 1,
+  "size": "M",
+  "theme": "cyber",
+  "start": 0,
+  "goal": 1,
+  "solvable": true,
+  "unsolvable_reasons": [],
+  "nodes": [
+    {
+      "id": 0,
+      "type": "st",
+      "name": "START",
+      "kind": "room",
+      "objects": [],
+      "number": 1,
+      "label": "Jack-in point (START)"
+    },
+    {
+      "id": 1,
+      "type": "gl",
+      "name": "GOAL",
+      "kind": "room",
+      "objects": [],
+      "number": 14,
+      "label": "Data core (GOAL)"
+    },
+    {
+      "id": 2,
+      "type": "em",
+      "name": "em",
+      "kind": "room",
+      "objects": [],
+      "number": 5,
+      "label": "Black ICE sentinel"
+    },
+    {
+      "id": 3,
+      "type": "item",
+      "name": "Get icebreaker 1",
+      "kind": "room",
+      "objects": [
+        "item-1"
+      ],
+      "number": 8,
+      "label": "Pickup: icebreaker 1"
+    },
+    {
+      "id": 4,
+      "type": "lock",
+      "name": "Use icebreaker 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "item-1"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 9,
+      "label": "Empty node / scan"
+    },
+    {
+      "id": 6,
+      "type": "bosskey",
+      "name": "Get root key 1",
+      "kind": "room",
+      "objects": [
+        "bosskey-1"
+      ],
+      "number": 15,
+      "label": "Pickup: root key 1"
+    },
+    {
+      "id": 7,
+      "type": "eb",
+      "name": "eb",
+      "kind": "room",
+      "objects": [],
+      "number": 11,
+      "label": "Core AI"
+    },
+    {
+      "id": 8,
+      "type": "lock",
+      "name": "Use root key 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "bosskey-1"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "key",
+      "name": "Get access code 1",
+      "kind": "room",
+      "objects": [
+        "key-1"
+      ],
+      "number": 16,
+      "label": "Pickup: access code 1"
+    },
+    {
+      "id": 10,
+      "type": "lock",
+      "name": "Use access code 1",
+      "kind": "gate",
+      "gate": "lock",
+      "requires": [
+        "key-1"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "switch",
+      "name": "relay 1",
+      "kind": "room",
+      "objects": [
+        "switch-1"
+      ],
+      "number": 10,
+      "label": "Switch: relay 1"
+    },
+    {
+      "id": 12,
+      "type": "gate",
+      "name": "Check relay 1",
+      "kind": "gate",
+      "gate": "state",
+      "requires": [
+        "switch-1"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "e",
+      "name": "e",
+      "kind": "room",
+      "objects": [],
+      "number": 6,
+      "label": "ICE"
+    },
+    {
+      "id": 14,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": [],
+      "number": 3,
+      "label": "Trace trap"
+    },
+    {
+      "id": 15,
+      "type": "t",
+      "name": "t",
+      "kind": "room",
+      "objects": [],
+      "number": 12,
+      "label": "Trace trap"
+    },
+    {
+      "id": 16,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 2,
+      "label": "Empty node / scan"
+    },
+    {
+      "id": 17,
+      "type": "p",
+      "name": "p",
+      "kind": "room",
+      "objects": [],
+      "number": 4,
+      "label": "Encrypted lock (puzzle)"
+    },
+    {
+      "id": 18,
+      "type": "c",
+      "name": "c",
+      "kind": "room",
+      "objects": [],
+      "number": 13,
+      "label": "Firewall (hacking check)"
+    },
+    {
+      "id": 19,
+      "type": "n",
+      "name": "n",
+      "kind": "room",
+      "objects": [],
+      "number": 7,
+      "label": "Empty node / scan"
+    }
+  ],
+  "edges": [
+    {
+      "source": 2,
+      "target": 3,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 8,
+      "oneway": false
+    },
+    {
+      "source": 8,
+      "target": 7,
+      "oneway": false
+    },
+    {
+      "source": 7,
+      "target": 1,
+      "oneway": false
+    },
+    {
+      "source": 12,
+      "target": 13,
+      "oneway": false
+    },
+    {
+      "source": 13,
+      "target": 5,
+      "oneway": false
+    },
+    {
+      "source": 14,
+      "target": 2,
+      "oneway": false
+    },
+    {
+      "source": 10,
+      "target": 15,
+      "oneway": false
+    },
+    {
+      "source": 15,
+      "target": 6,
+      "oneway": false
+    },
+    {
+      "source": 0,
+      "target": 16,
+      "oneway": false
+    },
+    {
+      "source": 4,
+      "target": 17,
+      "oneway": false
+    },
+    {
+      "source": 17,
+      "target": 12,
+      "oneway": false
+    },
+    {
+      "source": 18,
+      "target": 9,
+      "oneway": false
+    },
+    {
+      "source": 17,
+      "target": 19,
+      "oneway": false
+    },
+    {
+      "source": 19,
+      "target": 11,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 10,
+      "oneway": false
+    },
+    {
+      "source": 5,
+      "target": 18,
+      "oneway": false
+    },
+    {
+      "source": 16,
+      "target": 4,
+      "oneway": false
+    },
+    {
+      "source": 16,
+      "target": 14,
+      "oneway": false
+    }
+  ],
+  "objects": [
+    {
+      "id": "item-1",
+      "type": "item",
+      "name": "icebreaker 1",
+      "found_in": [
+        3
+      ],
+      "opens": [
+        4
+      ]
+    },
+    {
+      "id": "bosskey-1",
+      "type": "bosskey",
+      "name": "root key 1",
+      "found_in": [
+        6
+      ],
+      "opens": [
+        8
+      ]
+    },
+    {
+      "id": "key-1",
+      "type": "key",
+      "name": "access code 1",
+      "found_in": [
+        9
+      ],
+      "opens": [
+        10
+      ]
+    },
+    {
+      "id": "switch-1",
+      "type": "switch",
+      "name": "relay 1",
+      "found_in": [
+        11
+      ],
+      "opens": [
+        12
+      ]
+    }
+  ]
+}

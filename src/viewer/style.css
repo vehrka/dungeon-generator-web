@@ -45,8 +45,10 @@ header {
   border-bottom: 1px solid var(--color-steel-gray);
 }
 
-h1 { margin: 0; font-size: 32px; font-weight: 300; line-height: 1.11; letter-spacing: -0.02em; }
+h1 { margin: 0 auto 0 0; font-size: 32px; font-weight: 300; line-height: 1.11; letter-spacing: -0.02em; }
 header p { margin: 0; font-size: 11px; text-align: right; }
+/* Page link (help, map): a text action, as the exports; title left, tagline and link right. */
+header .nav { align-self: center; padding: 4px 0; font-size: 13px; }
 
 /* Map left, settings right, as the dungen result page (docs/plans/14b-generator-viewer.md). */
 .page {
@@ -127,9 +129,10 @@ button {
   cursor: pointer;
 }
 /* Text actions read as the guide's links: underlined, the band colour on hover. */
-.file, button:not(.primary) { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+a { color: inherit; }
+.file, button:not(.primary), a { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .row button:not(.primary) { padding: 4px 0; }
-.file:hover, button:not(.primary):hover:not(:disabled) { background: var(--color-band); }
+.file:hover, a:hover, button:not(.primary):hover:not(:disabled) { background: var(--color-band); }
 .file input { display: none; }
 button.primary { width: 100%; background: var(--color-ink-black); color: var(--color-canvas-mist); font-size: 15px; }
 button.primary:hover { background: var(--color-carbon); }
@@ -138,7 +141,12 @@ button.primary:disabled { background: var(--color-steel-gray); }
 
 /* Result and exports: a subsection band, the guide's lighter grey; exports with the result, as
    dungen's download next to its seed, so they stay in view on a short window. */
-.result { margin: 0 0 10px; padding: 8px var(--spacing-15); background: var(--color-band); }
+.result { position: relative; overflow: hidden; margin: 0 0 10px; padding: 8px var(--spacing-15); background: var(--color-band); }
+/* Loading: a carbon bar going back and forth along the band's foot while the worker runs, in view
+   from the first frame (most layouts take 0.1-0.2 s); still without motion. */
+.result.busy::after { content: ""; position: absolute; bottom: 0; left: 0; width: 30%; height: 3px; background: var(--color-carbon); animation: sweep 0.6s ease-in-out infinite alternate; }
+@keyframes sweep { to { transform: translateX(233.33%); } } /* 70% of the band, in the bar's 30% */
+@media (prefers-reduced-motion: reduce) { .result.busy::after { left: 0; width: 100%; animation: none; } }
 .result:has(.error) { background: var(--color-amber); }
 #result p { margin: 0; }
 #result p:first-child { font-size: 15px; margin-bottom: 2px; }
@@ -146,11 +154,48 @@ button.primary:disabled { background: var(--color-steel-gray); }
 .exports { gap: 10px; margin-top: 6px; font-size: 11px; }
 .exports button { font-size: 13px; }
 .exports button:hover:not(:disabled) { background: var(--color-canvas-mist); }
+/* View: a toggle, not an action, so not a link: two joined boxes in the inputs' black border, the
+   view shown filled as the primary button. */
+.views { gap: 0; margin-top: 6px; font-size: 11px; }
+.views span { margin-right: 10px; }
+.views button:not(.primary) { padding: 2px 12px; font-size: 13px; text-decoration: none; background: #fff; border: 1px solid var(--color-ink-black); }
+.views button + button { border-left: none; }
+.views button:hover:not([aria-pressed="true"]) { background: var(--color-canvas-mist); }
+.views button[aria-pressed="true"] { background: var(--color-ink-black); color: var(--color-canvas-mist); cursor: default; }
+
+/* Help page (help.html): one column of numbered bands, full width as the sheet; prose capped at
+   70ch. Prose is read, not scanned, so it is in sentence case, as the error messages; bands,
+   headings and labels stay capitals. */
+.doc main { min-height: 0; }
+.doc section { padding: 0 0 var(--spacing-22); }
+.doc h2 { margin: 0 0 var(--spacing-15); }
+.doc h3 { max-width: 70ch; margin: var(--spacing-15) 0 6px; padding: 2px 8px; background: var(--color-band); font-size: 13px; font-weight: 300; text-transform: uppercase; }
+.doc main p, .doc main li, .doc main dd { max-width: 70ch; text-transform: none; }
+.doc main p { margin: 0 0 10px; }
+.doc b { font-weight: 300; text-transform: uppercase; }
+.doc main ul { margin: 0 0 10px; padding-left: var(--spacing-15); }
+.doc main li { margin-bottom: 4px; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.steps h3::before { counter-increment: step; content: counter(step) " "; }
+.story { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px var(--spacing-15); margin: 0 0 var(--spacing-15); }
+.story dt { font-size: 11px; line-height: 1.75; color: var(--color-muted); }
+.story dd { margin: 0; }
+/* The sheet is 2225 px wide: drawn at its own size so its 13 px text stays readable, scrolling
+   sideways inside its frame, not the page. */
+.sheet { margin: 0 0 10px; }
+.sheet:has(img:not([src])) { display: none; } /* the module sets src: no JS, no empty frame */
+.sheet .scroll { overflow-x: auto; background: #fff; border: 1px solid var(--color-steel-gray); }
+.sheet img { display: block; max-width: none; height: auto; }
+.sheet figcaption { margin-top: 4px; color: var(--color-muted); font-size: 11px; }
+footer { padding: var(--spacing-15) var(--spacing-33); border-top: 1px solid var(--color-steel-gray); color: var(--color-muted); font-size: 11px; }
 
 @media (max-width: 800px) {
   .page { grid-template-columns: minmax(0, 1fr); }
   header { flex-direction: column; align-items: start; padding: var(--spacing-15); }
   header p { text-align: left; }
+  h1 { margin-right: 0; }
+  header .nav { align-self: start; }
+  footer { padding: var(--spacing-15); }
   h1 { font-size: 26px; }
   main { min-height: 0; padding: var(--spacing-15); }
   aside { position: static; max-height: none; border-left: 0; border-top: 1px solid var(--color-steel-gray); }

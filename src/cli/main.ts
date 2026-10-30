@@ -1,7 +1,8 @@
 // ruin.json → ruin-map.svg / .png, or a generated dungeon → m-7-zelda-map.svg
 //
-//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--key ruin.md]
+//   npm run cli -- ruin.json [-o ruin-map.svg|.png] [--layout-seed N] [--no-corridors] [--style plain|dyson|neon] [--key ruin.md] [--graph ruin-graph.svg]
 //   npm run cli -- --dungeon-seed 7 [--size M] [--theme zelda] [--json m-7-zelda.json] [--key m-7-zelda.md] [...]
+//   npm run cli -- --grammar docs/grammar.svg
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -12,16 +13,20 @@ import { DEFAULT_THEME, THEMES, type ThemeName } from "../engine/generator/theme
 import { normalize } from "../engine/normalize";
 import { isSeed, maxSeed, seedFromText } from "../engine/rng";
 import type { DungeonJson } from "../engine/types";
+import { renderGrammar } from "../render/grammar";
+import { drawGraph } from "../render/graph";
 import { dungeonKey } from "../render/key";
-import { draw } from "../render/svg";
+import { draw, mapStyles, type MapStyle } from "../render/svg";
 
 export type CliArgs = {
   source: { input: string } | { generate: Required<GenerateOptions> };
   output: string;
   json?: string;
   key?: string;
+  graph?: string;
   layoutSeed: number | undefined;
   corridors: boolean;
+  style?: MapStyle; // the theme's when absent
 };
 
 const parseSeed = (flag: string, text: string | undefined): number | undefined => {
@@ -31,20 +36,25 @@ const parseSeed = (flag: string, text: string | undefined): number | undefined =
   return seed;
 };
 
+const options = {
+  output: { type: "string", short: "o" },
+  "layout-seed": { type: "string" },
+  "no-corridors": { type: "boolean" },
+  "dungeon-seed": { type: "string" },
+  size: { type: "string" },
+  theme: { type: "string" },
+  json: { type: "string" },
+  key: { type: "string" },
+  graph: { type: "string" },
+  style: { type: "string" },
+  grammar: { type: "string" }, // parseGrammar's; main routes it there first
+} as const;
+
 export function parseCli(argv: string[]): CliArgs {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
-    options: {
-      output: { type: "string", short: "o" },
-      "layout-seed": { type: "string" },
-      "no-corridors": { type: "boolean" },
-      "dungeon-seed": { type: "string" },
-      size: { type: "string" },
-      theme: { type: "string" },
-      json: { type: "string" },
-      key: { type: "string" },
-    },
+    options,
   });
   if (positionals.length > 1) throw new Error(`Expected one input JSON, got ${positionals.length}`);
   const dungeonSeed = parseSeed("dungeon-seed", values["dungeon-seed"]);
@@ -66,8 +76,22 @@ export function parseCli(argv: string[]): CliArgs {
     output = values.output ?? `${size.toLowerCase()}-${dungeonSeed}-${theme}-map.svg`;
   }
   if (!/\.(svg|png)$/i.test(output)) throw new Error(`Output must end in .svg or .png: ${output}`);
+  if (values.graph !== undefined && !/\.svg$/i.test(values.graph)) throw new Error(`--graph must end in .svg: ${values.graph}`);
   const layoutSeed = parseSeed("layout-seed", values["layout-seed"]);
-  return { source, output, json: values.json, key: values.key, layoutSeed, corridors: !values["no-corridors"] };
+  const style = values.style?.toLowerCase() as MapStyle | undefined;
+  if (style !== undefined && !mapStyles.includes(style)) throw new Error(`Unknown style ${values.style}, expected one of ${mapStyles.join(" ")}`);
+  return { source, output, json: values.json, key: values.key, graph: values.graph, layoutSeed, corridors: !values["no-corridors"], style };
+}
+
+// --grammar out.svg: the grammar sheet alone, no dungeon, so no other option. Parsed with every
+// option, so a "--grammar" that is another option's value is not taken for it.
+export function parseGrammar(argv: string[]): string | undefined {
+  const { values, positionals, tokens } = parseArgs({ args: argv, allowPositionals: true, options, tokens: true });
+  if (values.grammar === undefined) return undefined;
+  const others = [...tokens.flatMap((t) => (t.kind === "option" && t.name !== "grammar" ? [`--${t.name}`] : [])), ...positionals];
+  if (others.length) throw new Error(`--grammar takes no other option: ${others.join(" ")}`);
+  if (!/\.svg$/i.test(values.grammar)) throw new Error(`--grammar must end in .svg: ${values.grammar}`);
+  return values.grammar;
 }
 
 type Out = { log: (m: string) => void; error: (m: string) => void };
@@ -75,6 +99,12 @@ type Out = { log: (m: string) => void; error: (m: string) => void };
 // Every failure (arguments, schema, non-planar, no layout) prints its message and returns 1.
 export async function main(argv: string[], out: Out = console): Promise<number> {
   try {
+    const grammar = parseGrammar(argv);
+    if (grammar !== undefined) {
+      writeFileSync(grammar, renderGrammar());
+      out.log(grammar);
+      return 0;
+    }
     const args = parseCli(argv);
     const { source } = args;
     const json: DungeonJson = "input" in source ? JSON.parse(readFileSync(source.input, "utf8")) : generateDungeon(source.generate);
@@ -82,11 +112,12 @@ export async function main(argv: string[], out: Out = console): Promise<number> 
     // Written before layout, so a dungeon that fails to lay out can still be inspected.
     if (args.json) writeFileSync(args.json, JSON.stringify(json, null, 2) + "\n");
     if (args.key) writeFileSync(args.key, dungeonKey(json));
+    if (args.graph) writeFileSync(args.graph, drawGraph(json).svg);
     const seed = isSeed(json.seed) ? json.seed : undefined;
     const layoutSeed = args.layoutSeed ?? seed;
     // Only a loaded file can lack one: a generated dungeon carries its dungeon seed.
     if (layoutSeed === undefined) throw new Error(`${(source as { input: string }).input} has no usable seed (${json.seed}); pass --layout-seed`);
-    const { svg, rooms } = draw(json, layoutSeed, { ...defaultConfig, corridors: args.corridors });
+    const { svg, rooms } = draw(json, layoutSeed, { ...defaultConfig, corridors: args.corridors }, args.style);
     if (args.output.toLowerCase().endsWith(".png")) {
       const { Resvg } = await import("@resvg/resvg-js"); // native addon, only for PNG
       writeFileSync(args.output, new Resvg(svg, { font: { loadSystemFonts: true } }).render().asPng());
