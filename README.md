@@ -8,6 +8,8 @@ Generates a dungeon from a seed and draws it as a map: rooms, doors, corridors, 
 and one-way paths, plus a GM key that names every room and what it holds. Runs as a CLI (SVG or PNG)
 and as a web viewer. The same seed always gives the same dungeon and the same map.
 
+Try it in the browser: <https://vehrka.github.io/dungeon-generator-web/>
+
 Status: generator, layout, three map styles (plain, Dyson, neon), GM key, graph view, grammar
 sheet, CLI and viewer with a help page done. Plan: [STATUS.md](STATUS.md).
 
@@ -93,6 +95,9 @@ it is written even when the map fails. `--grammar` writes the grammar sheet and 
 $ npm run dev     # http://localhost:5173
 $ npm run build   # static site in dist/
 ```
+
+Pushes to `main` publish `dist/` to GitHub Pages (`.github/workflows/pages.yml`):
+<https://vehrka.github.io/dungeon-generator-web/>.
 
 Settings sit right of the map. Dungeon: seed, size, theme, generate (random seed, written into the
 field; or type one and press Enter). Layout: seed, reroll, corridors. File: load a JSON or drop it on
