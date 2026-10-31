@@ -94,6 +94,8 @@ $ npm run dev     # http://localhost:5173
 $ npm run build   # static site in dist/
 ```
 
+Pushes to `main` publish `dist/` to GitHub Pages (`.github/workflows/pages.yml`).
+
 Settings sit right of the map. Dungeon: seed, size, theme, generate (random seed, written into the
 field; or type one and press Enter). Layout: seed, reroll, corridors. File: load a JSON or drop it on
 the map. Export saves the SVG, the JSON (generated only) and the GM key. The theme also picks the
